@@ -1,0 +1,85 @@
+\documentclass{article}
+
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+TODO:
+    \begin{itemize}
+        \item contact Sascha Boehme about authorship
+        \item are there any implementation of this (or comparable) algorithm in that have been evaluated?
+        \item finish implementation
+        \item test and evaluate implementation
+        \item (can wait) merge implementation (review code with active contributor beforehand)
+        \item find pretty inline setup for pseudo code
+        \item (in order) write high/low level algo
+        \item write implementation and evaluation
+        \item write background
+        \item write related work
+        \item write conclusion
+        \item write intro
+        \item reread, spellcheck ...
+    \end{itemize}
+
+% target page number: 2-2.5
+\section{Introduction}
+\begin{itemize}
+    \item context and motivation (automatic theorem proving, better performance)
+    \item what we are trying to do (monomorphisation)
+    \item basic idea of the algorithm 
+    \item overview of the paper
+\end{itemize}
+
+% target page number: 0.5-1.5
+\section{Background}
+
+\begin{itemize}
+    \item Language, TF1 (might be TH1 or something else)
+\end{itemize}
+
+% target page number: 2-4
+\section{High level algorithm}
+
+Mathematical description of the algorithm. Set notation and implicit loops.
+
+% target page number: 2-4
+\section{Low level algorithm}
+
+Precise algo description (pseudo code). Explicit loops, and bounds.
+
+% target page number: 2-4
+\section{Implementation and evaluation}
+
+Introduce context of zipperposition (do it in intro or background?).
+
+Explain how the final bounds were chosen (i liked the way those numbers looked)
+
+Present evaluation method (which problems were used, options used, server characteristics ect...)
+
+Compare the following:
+    \begin{itemize}
+        \item no call to e (no monomorphisation)
+        \item call e on start no monomorphisation
+        \item call e (default) no monomorphisation
+        \item call e on start monomorphisation
+        \item call e (default) monomorphisation
+        \item maybe compare a few different bounding heuristics?
+    \end{itemize}
+
+Compare performance with implementation of a similar algorithm (if any).
+
+Maybe compare with implementation of other kinds of monomorphisation algorithms (if appropriate).
+
+% target page number: 0.5-1
+\section{Related work}
+
+\begin{itemize}
+    \item that part of Sascha Boehme's thesis (Proving Theorems of Higher-Order Logic with SMT Solvers)
+    \item How to Encode Polymorphic Types Safely and Efﬁciently
+    \item Encoding Monomorphic and Polymorphic Types
+\end{itemize}
+
+% target page number: 0.5-1
+\section{Conclusion}
+
+\end{document}
