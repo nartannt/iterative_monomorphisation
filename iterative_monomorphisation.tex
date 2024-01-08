@@ -1,16 +1,18 @@
 \documentclass{article}
 
+\usepackage{soul}
+
 \setlength{\parindent}{0pt}
 
 \begin{document}
 
 TODO:
     \begin{itemize}
-        \item contact Sascha Boehme about authorship
+       \item \st{contact Sascha Boehme about authorship}
         \item are there any implementation of this (or comparable) algorithm in that have been evaluated?
-        \item finish implementation
-        \item test and evaluate implementation
-        \item (can wait) merge implementation (review code with active contributor beforehand)
+        \item finish implementation (mostly there)
+        \item test and evaluate implementation (well on the way)
+        \item (can wait) merge implementation (review code with active contributor(s) beforehand)
         \item find pretty inline setup for pseudo code
         \item (in order) write high/low level algo
         \item write implementation and evaluation
@@ -25,7 +27,16 @@ TODO:
 \section{Introduction}
 \begin{itemize}
     \item context and motivation (automatic theorem proving, better performance)
+       Automatic theorem provers have many applications, and are particularly useful in assisting in the elaboration of formal proofs. Speed is one of the main limitations of the use of theorem provers in this application. For instance, when used as a backend to a proof assistant a prover can often be expected to run for no more than a few seconds for a given instance of a problem.
     \item what we are trying to do (monomorphisation)
+       This paper presents a method, first introduced in [sacha's thesis] [as far as i know], that allows for higher order polymorphic problems to be approximated monomorphically. This algorithm aims to acheive the following:
+         \begin{itemize}
+            \item allow for existing higher order monomorphic theorem provers to be extended [albeit very crudely] to higher order polymorphic languages
+            \item improve the performance of existing higher order polymorphic theorem provers
+         \end{itemize}
+
+         It is therefore aimed at being practically useful, as a result it is not complete [ref to example in the paper where we explain that?]. 
+
     \item basic idea of the algorithm 
     \item overview of the paper
 \end{itemize}
@@ -40,7 +51,18 @@ TODO:
 % target page number: 2-4
 \section{High level algorithm}
 
-Mathematical description of the algorithm. Set notation and implicit loops.
+We consider a problem \(P\) to be a set of clauses \(C_1, \dots, C_n\).
+
+Algorithm :
+\begin{itemize}
+    \item Let \(F\) be the set of all function symbols in \(P\).
+    \item We consider \(M\) a map from the function symbols of \(F\) to the set of monomorphic type arguments with which the function symbol is instantiated \(P\) [unclear]
+
+    For instance if \(f^{a \rightarrow b}\) occurs in \(P\) (with \(a\) and \(b\) monomorphic types) then, \(a \rightarrow b \in M(f) \).
+    \item We consider \(P\) a map from the function symbols of \(F\) to the set of non-monomorphic type arguments with which the function symbol is instantiated in \(P\). [still somewhat unclear] This map is additionally paramatrised by the clause in which the function symbol is instantiated.
+
+    This is important because type arguments are quantified at the clause level. 
+\end{itemize}
 
 % target page number: 2-4
 \section{Low level algorithm}
