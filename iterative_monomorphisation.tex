@@ -1,6 +1,9 @@
 \documentclass{article}
 
 \usepackage{soul}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
 
 \setlength{\parindent}{0pt}
 
@@ -26,19 +29,28 @@ TODO:
 % target page number: 2-2.5
 \section{Introduction}
 \begin{itemize}
-    \item context and motivation (automatic theorem proving, better performance)
-       Automatic theorem provers have many applications, and are particularly useful in assisting in the elaboration of formal proofs. Speed is one of the main limitations of the use of theorem provers in this application. For instance, when used as a backend to a proof assistant a prover can often be expected to run for no more than a few seconds for a given instance of a problem.
-    \item what we are trying to do (monomorphisation)
+    \item context and motivation (automatic theorem proving, better performance)\\
+       Automatic theorem provers have many applications, and are particularly useful as backends to proof assistants. Speed is one of the main limitations of the use of theorem provers in this setting. Indeed, a prover can often be expected to run for no more than a few seconds for a given instance of a problem.
+    \item what we are trying to do (monomorphisation)\\
        This paper presents a method, first introduced in [sacha's thesis] [as far as i know], that allows for higher order polymorphic problems to be approximated monomorphically. This algorithm aims to acheive the following:
          \begin{itemize}
             \item allow for existing higher order monomorphic theorem provers to be extended [albeit very crudely] to higher order polymorphic languages
-            \item improve the performance of existing higher order polymorphic theorem provers
+            \item improve the performance of existing higher order polymorphic theorem provers on polymorphic problems
          \end{itemize}
 
-         It is therefore aimed at being practically useful, as a result it is not complete [ref to example in the paper where we explain that?]. 
+         It is therefore aimed at being practically useful, to this end it forgoes completeness, this is the main theoretical weakness of this algorithm [the real main theoretical weakness would be that it is unsound, but i've done my best to make sure it isn't]. [ref to example in the paper where we explain that?]. 
 
-    \item basic idea of the algorithm 
+    \item basic idea of the algorithm\\
+    A given problem is seen as a set of polymorphic clauses. Type variables of the problem are quantified at the clause level. The type arguments of the problem are collected and the uninstantiated type arguments are matched against those that contain no type variables. This yields new type arguments, both uninstantitated and ground, the process is then repeated making use of the newly derived type arguments.
+
+    The new type arguments we have derived are used to create new clauses, without type variables. This can lead to the same clause being duplicated as one type variable may be instantiated in a number of different ways.
+    A final step is required as the newly generated problem, whilst it does not contain type variables, still makes use of type constructors. Those can be transparently erased through the mangling method presented in [relevant paper].
     \item overview of the paper
+
+       This paper will first give some general background and set the theoretical framework that will be considered. Then a high-level mathematical description of the algorithm will be presented. A more detailed low-level description of the algorithm corresponding to its actual implementation will follow.
+       Finally the implementation and evaluation of the algorithm in zippeposition [the award winning higher order theorem prover] [introduce zipperposition before] will be discussed.
+
+       [issue with intro: focuses too much on theoretical aspect bearly mentions zipp or implementation]
 \end{itemize}
 
 % target page number: 0.5-1.5
@@ -48,6 +60,28 @@ TODO:
     \item Language, TF1 (might be TH1 or something else)
 \end{itemize}
 
+We want our starting logic to be:
+\begin{itemize}
+    \item higher order, we want lambdas, function symbols and the rest
+    \item polymorphic, we want atomic types, type constructors and type variables
+\end{itemize}
+and our target logic to be the same thing without polymorphism make sure to point out that the mono logic is a subset of the poly logic
+
+
+Definitions we need:
+\begin{itemize}
+   \item type arguments (probably part of logic)
+   \item ground and uninstantiated types 
+   \item vaguely define what matching is
+   \item define what a term, literal and clause are
+\end{itemize}
+Need to define ground types: without type variables and uninstantiated types, with type variables
+
+DO NOT use monomorphic to mean ground and polymorphic to mean uninstantiated, everything is polymorphic until we mangle, then everything is monomorphic
+
+Unsure of which terms to use: ground and non-ground, or instantiated and uninstantiated or both
+
+
 % target page number: 2-4
 \section{High level algorithm}
 
@@ -56,18 +90,173 @@ We consider a problem \(P\) to be a set of clauses \(C_1, \dots, C_n\).
 Algorithm :
 \begin{itemize}
     \item Let \(F\) be the set of all function symbols in \(P\).
-    \item We consider \(M\) a map from the function symbols of \(F\) to the set of monomorphic type arguments with which the function symbol is instantiated \(P\) [unclear]
+    \item Given a function symbol \(f \in F\), we define \(I(f)\), the set of all ground type arguments that are passed to \(f\) is instantiated in \(P\).
 
-    For instance if \(f^{a \rightarrow b}\) occurs in \(P\) (with \(a\) and \(b\) monomorphic types) then, \(a \rightarrow b \in M(f) \).
-    \item We consider \(P\) a map from the function symbols of \(F\) to the set of non-monomorphic type arguments with which the function symbol is instantiated in \(P\). [still somewhat unclear] This map is additionally paramatrised by the clause in which the function symbol is instantiated.
+    For instance if \(f^{a \rightarrow b}\) occurs in \(P\) (with \(a\) and \(b\) ground types) then, \(a \rightarrow b \in I(f) \).
+ \item Given a clause \(C \in P\) and a function symbol \(f \in C\), we define \(U(C, f)\), the set of uninstantiated type arguments passed to \(f\) in \(C\). 
 
-    This is important because type arguments are quantified at the clause level. 
+    It is important to paramatrise \(U\) with the clause of \(f\) because type variables are quantified at the clause level. This is not necessary for \(I\) because its type arguments do not contain type variables. [seems a sufficient explanation, if not clear expand further]
+
 \end{itemize}
+
+A single iteration of the algorithm will do the following:
+\begin{itemize}
+   \item For each clause \(C_i \in P\) and each function symbol \(f \in C_i\), we consider the uninstantiated type arguments \(U(C_i, f)\) these type type arguments are matched against all ground type arguments of \(I(f)\)
+
+      [We have an issue: we don't define matching, don't think we need to go into a lot of detail]
+
+      Each such matching may return a substitution which instantiates one or more type variables of \(C_i\) (that would also be in the type arguments of \(f\))
+
+   \item Once all such substiutions have been computed. We apply each substitutions to the clause they were generated from. These newly created clauses are added to the problem and the newly generated type arguments (both ground and uninstantiated) will be added to \(U\) and \(I\) to be used for the next iteration.
+\end{itemize}
+
+After a set number of iterations, we take all clauses with no type variables and mangle their types [see relevant paper]. The resulting set of clauses forms a problem \(P'\) with the following properties:
+\begin{itemize}
+   \item \(P'\) is monomorphic [rewrite that as saying \(P'\) is in the monomorphic fragment of the original logic]
+   \item if a contradiction can be derived from \(P'\), then a contradiction can be derived from \(P\) [soundness]
+   \item we do not however have the converse [completeness]
+\end{itemize}
+
+[Add 2 or 3 examples to show how it works and explain why we have the different steps]
+
+\subsection{Incompleteness}
+
+This algorithm is incomplete, this is because not all possible instantiations of the type variables are generated.
+Consider the following problem: 
+\begin{align*}
+   P = \{ & \forall \alpha. f \langle \alpha \rightarrow int \rangle \\
+          & \forall \alpha. f \langle nat \rightarrow \alpha \rangle \}
+\end{align*}
+
+The algorithm only matches against ground type arguments. This is the case because polymorphic type unification is undecidable (quick ref) and whilst interweaving phases of unification with the current algorithm would be theoretically possible, it would most likely not be of any practical use. Indeed, the current implementation is already very explosive and generating new substitutions with a costly unification procedure would most likely not result in any improvements.
+
+
+Therefore, the previous problem would never generate the clause \(f \langle nat \rightarrow int \rangle\).
+[having trouble finishing the example, we would need for the nat int clause to allow finding a contradiction
+without allowing the other two to generate this one]
 
 % target page number: 2-4
 \section{Low level algorithm}
 
+This section presents a more detailed description of the algorithm, it follows closely the implementation in zipperposition.
+
+The main departures from the high-level description of the algorithm are the following:
+\begin{itemize}
+   \item the substitutions are directly applied to the type arguments, instead of the clauses, this also dispenses us from having to re-extract the type arguments from the clauses at each iteration
+   \item as a result the new clauses are generated only once all substitutions have been computed and iteratively applied to the various type arguments
+   \item some operations are performed in a different order to avoid useless computations [which ones?]
+   \item bounds are used at almost all steps of the process as the various enumerations are highly explosive and require bounds in order to be useful in a practical setting
+   \item the various sets are implemented with maps
+\end{itemize}
+
 Precise algo description (pseudo code). Explicit loops, and bounds.
+
+[note that this is all very ugly and will be made beautiful once the first draft (of the algorithm) is done]
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+\Function{Type arguments}{Literal: lit}
+
+   \State let \(t_1\), \(t_2\) be the terms of \(lit\)
+   \State recursively collect the function symbols and associated type arguments of \(t_1\) and \(t_2\) into a list of pairs
+
+   \State \Comment Going a bit fast here, probably need to reformulate, but don't go into details, it's not important
+
+   \State \Return the list of (function symbol, type argument) pairs
+
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+\Function{Initialisation}{Problem: P}
+   \ForAll{clause \(C \in P\)}
+      \ForAll{literal \(lit \in C\)}
+         \State let fun\_sym\_ty\_args = Type arguments(lit)
+         \ForAll{(fun\_sym, ty\_args) in fun\_sym\_ty\_args}
+         \If{\( \forall ty\_arg \in ty\_args. is\_ground(ty\_arg)\) }
+
+            \State \(I(fun\_sym) = I(fun\_sym) \cup \{ty\_args\}\)
+
+         \Else
+
+            \State \(U(C, fun\_sym) = U(C, fun\_sym) \cup \{ty\_args\}\)
+
+         \EndIf
+         \EndFor
+      \EndFor
+   \EndFor
+
+   \State \Return (I, U)
+
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+\Function{Iteration}{Problem: P, U, I, S}
+   \ForAll {clause \(C \in P\)}
+      \ForAll {\(fun\_sym, ty\_args \in U(C)\)}
+      \ForAll {\( ty\_args' \in I(fun\_sym) \)}
+            
+            \State \(subst = match(ty\_args, ty\_arg')\)
+
+            \State \Comment the match may fail in which case we simply continue with the loop
+
+            \State \(S(C) = S(C) \cup \{subst\}\)
+         \EndFor
+      \EndFor
+   
+   \EndFor
+
+   \ForAll {clause \(C \in P\)}
+      \ForAll {\(subst \in S(C)\)}
+         \ForAll {\(fun\_symbol, ty\_args \in U(C)\)}
+            \State \(ty\_args' = apply(subst, ty\_args)\)
+
+            \If {\( \forall ty\_arg \in ty\_args'. is\_ground(ty\_arg)\) }
+
+               \State \(I(fun\_sym) = I(fun\_sym) \cup \{ty\_args'\}\)
+            \Else
+
+               \State \(U(C, fun\_sym) = U(C, fun\_sym) \cup \{ty\_args'\}\)
+            \EndIf
+
+         \EndFor
+      \EndFor
+   \EndFor
+
+   \State \Return (I, U, S)
+
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+\Function{Generate clauses}{Problem: P, Substitutions: S}
+
+\ForAll {clause \(C \in P\)}
+   \ForAll {\(subst \in S(C)\)}
+      \State \(C' = apply(subst, C)\)
+
+      \If {\(C'\) is ground}
+
+         \State \(P = P \cup \{C'\}\)
+      \EndIf
+
+   \EndFor
+\EndFor
+
+\State \Return \(P\)
+
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 % target page number: 2-4
 \section{Implementation and evaluation}
@@ -80,17 +269,30 @@ Present evaluation method (which problems were used, options used, server charac
 
 Compare the following:
     \begin{itemize}
-        \item no call to e (no monomorphisation)
-        \item call e on start no monomorphisation
-        \item call e (default) no monomorphisation
-        \item call e on start monomorphisation
-        \item call e (default) monomorphisation
-        \item maybe compare a few different bounding heuristics?
+        \item no call to e (no monomorphisation) (using portfolio mode, this serves as reference)
+        \item call e on start
+        \item call e (default) monomorphisation (this is too late)
+        \item call e at 0.05 * timeout
+        \item call e at 0.1 * timeout (may still be too late)
+        \item call e at some time before 0.05 * timeout ?
+        \item different bounds worth trying: give up on the 2000 clause maximum
+              add a floor for polymorphic type args and also a ceiling 
+              messa around with multipliers a little bit
+         \item perhaps look into some dynamic bounds
+         \item consider calling a different first order prover
     \end{itemize}
 
 Compare performance with implementation of a similar algorithm (if any).
 
-Maybe compare with implementation of other kinds of monomorphisation algorithms (if appropriate).
+Maybe compare with implementation of other kinds of monomorphisation algorithms (if appropriate). This would require implementing a guards or tags method which could take a while
+
+Comments on results:
+So far from the testing i've done:
+\begin{itemize}
+   \item we gain very few problems compared to portfolio mode, this is very bad
+   \item these can easily be lost with small bound adjustments, this isn't great but not catastriphic
+   \item almost all newly gained problems are solved with the 0.0 e call, this one is catastrophic
+\end{itemize}
 
 % target page number: 0.5-1
 \section{Related work}
