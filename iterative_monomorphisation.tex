@@ -1,6 +1,8 @@
 \documentclass{article}
 
 \usepackage{soul}
+\usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{amsmath}
@@ -11,14 +13,12 @@
 
 TODO:
    \begin{itemize}
-      \item \st{contact Sascha Boehme about authorship}
 
-      \item it seems that dissentangling the implemntation and low-level description is quite difficult and may not be appropriate, it might be best to instead fuse low-level description and implementation and then split the section into substitution generation and clause generation
-      
-      \item are there any implementation of this (or comparable) algorithm in that have been evaluated?
+      \item split the problems in two sets one for refining parameters and bounds, the other for overall evaluation
       \item read mangling paper in detail
+      \item set up tables
       \item finish implementation (mostly there)
-      \item test and evaluate implementation (well on the way)
+      \item test and evaluate implementation 
       \item (can wait) merge implementation (review code with active contributor(s) beforehand)
       \item find pretty inline setup for pseudo code
       \item (in order) write high/low level algo
@@ -44,7 +44,8 @@ TODO:
 
          It is therefore aimed at being practically useful, to this end it forgoes completeness, this is the main theoretical weakness of this algorithm [the real main theoretical weakness would be that it is unsound, but i've done my best to make sure it isn't]. [ref to example in the paper where we explain that?]. 
 
-    \item basic idea of the algorithm\\
+    \item basic idea of the algorithm
+
     A given problem is seen as a set of polymorphic clauses. Type variables of the problem are quantified at the clause level. The type arguments of the problem are collected and the uninstantiated type arguments are matched against those that contain no type variables. This yields new type arguments, both uninstantitated and ground, the process is then repeated making use of the newly derived type arguments.
 
     The new type arguments we have derived are used to create new clauses, without type variables. This can lead to the same clause being duplicated as one type variable may be instantiated in a number of different ways.
@@ -59,6 +60,9 @@ TODO:
 
 % target page number: 0.5-1.5
 \section{Background}
+
+[Start out by mentionning popular type encodings, such as tags and gards, explain the interest of this method]
+Why we didn't implement the types / guards method: in part because it relies on inferences on types that are given in Isabelle but we would have had to do ourselves
 
 \begin{itemize}
     \item Language, TF1 (might be TH1 or something else)
@@ -146,8 +150,11 @@ Consider the following problem [note that we need a consistent notation for type
 The algorithm only matches against ground type arguments. This is the case because polymorphic type unification is undecidable (quick ref) and whilst interweaving phases of unification with the current algorithm would be theoretically possible, it would most likely not be of any practical use. Indeed, the current implementation is already very explosive and generating new substitutions with a costly unification procedure would most likely not result in any improvements.
 
 
-Therefore, the previous problem would never instantiate a clause, despite the problem becoming trvially contradictory if the the last clause and any of the first two are instantiated.
+The previous problem would therefore never instantiate a clause, despite the problem becoming trvially contradictory if the the last clause and any of the first two are instantiated.
 
+
+Furthermore, the finite number of iterations of the algorithm consitutes an additional source of incompleteness in practice.
+[find example that would require a list list list int to be solved but only allow such a type to be generated after 3 iterations]
 % target page number: 2-4
 \section{Low level algorithm}
 
@@ -166,7 +173,7 @@ Precise algo description (pseudo code). Explicit loops, and bounds.
 
 [note that this is all very ugly and will be made beautiful once the first draft (of the algorithm) is done]
 
-\begin{algorithm}
+\begin{algorithm}[tbh]
 \begin{algorithmic}[1]
 \Function{Type arguments}{Literal: lit}
 
@@ -182,7 +189,7 @@ Precise algo description (pseudo code). Explicit loops, and bounds.
 \end{algorithm}
 
 
-\begin{algorithm}
+\begin{algorithm}[tbh]
 \begin{algorithmic}[1]
 \Function{Initialisation}{Problem: P}
    \ForAll{clause \(C \in P\)}
@@ -208,8 +215,10 @@ Precise algo description (pseudo code). Explicit loops, and bounds.
 \end{algorithmic}
 \end{algorithm}
 
+This function is very basic and simply gathers all the type arguments of the various function symbols of the problem and sorts them depending on whether they are ground or not.
 
-\begin{algorithm}
+
+\begin{algorithm}[tbh]
 \begin{algorithmic}[1]
 \Function{Iteration}{Problem: P, U, I, S}
    \ForAll {clause \(C \in P\)}
@@ -250,14 +259,14 @@ Precise algo description (pseudo code). Explicit loops, and bounds.
 \end{algorithm}
 In the zipperposition implemntation this iteration procedure is limited by several bounds. The number of new type arguments that can be generated for each function symbol is limited by user-defined bounds. These bounds can be defined proportionally. Additionally, the number of new type arguments can be limited at the clause level. In both cases, the bounds for the new ground type arguments and non-ground type arguments can be set independently.
 
-A consequences of these bounds is that in order to avoid unecessary computations, the program will iteratively apply substitutions until either the ground or non-ground bound is reached. Then substitutions can be discarded depending on whether they instantiate or not a given set of type arguments
+A consequences of these bounds is that in order to avoid unecessary computations, the program will iteratively apply substitutions until either the ground or non-ground bound is reached. Then substitutions can be discarded depending on whether they instantiate a given set of type arguments or not.
 
 Additionally, there are bounds for the number of substitutions that are generated.
 
 [So far, after more or less blind experimentation, I've settled on severely limiting new non-ground type arguments because they used to balloon out of control, whilst the growth in ground type arguments is more manageable]
 [It's also worth suggesting the possibility of a more sophisticated implementation that could allow for dynamic bounds]
 
-\begin{algorithm}
+\begin{algorithm}[tbh]
 \begin{algorithmic}[1]
 \Function{Instantiate clause}{Clause: C, Substitutions S}
 
@@ -296,7 +305,7 @@ This function differs from the implementation in a significant way, indeed, thro
 
 What the previous function does is essentially going through the tree of possible substitutions that instantiate the clause and collecting all possible instantiations. This is extremely explosive, and a hard cap on the number of clauses we want to generate is almost indispensable for any implementation.
 
-\begin{algorithm}
+\begin{algorithm}[tbh]
 \begin{algorithmic}[1]
 \Function{Generate clauses}{Problem: P, Substitutions: S}
 
@@ -305,14 +314,22 @@ What the previous function does is essentially going through the tree of possibl
    \State \(P = P \cup new\_clauses\)
 \EndFor
 
-\State \Return \(P\)
+\State \(P' = \emptyset \)
+
+\ForAll {clause \(C \in P\)}
+   \If{\(C\) is ground}
+      \State \(P' = P' \cup \{mangle(C)\}\)
+   \EndIf
+\EndFor
+
+\State \Return \(P'\)
 
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
 
 % target page number: 2-4
-\section{Implementation and evaluation}
+\section{Evaluation}
 
 Introduce context of zipperposition (do it in intro or background?).
 
@@ -326,37 +343,25 @@ Provide complete list of problems explain which ones we excluded and why: for so
 
 Compare the following:
     \begin{itemize}
-        \item no call to e (no monomorphisation) (using portfolio mode, this serves as reference)
-        \item call e on start
-        \item call e (default) monomorphisation (this is too late)
-        \item call e at 0.05 * timeout
-        \item call e at 0.1 * timeout (may still be too late)
-        \item call e at some time before 0.05 * timeout ?
-        \item different bounds worth trying: give up on the 2000 clause maximum
-              add a floor for polymorphic type args and also a ceiling 
-              messa around with multipliers a little bit
-         \item perhaps look into some dynamic bounds
-         \item consider calling a different first order prover
+        \item e on original portfolio mode
+        \item e with original portfolio mode and monomorphisation
+        \item adjusted portforlio mode 
+
+        \item when e is called
+        \item using zipp only as monomorphiser (passing the result to E, vampire, satallax, leo3)
+
+        \item test different bounds
     \end{itemize}
 
-Compare performance with implementation of a similar algorithm (if any).
-
-Maybe compare with implementation of other kinds of monomorphisation algorithms (if appropriate). This would require implementing a guards or tags method which could take a while
-
-Comments on results:
-So far from the testing i've done:
-\begin{itemize}
-   \item we gain very few problems compared to portfolio mode, this is very bad especially since we only look at polymorphic problems, where this algorithm should shine at least in proportional terms
-   \item these can easily be lost with small bound adjustments, this isn't great but not catastriphic
-   \item almost all newly gained problems are solved with the 0.0 e call, this one is catastrophic
-\end{itemize}
 
 % target page number: 0.5-1
 \section{Related work}
 
 \begin{itemize}
-    \item that part of Sascha Boehme's thesis (Proving Theorems of Higher-Order Logic with SMT Solvers)
-    \item How to Encode Polymorphic Types Safely and Efﬁciently
+    \item part of Sascha Boehme's thesis (Proving Theorems of Higher-Order Logic with SMT Solvers)
+    \item How to Encode Polymorphic Types Safely and Efﬁciently, section 4
+
+    \item Expressing polymorphic types in a many-sorted language
     \item Encoding Monomorphic and Polymorphic Types
 \end{itemize}
 
@@ -364,9 +369,6 @@ So far from the testing i've done:
 \section{Conclusion}
 
 % summary 
-In conclusion, this paper has given a theoretical and practical description of an iterative monomorphisation algorithm. The practical description gives some insights on how it may be efficiently implemented. Additionally, its implementation in zipperposition demonstrates its practical feasibility.
-
-However, the evaluation of this implementation against the TPTP benchmarks show dissapointing results in light of the efficiency of similar ideas in other frameworks. Indeed, zipperposition can only solve a handful of additional problems thanks to monomorphisation. Despite these issues, a refinment of the existing implementation paired with a better choice of bounds and options may allow for an improvement in results [decent enough to warrant having spent so much time on it]
 
 % Future avenues
 
