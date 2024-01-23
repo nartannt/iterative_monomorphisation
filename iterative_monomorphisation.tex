@@ -1,6 +1,7 @@
 \documentclass{article}
 
 \usepackage{soul}
+\usepackage{caption}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{algorithm}
@@ -328,6 +329,8 @@ What the previous function does is essentially going through the tree of possibl
 \end{algorithmic}
 \end{algorithm}
 
+\break
+
 % target page number: 2-4
 \section{Evaluation}
 
@@ -353,6 +356,68 @@ Compare the following:
         \item test different bounds
     \end{itemize}
 
+\break
+
+\begin{center}
+\captionof{table}{Bounds and options to test}
+\begin{tabular}{ccccc}
+   \toprule
+   \multicolumn{5}{c}{monomorphisation point (steps)} \\
+   0 & 25 & 50 & 100 & 200 \\
+   \midrule
+   \multicolumn{4}{c}{new clauses multiplier} \\
+   1.0 & 1.5 & 2.0 & 3.0 \\
+   \midrule
+   \multicolumn{3}{c}{total new clauses cap} \\
+   2000 & 5000 & none\\
+   \midrule
+   \multicolumn{4}{c}{loop number} \\
+   2 & 3 & 4 & 5 \\
+   \midrule
+   \multicolumn{5}{c}{monomorphisation point (steps)} \\
+   0 & 25 & 50 & 100 & 200 \\
+
+   \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}
+\captionof{table}{Monomorphisation to the service of Zipperposition?}
+\begin{tabular}{lccc}
+   \toprule
+   &portfolio classic & portfolio monomorphisation & custom portfolio \\
+   \midrule
+   bounds  & -  & - & - \\
+   bounds2 & - & - & - \\
+   bounds3 & - & - & - \\
+   bounds4 & - & - & - \\
+   bounds5 & - & - & - \\
+
+   \bottomrule
+\end{tabular}
+\end{center}
+
+\bigskip
+\bigskip
+\bigskip
+
+\begin{center}
+\captionof{table}{Monomorphisation as an alternative to native polymorphism?}
+\begin{tabular}{lccccccccc}
+   \toprule
+   & \multicolumn{2}{c}{E}   & \multicolumn{2}{c}{Vampire} &\multicolumn{2}{c}{Leo3} & \multicolumn{2}{c}{Satallax} \\
+   \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+   & native & mono & native & mono & native & mono & native & mono\\
+   \midrule
+   bounds  & - & - & - & - & - & - & - & - \\
+   bounds' & - & - & - & - & - & - & - & - \\
+   bounds* & - & - & - & - & - & - & - & - \\
+   bounds? & - & - & - & - & - & - & - & - \\
+   \bottomrule
+\end{tabular}
+\end{center}
+
+\break
 
 % target page number: 0.5-1
 \section{Related work}
