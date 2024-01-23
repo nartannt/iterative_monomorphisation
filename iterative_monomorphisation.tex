@@ -8,28 +8,7 @@
 \usepackage{algpseudocode}
 \usepackage{amsmath}
 
-\setlength{\parindent}{0pt}
-
 \begin{document}
-
-TODO:
-   \begin{itemize}
-
-      \item split the problems in two sets one for refining parameters and bounds, the other for overall evaluation
-      \item read mangling paper in detail
-      \item set up tables
-      \item finish implementation (mostly there)
-      \item test and evaluate implementation 
-      \item (can wait) merge implementation (review code with active contributor(s) beforehand)
-      \item find pretty inline setup for pseudo code
-      \item (in order) write high/low level algo
-      \item write implementation and evaluation
-      \item write background
-      \item write related work
-      \item write conclusion
-      \item write intro
-      \item reread, spellcheck ...
-    \end{itemize}
 
 % target page number: 2-2.5
 \section{Introduction}
@@ -329,6 +308,8 @@ What the previous function does is essentially going through the tree of possibl
 \end{algorithmic}
 \end{algorithm}
 
+Implementation in Zipperposition.
+
 \break
 
 % target page number: 2-4
@@ -358,55 +339,6 @@ Compare the following:
 
 \break
 
-\begin{center}
-\captionof{table}{Bounds and options to test}
-\begin{tabular}{cccccc}
-   \toprule
-   \multicolumn{5}{c}{monomorphisation point (steps)} \\
-   0 & 25 & 50 & 100 & (200) \\
-   \midrule
-   \multicolumn{4}{c}{new clauses multiplier} \\
-   1.0 & 1.5 & 2.0 & (3.0) \\
-   \midrule
-   \multicolumn{3}{c}{total new clauses cap} \\
-   2000 & 5000 & none\\
-   \midrule
-   \multicolumn{4}{c}{loop number} \\
-   2 & 3 & 4 & 5 \\
-   \midrule
-   \multicolumn{5}{c}{monomorphisation point (steps)} \\
-   0 & 25 & 50 & 100 & (200) \\
-   \midrule
-   \multicolumn{5}{c}{e-timeout} \\
-   2.0 & 5.0 & 10.0 & 15.0 & no timeout \\
-   \midrule
-   \multicolumn{3}{c}{new poly ty arg limit per fun sym multiplier} \\
-   0 & 0.5 & 1.0  \\
-   \midrule
-   \multicolumn{3}{c}{new poly ty arg limit per fun sym floor} \\
-   0 & 2 & 5  \\
-   \midrule
-   \multicolumn{3}{c}{new poly ty arg limit per fun sym cap} \\
-   10 & 20 & 50  \\
-   \midrule
-   \multicolumn{5}{c}{new mono ty arg limit per fun sym multiplier} \\
-   0..5 & 1.0 & 1.5 & 2.0 & (3.0)\\
-   \midrule
-   \multicolumn{5}{c}{new mono ty arg limit per fun sym floor} \\
-   0 & 2 & 5 & 7 & 10\\
-   \midrule
-   \multicolumn{4}{c}{new mono ty arg limit per fun sym cap} \\
-   10 & 20 & 50 & 100  \\
-   \midrule
-   \multicolumn{3}{c}{monomorphising subst per clause} \\
-   2 & 5 & 7  \\
-   \midrule
-   \multicolumn{5}{c}{subst per clause (total, split 50/50)} \\
-   1000 & 2000 & 5000 & 10000 & 15000  \\
-
-   \bottomrule
-\end{tabular}
-\end{center}
 
 We ignore the following bounds: ty var limit per clause, subst per ty var, limiting the new type args per clause
 
