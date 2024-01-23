@@ -342,41 +342,38 @@ Compare the following:
 
 We ignore the following bounds: ty var limit per clause, subst per ty var, limiting the new type args per clause
 
-\begin{center}
-\captionof{table}{Monomorphisation to the service of Zipperposition?}
-\begin{tabular}{lccc}
-   \toprule
-   &portfolio classic & portfolio monomorphisation & custom portfolio \\
-   \midrule
-   bounds  & -  & - & - \\
-   bounds2 & - & - & - \\
-   bounds3 & - & - & - \\
-   bounds4 & - & - & - \\
-   bounds5 & - & - & - \\
+\subsection{Parameter optimisation}
 
+\subsection{Monomorphisation as preprocessor}
+
+\begin{table}[h]
+\caption{Evaluation of native polymorphism vs.\ monomorphisation}
+\centering\begin{tabular}{@{}lccc@{}}
+   \toprule
+   & Native & Mono & Union \\
+   \midrule
+   E  &   & 0 & 0 \\
+   Leo-III & 0 & 0 & 0 \\
+   Satallax &  & 0 & 0 \\
+   Vampire & 0 & 0 & 0 \\
+   Zipperposition & 0 & 0 & 0 \\[1.5\jot]
+   Total & 0 & 0 & 0 \\
    \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
-\bigskip
-\bigskip
-\bigskip
+\subsection{E as Zipperposition backend}
 
-\begin{center}
-\captionof{table}{Monomorphisation as an alternative to native polymorphism?}
-\begin{tabular}{lccccccccc}
+\begin{table}[h]
+\caption{Evaluation of Zipperposition without E vs. with E}
+\centering\begin{tabular}{@{}lccc@{}}
    \toprule
-   & \multicolumn{2}{c}{E}   & \multicolumn{2}{c}{Vampire} &\multicolumn{2}{c}{Leo3} & \multicolumn{2}{c}{Satallax} \\
-   \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
-   & native & mono & native & mono & native & mono & native & mono\\
+   & without E & with E & Union \\
    \midrule
-   bounds  & - & - & - & - & - & - & - & - \\
-   bounds' & - & - & - & - & - & - & - & - \\
-   bounds* & - & - & - & - & - & - & - & - \\
-   bounds? & - & - & - & - & - & - & - & - \\
+   Zipperposition & 0 & 0 & 0 \\
    \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 \break
 
