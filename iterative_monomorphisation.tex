@@ -3,74 +3,77 @@
 \usepackage{soul}
 \usepackage{caption}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{multirow}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{amsmath}
+\usepackage{authblk}
 
 \begin{document}
 
+\title{Iterative Monomorphisation}
+\author{Jasmin Blanchette, Sascha B\"ohme, Tanguy Bozec}
+\affil{[add affiliation]}
+\date{[date]}
+\maketitle
+\begin{abstract}
+   [Write abstract]
+\end{abstract}
+
+
 % target page number: 2-2.5
 \section{Introduction}
-\begin{itemize}
-    \item context and motivation (automatic theorem proving, better performance)\\
-       Automatic theorem provers have many applications, and are particularly useful as backends to proof assistants. Speed is one of the main limitations of the use of theorem provers in this setting. Indeed, a prover can often be expected to run for no more than a few seconds for a given instance of a problem.
-    \item what we are trying to do (monomorphisation)\\
-       This paper presents a method, first introduced in [sacha's thesis] [as far as i know], that allows for higher order polymorphic problems to be approximated monomorphically. This algorithm aims to acheive the following:
-         \begin{itemize}
-            \item allow for existing higher order monomorphic theorem provers to be extended [albeit very crudely] to higher order polymorphic languages
-            \item improve the performance of existing higher order polymorphic theorem provers on polymorphic problems
-         \end{itemize}
+%context and motivation (automatic theorem proving, better performance)\\
+Automatic theorem provers have many applications, and are particularly useful as backends to proof assistants. Speed is one of the main limitations of the use of theorem provers in this setting. Indeed, a prover can often be expected to run for no more than a few seconds for a given instance of a problem.
 
-         It is therefore aimed at being practically useful, to this end it forgoes completeness, this is the main theoretical weakness of this algorithm [the real main theoretical weakness would be that it is unsound, but i've done my best to make sure it isn't]. [ref to example in the paper where we explain that?]. 
+%what we are trying to do (monomorphisation)\\
+This paper presents an iterative method, first introduced in [sacha's thesis], that allows for higher order polymorphic problems to be approximated monomorphically. This algorithm aims to acheive the following:
+   \begin{itemize}
+      \item allow for existing higher order monomorphic theorem provers to be extended to higher order polymorphic languages
+      \item improve the performance of existing higher order polymorphic theorem provers on polymorphic problems
+   \end{itemize}
 
-    \item basic idea of the algorithm
+It is therefore aimed at being practically useful, to this end it forgoes completeness, this is the main theoretical weakness of this algorithm.
 
-    A given problem is seen as a set of polymorphic clauses. Type variables of the problem are quantified at the clause level. The type arguments of the problem are collected and the uninstantiated type arguments are matched against those that contain no type variables. This yields new type arguments, both uninstantitated and ground, the process is then repeated making use of the newly derived type arguments.
+%basic idea of the algorithm
 
-    The new type arguments we have derived are used to create new clauses, without type variables. This can lead to the same clause being duplicated as one type variable may be instantiated in a number of different ways.
-    A final step is required as the newly generated problem, whilst it does not contain type variables, still makes use of type constructors. Those can be transparently erased through the mangling method presented in [relevant paper].
-    \item overview of the paper
+A given problem is seen as a set of polymorphic clauses. Type variables of the problem are quantified at the clause level. The type arguments of the problem are collected and the uninstantiated type arguments are matched against those that contain no type variables. This yields new type arguments, both uninstantitated and ground, the process is then repeated making use of the newly derived type arguments.
 
-       This paper will first give some general background and set the theoretical framework that will be considered. Then a high-level mathematical description of the algorithm will be presented. A more detailed low-level description of the algorithm corresponding to its actual implementation will follow.
-       Finally the implementation and evaluation of the algorithm in zippeposition [the award winning higher order theorem prover] [introduce zipperposition before] will be discussed.
+The new type arguments that have been derived are used to create new clauses, without type variables.
+    A final step is required as the newly generated problem, whilst it does not contain type variables, still makes use of type constructors. Those can be transparently erased through the mangling method presented in [encoding monomorphic and polymorphic types].
 
-       [issue with intro: focuses too much on theoretical aspect bearly mentions zipp or implementation]
-\end{itemize}
+%overview of the paper
+
+This paper will first give some general background and describe the logical framework. Then a high-level mathematical description of the algorithm will be presented. A more detailed low-level description of the algorithm corresponding to its actual implementation will follow.
+       Finally, an evaluation of the algorithm's implementation in zippeposition will be discussed.
 
 % target page number: 0.5-1.5
 \section{Background}
 
-[Start out by mentionning popular type encodings, such as tags and gards, explain the interest of this method]
-Why we didn't implement the types / guards method: in part because it relies on inferences on types that are given in Isabelle but we would have had to do ourselves
+% mention alternatives, (guards, tags) and current implementation in Isabelle
 
-\begin{itemize}
-    \item Language, TF1 (might be TH1 or something else)
-\end{itemize}
+Language: TF1  %TH1?
 
 We want our starting logic to be:
 \begin{itemize}
-    \item higher order, we want lambdas, function symbols and the rest
-    \item polymorphic, we want atomic types, type constructors and type variables
+    \item higher order
+    \item polymorphic: we want atomic types, type constructors and universally quantified type variables
 \end{itemize}
-and our target logic to be the same thing without polymorphism make sure to point out that the mono logic is a subset of the poly logic
+our target logic to be the same thing except we foregoe type constructors and type variables 
+we want our target logic to be a subset of the starting logic
 
 
-Definitions we need:
+Definitions :
 \begin{itemize}
-   \item type arguments (probably part of logic)
-   \item ground and uninstantiated types 
-   \item vaguely define what matching is
-   \item define what a term, literal and clause are
+   \item type arguments % part of the logic
+   \item ground and uninstantiated types %monomorphic and polymorphic
+   \item matching % being overly precise probably uncecessary
+   \item term, literal, clause  % also part logic
 \end{itemize}
-Need to define ground types: without type variables and uninstantiated types, with type variables
-
-DO NOT use monomorphic to mean ground and polymorphic to mean uninstantiated, everything is polymorphic until we mangle, then everything is monomorphic
-
-Unsure of which terms to use: ground and non-ground, or instantiated and uninstantiated or both
-
 
 % target page number: 2-4
+% needs to be re-written
 \section{High level algorithm}
 
 We consider a problem \(P\) to be a set of clauses \(C_1, \dots, C_n\).
@@ -108,14 +111,9 @@ After a set number of iterations, we take all clauses with no type variables and
 [Add 2 or 3 examples to show how it works and explain why we have the different steps]
 
 \subsection{Soundness}
-[this isn't an actual proof, more of a justification, mostly a joke in its present form]
-Soundness of the algorithm follows from the fact that the resulting clauses are obtained by directly instantiating universally quantified type variable of the initial clauses. Then we rely upon the soundness of mangling [include reference].
+Soundness of the algorithm follows from the fact that the resulting clauses are obtained by directly instantiating universally quantified type variable of the initial clauses.
 
-\subsection{Multiple type arguments}
-Comment that a function symbol with multiple type arguments will often see them instantiated one at a time per iteration. Conclude that it may be beneficial to remove clauses with function symbols with too many uninstantiated type arguments. Nuance that if the more there are such symbols, the more likely we are to generate substitutions that instantiate several type arguments at a time. Note that in practice setting a type variable limit changes nothing.
-[more tests needed for showing that
-[need to add a couple of tests to show that]
-[maybe this section doesn't belong here, probably better in the low level section]
+Then we rely upon the soundness of mangling [encoding mono and poly ty].
 
 \subsection{Incompleteness}
 
@@ -134,11 +132,12 @@ The previous problem would therefore never instantiate a clause, despite the pro
 
 
 Furthermore, the finite number of iterations of the algorithm consitutes an additional source of incompleteness in practice.
-[find example that would require a list list list int to be solved but only allow such a type to be generated after 3 iterations]
+%find example that would require a list list list int to be solved but only allow such a type to be generated after 3 iterations
+
 % target page number: 2-4
 \section{Low level algorithm}
 
-This section presents a more detailed description of the algorithm, it follows closely the implementation in zipperposition.
+This section presents a more detailed description of the algorithm, it follows closely the implementation in Zipperposition.
 
 The main departures from the high-level description of the algorithm are the following:
 \begin{itemize}
@@ -148,10 +147,6 @@ The main departures from the high-level description of the algorithm are the fol
    \item bounds are used at almost all steps of the process as the various enumerations are highly explosive and require bounds in order to be useful in a practical setting
    \item the various sets are implemented with maps
 \end{itemize}
-
-Precise algo description (pseudo code). Explicit loops, and bounds.
-
-[note that this is all very ugly and will be made beautiful once the first draft (of the algorithm) is done]
 
 \begin{algorithm}[tbh]
 \begin{algorithmic}[1]
@@ -237,14 +232,11 @@ This function is very basic and simply gathers all the type arguments of the var
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-In the zipperposition implemntation this iteration procedure is limited by several bounds. The number of new type arguments that can be generated for each function symbol is limited by user-defined bounds. These bounds can be defined proportionally. Additionally, the number of new type arguments can be limited at the clause level. In both cases, the bounds for the new ground type arguments and non-ground type arguments can be set independently.
+In the Zipperposition implemntation this iteration procedure is limited by several bounds. The number of new type arguments that can be generated for each function symbol is limited by user-defined bounds. These bounds can be defined proportionally. Additionally, the number of new type arguments can be limited at the clause level. In both cases, the bounds for the new ground type arguments and non-ground type arguments can be set independently.
 
 A consequences of these bounds is that in order to avoid unecessary computations, the program will iteratively apply substitutions until either the ground or non-ground bound is reached. Then substitutions can be discarded depending on whether they instantiate a given set of type arguments or not.
 
 Additionally, there are bounds for the number of substitutions that are generated.
-
-[So far, after more or less blind experimentation, I've settled on severely limiting new non-ground type arguments because they used to balloon out of control, whilst the growth in ground type arguments is more manageable]
-[It's also worth suggesting the possibility of a more sophisticated implementation that could allow for dynamic bounds]
 
 \begin{algorithm}[tbh]
 \begin{algorithmic}[1]
@@ -281,7 +273,6 @@ Additionally, there are bounds for the number of substitutions that are generate
 \end{algorithm}
 This function differs from the implementation in a significant way, indeed, through experimentation it was found that the generated clauses were far more likely to be solved by E if the substitutions that are combined to instantiate the clause were derived from the same iteration. In practice, we therefore store the iteration at which each substition is generated and at the instantiation phase only apply substitutions from the same iteration.
 
-[need to make a handful of tests to check that]
 
 What the previous function does is essentially going through the tree of possible substitutions that instantiate the clause and collecting all possible instantiations. This is extremely explosive, and a hard cap on the number of clauses we want to generate is almost indispensable for any implementation.
 
@@ -310,29 +301,19 @@ What the previous function does is essentially going through the tree of possibl
 
 Implementation in Zipperposition.
 
-\break
-
 % target page number: 2-4
 \section{Evaluation}
 
-Introduce context of zipperposition (do it in intro or background?).
-
-Explain how the final bounds were chosen (i liked the way those numbers looked)
-
-Present evaluation method (which problems were used, options used, server characteristics ect...)
-
-
-
-Provide complete list of problems explain which ones we excluded and why: for some it was lack of axiom files, a handful of others were simply too large
+% Provide complete list of problems explain which ones were excluded and why
 
 Compare the following:
     \begin{itemize}
-        \item e on original portfolio mode
-        \item e with original portfolio mode and monomorphisation
+        \item E on original portfolio mode
+        \item E with original portfolio mode and monomorphisation
         \item adjusted portforlio mode 
 
-        \item when e is called
-        \item using zipp only as monomorphiser (passing the result to E, vampire, satallax, leo3)
+        \item when E is called
+        \item using zipp only as monomorphiser (passing the result to E, Vampire, Satallax, Leo-III)
 
         \item test different bounds
     \end{itemize}
@@ -344,9 +325,110 @@ We ignore the following bounds: ty var limit per clause, subst per ty var, limit
 
 \subsection{Parameter optimisation}
 
+Considering the total number of parameters, it would be impractical to exhaustively test all option combinations. Consequently, options have been grouped together into sets of 2 or 3 options that will be more thouroughly tested. Two options will be part of the same group if it is deemed likely that a change in one of the options will significantly impact how much a change in the second option will affect the overall results.
+
+The first two groups of options are natural as they affect how many new monomorphic and polymorphic type arguments are generated respectively for each function symbol at each iteration. These options are closely linked and must be set together if they are to be relevant.
+
+During an iteration, for each function symbol (for each clause in the polymorphic case), the number of newly generated type arguments is determined by this formula:
+\( \min(\text{cap}, \max(\text{floor}, \text{multiplier} \times \text{number of type arguments})) \)
+
+The multiplier allows for a controlled increase of the number of type arguments, relative to the size of the problem whilst the floor prevents some function symbols seeing no new type arguments if the multiplier is too low.
+The cap acts as a final limit in the case the explosion is too fast despite the multiplier bound.
+
+\begin{table}[H]
+\caption{Monomorphic type argument generation}
+\centering\begin{tabular}{@{}llc*{9}{>{\centering\arraybackslash}p{1.5em}}@{}}
+   && \multicolumn{3}{c}{floor 1} & \multicolumn{3}{c}{floor 3} & \multicolumn{3}{c}{floor 9}\\
+   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+   && \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier}\\
+   && 0.0 & 1.0 & 2.0 & 0.0 & 1.0 & 2.0 & 0.0 & 1.0 & 2.0\\
+   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+   \multirow{4}{1em}{cap}
+   & \multicolumn{1}{l|}{25} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{50} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   &\multicolumn{1}{l|}{100} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   &\multicolumn{1}{l|}{none}& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\end{tabular}
+\end{table}
+
+\bigskip
+\bigskip
+
+If the floor and multiplier are set to 0 and 0.0, no new polymorphic type arguments will be generated, as a result the cap will be irrelevant.
+
+\begin{table}[H]
+\caption{Polymorphic type argument generation}
+\centering\begin{tabular}{@{}llc*{9}{>{\centering\arraybackslash}p{1.5em}}@{}}
+   && \multicolumn{3}{c}{floor 0} & \multicolumn{3}{c}{floor 3} & \multicolumn{3}{c}{floor 6}\\
+   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+   && \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier}\\
+   && 0.0 & 0.5 & 1.0 & 0.0 & 0.5 & 1.0 & 0.0 & 0.5 & 1.0\\
+   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+   \multirow{4}{1em}{cap}
+   & \multicolumn{1}{l|}{10} & \multirow{4}{1em}{0} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{20}  && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   &\multicolumn{1}{l|}{50}  && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   &\multicolumn{1}{l|}{none} && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\end{tabular}
+\end{table}
+
+This table groups two bounds that directly affect the number of clauses generated, a first one that allows at most a number of new clauses equal to ``multiplier" times the original number of clauses. And the cap that gives an absolute bound over the total number of clauses generated.
+
+The choice to also include e-timeout in this table is due to the fact that E being successful in solving a monomorphised problem in a certain time limit is highly dependent on the number of clauses it is given.
+
+\begin{table}[H]
+\caption{Clause generation}
+\centering\begin{tabular}{@{}llc*{9}{>{\centering\arraybackslash}p{1.5em}}@{}}
+   && \multicolumn{3}{c}{500 cap} & \multicolumn{3}{c}{2000 cap} & \multicolumn{3}{c}{no cap}\\
+   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+   && \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier}\\
+   && 1.0 & 2.0 & 3.0 & 1.0 & 2.0 & 3.0 & 1.0 & 2.0 & 3.0\\
+   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
+   \multirow{4}{4.2em}{e-timeout}
+   & \multicolumn{1}{l|}{1 s} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{5 s} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   &\multicolumn{1}{l|}{10 s} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   &\multicolumn{1}{l|}{none} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Substitution generation}
+\centering\begin{tabular}{@{}llc*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
+   \toprule
+   & & \multicolumn{4}{c}{mono subst per clause}\\
+   & & 2 & 5 & 7 & 10\\
+   \cmidrule(lr){3-6}
+   \multirow{4}{4.1em}{subst cap}
+   & \multicolumn{1}{l|}{50}   & 0 & 0 & 0 & 0\\
+   & \multicolumn{1}{l|}{100}  & 0 & 0 & 0 & 0\\
+   & \multicolumn{1}{l|}{500}  & 0 & 0 & 0 & 0\\
+   & \multicolumn{1}{l|}{none} & 0 & 0 & 0 & 0\\
+   
+   \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Substitution generation}
+\centering\begin{tabular}{@{}llc*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
+   \toprule
+   & & \multicolumn{4}{c}{e call step}\\
+   & & 0 & 15 & 45 & 90\\
+   \cmidrule(lr){3-6}
+   \multirow{4}{3.3em}{loop nb}
+   & \multicolumn{1}{l|}{2} & 0 & 0 & 0 & 0\\
+   & \multicolumn{1}{l|}{3} & 0 & 0 & 0 & 0\\
+   & \multicolumn{1}{l|}{4} & 0 & 0 & 0 & 0\\
+   & \multicolumn{1}{l|}{5} & 0 & 0 & 0 & 0\\
+   
+   \bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Monomorphisation as preprocessor}
 
-\begin{table}[h]
+\begin{table}[ht]
 \caption{Evaluation of native polymorphism vs.\ monomorphisation}
 \centering\begin{tabular}{@{}lccc@{}}
    \toprule
@@ -364,7 +446,7 @@ We ignore the following bounds: ty var limit per clause, subst per ty var, limit
 
 \subsection{E as Zipperposition backend}
 
-\begin{table}[h]
+\begin{table}[ht]
 \caption{Evaluation of Zipperposition without E vs. with E}
 \centering\begin{tabular}{@{}lccc@{}}
    \toprule
