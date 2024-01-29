@@ -343,11 +343,11 @@ The cap acts as a final limit in the case the explosion is too fast despite the 
    && \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier}\\
    && 0.0 & 1.0 & 2.0 & 0.0 & 1.0 & 2.0 & 0.0 & 1.0 & 2.0\\
    \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
-   \multirow{4}{1em}{cap}
-   & \multicolumn{1}{l|}{25} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{50} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   &\multicolumn{1}{l|}{100} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   &\multicolumn{1}{l|}{none}& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   \multirow{4}{1.5em}{cap}
+   & \multicolumn{1}{l|}{25}   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{50}   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{100}  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{none} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 \end{tabular}
 \end{table}
 
@@ -364,17 +364,18 @@ If the floor and multiplier are set to 0 and 0.0, no new polymorphic type argume
    && \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier}\\
    && 0.0 & 0.5 & 1.0 & 0.0 & 0.5 & 1.0 & 0.0 & 0.5 & 1.0\\
    \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
-   \multirow{4}{1em}{cap}
-   & \multicolumn{1}{l|}{10} & \multirow{4}{1em}{0} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{20}  && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   &\multicolumn{1}{l|}{50}  && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   &\multicolumn{1}{l|}{none} && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   \multirow{4}{1.5em}{cap}
+   & \multicolumn{1}{l|}{10} 
+   & \multirow{4}{1em}{0}       & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{20}   && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{50}   && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{none} && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 \end{tabular}
 \end{table}
 
 This table groups two bounds that directly affect the number of clauses generated, a first one that allows at most a number of new clauses equal to ``multiplier" times the original number of clauses. And the cap that gives an absolute bound over the total number of clauses generated.
 
-The choice to also include e-timeout in this table is due to the fact that E being successful in solving a monomorphised problem in a certain time limit is highly dependent on the number of clauses it is given.
+The choice to also include e-timeout in this table is due to the fact that E being successful in solving a monomorphised problem in a certain time limit has been observed to be highly dependent on the number of clauses it is given.
 
 \begin{table}[H]
 \caption{Clause generation}
@@ -385,19 +386,21 @@ The choice to also include e-timeout in this table is due to the fact that E bei
    && 1.0 & 2.0 & 3.0 & 1.0 & 2.0 & 3.0 & 1.0 & 2.0 & 3.0\\
    \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
    \multirow{4}{4.2em}{e-timeout}
-   & \multicolumn{1}{l|}{1 s} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{5 s} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   &\multicolumn{1}{l|}{10 s} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   &\multicolumn{1}{l|}{none} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{1 s}  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{5 s}  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{10 s} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & \multicolumn{1}{l|}{none} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 \end{tabular}
 \end{table}
 
+The next table gathers the bounds linked to substitutions generation, the first one limits the number of monomorphising substitutions that are generated per clause during the final phase. The second one gives an absolute cap on the overall number of substitutions generated at each clause during the type argument generation.
+
 \begin{table}[H]
 \caption{Substitution generation}
-\centering\begin{tabular}{@{}llc*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
+\centering\begin{tabular}{@{}lc*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
-   & & \multicolumn{4}{c}{mono subst per clause}\\
-   & & 2 & 5 & 7 & 10\\
+   && \multicolumn{4}{c}{mono subst}\\
+   && 2 & 5 & 7 & 10\\
    \cmidrule(lr){3-6}
    \multirow{4}{4.1em}{subst cap}
    & \multicolumn{1}{l|}{50}   & 0 & 0 & 0 & 0\\
@@ -409,12 +412,15 @@ The choice to also include e-timeout in this table is due to the fact that E bei
 \end{tabular}
 \end{table}
 
+This last table attempts to determine which are the best bounds related to the depth at which the monomorphisation problem is run as well as how long zipperposition is allowed to run before monomorphisation (and the subsequent call of E) is ran.
+
 \begin{table}[H]
-\caption{Substitution generation}
-\centering\begin{tabular}{@{}llc*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
+% not super happy with caption
+\caption{Problem depth}
+\centering\begin{tabular}{@{}lc*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
-   & & \multicolumn{4}{c}{e call step}\\
-   & & 0 & 15 & 45 & 90\\
+   && \multicolumn{4}{c}{E call step}\\
+   && 0 & 15 & 45 & 90\\
    \cmidrule(lr){3-6}
    \multirow{4}{3.3em}{loop nb}
    & \multicolumn{1}{l|}{2} & 0 & 0 & 0 & 0\\
@@ -422,6 +428,56 @@ The choice to also include e-timeout in this table is due to the fact that E bei
    & \multicolumn{1}{l|}{4} & 0 & 0 & 0 & 0\\
    & \multicolumn{1}{l|}{5} & 0 & 0 & 0 & 0\\
    
+   \bottomrule
+\end{tabular}
+\end{table}
+
+
+% We have two options, either use the current tables and make a tiered old/new test structure, or test everyting at once, which would be possible (32 options vs 16 with the tiered approach) however the results would most likely not be very pleasant to present, a highlight would have to be selected.
+
+% final tests to make sure everything plays well together
+\begin{table}[H]
+\caption{Problem size refinement}
+\centering\begin{tabular}{@{}llcccc@{}}
+   \toprule
+   && \multicolumn{4}{c}{substitution generation} \\
+   && \multicolumn{2}{c}{old} & \multicolumn{2}{c}{new} \\
+   \cmidrule(lr){3-4} \cmidrule(lr){5-6}
+   && \multicolumn{2}{c}{problem depth} &\multicolumn{2}{c}{problem depth}\\
+   && old & new & old & new \\
+   \cmidrule(lr){3-4} \cmidrule(lr){5-6}
+   \multirow{2}{7.5em}{clause generation}
+   &\multicolumn{1}{l|}{old} & 0  & 0 & 0 & 0 \\
+   &\multicolumn{1}{l|}{new} & 0  & 0 & 0 & 0\\
+   \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Type argument generation refinement}
+\centering\begin{tabular}{@{}llcc@{}}
+   \toprule
+   && \multicolumn{2}{c}{mono bounds} \\
+   && old & new\\
+   \cmidrule(r){3-4}
+   \multirow{2}{5.4em}{poly bounds}
+   &\multicolumn{1}{l|}{old} & 0  & 0 \\
+   &\multicolumn{1}{l|}{new} & 0  & 0 \\
+   \bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{table}[H]
+\caption{Final bounds refinement}
+\centering\begin{tabular}{@{}llcc@{}}
+   \toprule
+   && \multicolumn{2}{c}{type argument bounds} \\
+   && old & new\\
+   \cmidrule(r){3-4}
+   \multirow{2}{5.4em}{problem size bounds}
+   &\multicolumn{1}{l|}{old} & 0  & 0 \\
+   &\multicolumn{1}{l|}{new} & 0  & 0 \\
    \bottomrule
 \end{tabular}
 \end{table}
