@@ -1,52 +1,87 @@
-\documentclass{article}
+\documentclass[]{ceurart}
+
+\sloppy
 
 \usepackage{soul}
 \usepackage{caption}
 \usepackage{booktabs}
+\usepackage{listings}
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{amsmath}
-\usepackage{authblk}
+
+\lstset{breaklines=true}
 
 \begin{document}
 
+
+\copyrightyear{2024}
+\copyrightclause{standard copyright text (cc logo is placeholder)}
+
+\conference{not a conference}
+
 \title{Iterative Monomorphisation}
-\author{Jasmin Blanchette, Sascha B\"ohme, Tanguy Bozec}
-\affil{[add affiliation]}
-\date{[date]}
-\maketitle
+
+\author[1]{Jasmin Blanchette}[%
+email=jasmin.blanchette@ifi.lmu.de,
+url=https://www.tcs.ifi.lmu.de/mitarbeiter/jasmin-blanchette_de.html,
+]
+\address[1]{lmu}
+\author{Sascha B\"ohme}[%
+email=sascha.boehme@posteo.de,
+]
+\author[1,2]{Tanguy Bozec}[%
+email=tanguy.bozec@ens-paris-saclay.fr,
+]
+\address[2]{ens paris-saclay}
+
+
 \begin{abstract}
-   [Write abstract]
+   Monomorphisation methods allows the extension of some higher order theorem provers to polymorphic logics. This paper presents an iterative approach to monomorphisation with two main goals: creating an efficient method for extending higher order provers to polymorphic logics and improving the performance of existing provers which natively support polymorphism.
+   
+   We first present the iterative monomorphisation algorithm, before discussing its implementation in Zipperposition. Finally, the implementation is evaluated as an alternative to native polymorphism and as a means to strenghen Zipperposition.
 \end{abstract}
 
+\begin{keywords}
+   monomorphisation\sep
+   higher order theorem proving \sep
+   automatic theorem proving
+\end{keywords}
+
+\maketitle
 
 % target page number: 2-2.5
 \section{Introduction}
-%context and motivation (automatic theorem proving, better performance)\\
+
+This paper will first give some general background and describe the logical framework. Then a high-level description of the algorithm will be presented. A more detailed low-level description of the algorithm corresponding to its implementation will follow.
+
+Finally, the evaluation of the implementation in Zipperposition will be discussed.
+
+\subsection{Context and motivation}
 Automatic theorem provers have many applications, and are particularly useful as backends to proof assistants. Speed is one of the main limitations of the use of theorem provers in this setting. Indeed, a prover can often be expected to run for no more than a few seconds for a given instance of a problem.
 
 %what we are trying to do (monomorphisation)\\
-This paper presents an iterative method, first introduced in [sacha's thesis], that allows for higher order polymorphic problems to be approximated monomorphically. This algorithm aims to acheive the following:
+This paper presents an iterative method, first introduced in [sacha's thesis], that allows for higher order polymorphic problems to be approximated monomorphically. This is done through the generation of increasingly large monomorphic type arguments which are used to instantiate the type variables of the original problem. This algorithm aims to acheive the following:
    \begin{itemize}
       \item allow for existing higher order monomorphic theorem provers to be extended to higher order polymorphic languages
-      \item improve the performance of existing higher order polymorphic theorem provers on polymorphic problems
+      \item improve the performance of existing native polymorphic theorem provers on polymorphic problems
    \end{itemize}
 
-It is therefore aimed at being practically useful, to this end it forgoes completeness, this is the main theoretical weakness of this algorithm.
+It is therefore aimed at being practically useful, to this end it forgoes completeness, this is the main theoretical weakness of this approach.
 
 %basic idea of the algorithm
+\subsection{Algorithm overview}
+A given problem is seen as a set of polymorphic clauses. Type variables of the problem are quantified at the clause level. The type arguments of the problem are collected and the polymorphic type arguments are matched against the monomorphic ones. This yields new type arguments, both polymorphic and monomorphic, the process is then repeated making use of the newly derived type arguments.
 
-A given problem is seen as a set of polymorphic clauses. Type variables of the problem are quantified at the clause level. The type arguments of the problem are collected and the uninstantiated type arguments are matched against those that contain no type variables. This yields new type arguments, both uninstantitated and ground, the process is then repeated making use of the newly derived type arguments.
+After a set number of iterations, the newly derived type arguments are used to create new monomorphic clauses, by instantiating their type variables.
+   
+A final step is required as the newly generated problem, whilst it does not contain type variables, still makes use of type constructors. Those can be erased through the mangling method presented in [encoding monomorphic and polymorphic types].
 
-The new type arguments that have been derived are used to create new clauses, without type variables.
-    A final step is required as the newly generated problem, whilst it does not contain type variables, still makes use of type constructors. Those can be transparently erased through the mangling method presented in [encoding monomorphic and polymorphic types].
 
-%overview of the paper
+\subsection{Evaluation results}
 
-This paper will first give some general background and describe the logical framework. Then a high-level mathematical description of the algorithm will be presented. A more detailed low-level description of the algorithm corresponding to its actual implementation will follow.
-       Finally, an evaluation of the algorithm's implementation in zippeposition will be discussed.
 
 % target page number: 0.5-1.5
 \section{Background}
@@ -67,7 +102,7 @@ we want our target logic to be a subset of the starting logic
 Definitions :
 \begin{itemize}
    \item type arguments % part of the logic
-   \item ground and uninstantiated types %monomorphic and polymorphic
+   \item monomorphic and polymorphic types
    \item matching % being overly precise probably uncecessary
    \item term, literal, clause  % also part logic
 \end{itemize}
@@ -148,7 +183,7 @@ The main departures from the high-level description of the algorithm are the fol
    \item the various sets are implemented with maps
 \end{itemize}
 
-\begin{algorithm}[tbh]
+\begin{algorithm}[th]
 \begin{algorithmic}[1]
 \Function{Type arguments}{Literal: lit}
 
@@ -335,19 +370,20 @@ During an iteration, for each function symbol (for each clause in the polymorphi
 The multiplier allows for a controlled increase of the number of type arguments, relative to the size of the problem whilst the floor prevents some function symbols seeing no new type arguments if the multiplier is too low.
 The cap acts as a final limit in the case the explosion is too fast despite the multiplier bound.
 
-\begin{table}[H]
+\begin{table}[th]
 \caption{Monomorphic type argument generation}
-\centering\begin{tabular}{@{}llc*{9}{>{\centering\arraybackslash}p{1.5em}}@{}}
-   && \multicolumn{3}{c}{floor 1} & \multicolumn{3}{c}{floor 3} & \multicolumn{3}{c}{floor 9}\\
-   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
-   && \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier}\\
-   && 0.0 & 1.0 & 2.0 & 0.0 & 1.0 & 2.0 & 0.0 & 1.0 & 2.0\\
-   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
-   \multirow{4}{1.5em}{cap}
-   & \multicolumn{1}{l|}{25}   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{50}   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{100}  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{none} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\centering\begin{tabular}{@{}l*{9}{>{\centering\arraybackslash}p{1.1em}}@{}}
+   \toprule
+   & \multicolumn{3}{c}{floor 1} & \multicolumn{3}{c}{floor 3} & \multicolumn{3}{c}{floor 9}\\
+   \cmidrule(l){2-10}
+   \multirow{2}{2em}{cap} & \multicolumn{9}{c}{multiplier} \\
+      & 0.0 & 1.0 & 2.0 & 0.0 & 1.0 & 2.0 & 0.0 & 1.0 & 2.0\\
+    \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
+    25   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    50   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    100  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    none & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    \bottomrule
 \end{tabular}
 \end{table}
 
@@ -356,20 +392,20 @@ The cap acts as a final limit in the case the explosion is too fast despite the 
 
 If the floor and multiplier are set to 0 and 0.0, no new polymorphic type arguments will be generated, as a result the cap will be irrelevant.
 
-\begin{table}[H]
+\begin{table}[th]
 \caption{Polymorphic type argument generation}
-\centering\begin{tabular}{@{}llc*{9}{>{\centering\arraybackslash}p{1.5em}}@{}}
-   && \multicolumn{3}{c}{floor 0} & \multicolumn{3}{c}{floor 3} & \multicolumn{3}{c}{floor 6}\\
-   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
-   && \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier}\\
-   && 0.0 & 0.5 & 1.0 & 0.0 & 0.5 & 1.0 & 0.0 & 0.5 & 1.0\\
-   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
-   \multirow{4}{1.5em}{cap}
-   & \multicolumn{1}{l|}{10} 
-   & \multirow{4}{1em}{0}       & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{20}   && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{50}   && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{none} && 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\centering\begin{tabular}{@{}l*{9}{>{\centering\arraybackslash}p{1.1em}}@{}}
+   \toprule
+   & \multicolumn{3}{c}{floor 0} & \multicolumn{3}{c}{floor 3} & \multicolumn{3}{c}{floor 6}\\
+   \cmidrule(l){2-10}
+   \multirow{2}{2em}{cap} & \multicolumn{9}{c}{multiplier} \\
+      & 0.0 & 0.5 & 1.0 & 0.0 & 0.5 & 1.0 & 0.0 & 0.5 & 1.0 \\
+    \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
+    10   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    20   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    50   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    none & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    \bottomrule
 \end{tabular}
 \end{table}
 
@@ -377,36 +413,35 @@ This table groups two bounds that directly affect the number of clauses generate
 
 The choice to also include e-timeout in this table is due to the fact that E being successful in solving a monomorphised problem in a certain time limit has been observed to be highly dependent on the number of clauses it is given.
 
-\begin{table}[H]
+\begin{table}[th]
 \caption{Clause generation}
-\centering\begin{tabular}{@{}llc*{9}{>{\centering\arraybackslash}p{1.5em}}@{}}
-   && \multicolumn{3}{c}{500 cap} & \multicolumn{3}{c}{2000 cap} & \multicolumn{3}{c}{no cap}\\
-   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
-   && \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier} & \multicolumn{3}{c}{multiplier}\\
-   && 1.0 & 2.0 & 3.0 & 1.0 & 2.0 & 3.0 & 1.0 & 2.0 & 3.0\\
-   \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
-   \multirow{4}{4.2em}{e-timeout}
-   & \multicolumn{1}{l|}{1 s}  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{5 s}  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{10 s} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-   & \multicolumn{1}{l|}{none} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\centering\begin{tabular}{@{}l*{9}{>{\centering\arraybackslash}p{1.1em}}@{}}
+   \toprule
+   & \multicolumn{3}{c}{cap 500} & \multicolumn{3}{c}{cap 2000} & \multicolumn{3}{c}{no cap}\\
+   \cmidrule(l){2-10}
+   \multirow{2}{4em}{E timeout} & \multicolumn{9}{c}{multiplier} \\
+      & 1.0 & 2.0 & 3.0 & 1.0 & 2.0 & 3.0 & 1.0 & 2.0 & 3.0 \\
+    \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
+    2s   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    5s   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    10s  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    none & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    \bottomrule
 \end{tabular}
 \end{table}
-
 The next table gathers the bounds linked to substitutions generation, the first one limits the number of monomorphising substitutions that are generated per clause during the final phase. The second one gives an absolute cap on the overall number of substitutions generated at each clause during the type argument generation.
 
-\begin{table}[H]
+\begin{table}[th]
 \caption{Substitution generation}
-\centering\begin{tabular}{@{}lc*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
+\centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1em}}@{}}
    \toprule
-   && \multicolumn{4}{c}{mono subst}\\
-   && 2 & 5 & 7 & 10\\
-   \cmidrule(lr){3-6}
-   \multirow{4}{4.1em}{subst cap}
-   & \multicolumn{1}{l|}{50}   & 0 & 0 & 0 & 0\\
-   & \multicolumn{1}{l|}{100}  & 0 & 0 & 0 & 0\\
-   & \multicolumn{1}{l|}{500}  & 0 & 0 & 0 & 0\\
-   & \multicolumn{1}{l|}{none} & 0 & 0 & 0 & 0\\
+   \multirow{2}{4em}{subst cap} & \multicolumn{4}{c}{mono subst}\\
+   & 2 & 5 & 7 & 10\\
+   \midrule
+   50   & 0 & 0 & 0 & 0\\
+   100  & 0 & 0 & 0 & 0\\
+   500  & 0 & 0 & 0 & 0\\
+   none & 0 & 0 & 0 & 0\\
    
    \bottomrule
 \end{tabular}
@@ -414,19 +449,18 @@ The next table gathers the bounds linked to substitutions generation, the first 
 
 This last table attempts to determine which are the best bounds related to the depth at which the monomorphisation problem is run as well as how long zipperposition is allowed to run before monomorphisation (and the subsequent call of E) is ran.
 
-\begin{table}[H]
+\begin{table}[th]
 % not super happy with caption
 \caption{Problem depth}
-\centering\begin{tabular}{@{}lc*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
+\centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1em}}@{}}
    \toprule
-   && \multicolumn{4}{c}{E call step}\\
-   && 0 & 15 & 45 & 90\\
-   \cmidrule(lr){3-6}
-   \multirow{4}{3.3em}{loop nb}
-   & \multicolumn{1}{l|}{2} & 0 & 0 & 0 & 0\\
-   & \multicolumn{1}{l|}{3} & 0 & 0 & 0 & 0\\
-   & \multicolumn{1}{l|}{4} & 0 & 0 & 0 & 0\\
-   & \multicolumn{1}{l|}{5} & 0 & 0 & 0 & 0\\
+   \multirow{2}{3em}{loop nb} & \multicolumn{4}{c}{E call step}\\
+   & 0 & 15 & 45 & 90\\
+   \midrule
+   2 & 0 & 0 & 0 & 0\\
+   3 & 0 & 0 & 0 & 0\\
+   4 & 0 & 0 & 0 & 0\\
+   5 & 0 & 0 & 0 & 0\\
    
    \bottomrule
 \end{tabular}
@@ -436,24 +470,23 @@ This last table attempts to determine which are the best bounds related to the d
 % We have two options, either use the current tables and make a tiered old/new test structure, or test everyting at once, which would be possible (32 options vs 16 with the tiered approach) however the results would most likely not be very pleasant to present, a highlight would have to be selected.
 
 % final tests to make sure everything plays well together
-\begin{table}[H]
+\begin{table}[ht]
 \caption{Problem size refinement}
-\centering\begin{tabular}{@{}llcccc@{}}
+\centering\begin{tabular}{@{}lcccc@{}}
    \toprule
-   && \multicolumn{4}{c}{substitution generation} \\
-   && \multicolumn{2}{c}{old} & \multicolumn{2}{c}{new} \\
-   \cmidrule(lr){3-4} \cmidrule(lr){5-6}
-   && \multicolumn{2}{c}{problem depth} &\multicolumn{2}{c}{problem depth}\\
-   && old & new & old & new \\
-   \cmidrule(lr){3-4} \cmidrule(lr){5-6}
-   \multirow{2}{7.5em}{clause generation}
-   &\multicolumn{1}{l|}{old} & 0  & 0 & 0 & 0 \\
-   &\multicolumn{1}{l|}{new} & 0  & 0 & 0 & 0\\
+   & \multicolumn{4}{c}{substitution generation} \\
+   & \multicolumn{2}{c}{old} & \multicolumn{2}{c}{new} \\
+   \cmidrule(lr){2-5} 
+   \multirow{2}{4.5em}{clause gen} & \multicolumn{4}{c}{problem depth} \\
+   & old & new & old & new \\
+   \cmidrule(lr){2-3} \cmidrule(lr){4-5}
+   old & 0  & 0 & 0 & 0 \\
+   new & 0  & 0 & 0 & 0\\
    \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[ht]
 \caption{Type argument generation refinement}
 \centering\begin{tabular}{@{}llcc@{}}
    \toprule
@@ -461,14 +494,14 @@ This last table attempts to determine which are the best bounds related to the d
    && old & new\\
    \cmidrule(r){3-4}
    \multirow{2}{5.4em}{poly bounds}
-   &\multicolumn{1}{l|}{old} & 0  & 0 \\
-   &\multicolumn{1}{l|}{new} & 0  & 0 \\
+   &\multicolumn{1}{l}{old} & 0  & 0 \\
+   &\multicolumn{1}{l}{new} & 0  & 0 \\
    \bottomrule
 \end{tabular}
 \end{table}
 
 
-\begin{table}[H]
+\begin{table}[ht]
 \caption{Final bounds refinement}
 \centering\begin{tabular}{@{}llcc@{}}
    \toprule
@@ -476,8 +509,8 @@ This last table attempts to determine which are the best bounds related to the d
    && old & new\\
    \cmidrule(r){3-4}
    \multirow{2}{5.4em}{problem size bounds}
-   &\multicolumn{1}{l|}{old} & 0  & 0 \\
-   &\multicolumn{1}{l|}{new} & 0  & 0 \\
+   &\multicolumn{1}{l}{old} & 0  & 0 \\
+   &\multicolumn{1}{l}{new} & 0  & 0 \\
    \bottomrule
 \end{tabular}
 \end{table}
