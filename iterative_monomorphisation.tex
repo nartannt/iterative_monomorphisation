@@ -31,7 +31,7 @@ email=tanguy.bozec@ens-paris-saclay.fr,
 email=jasmin.blanchette@ifi.lmu.de,
 %url=https://www.tcs.ifi.lmu.de/mitarbeiter/jasmin-blanchette_de.html,
 ]
-\address[1]{Departement d'informatique, École normale supérieure Paris-Saclay, France} % TODO dpt info
+\address[1]{ENS Paris-Saclay, Université Paris-Saclay, France}
 \address[2]{Institute of Informatics, Ludwig-Maximilians-Universität München, Germany}
 
 
@@ -52,11 +52,6 @@ email=jasmin.blanchette@ifi.lmu.de,
 % target page number: 2-2.5
 \section{Introduction}
 
-This paper will first give some general background and describe the logical framework. Then a high-level description of the algorithm will be presented. A more detailed low-level description of the algorithm corresponding to its implementation will follow.
-
-Finally, the evaluation of the implementation in Zipperposition will be discussed.
-
-\subsection{Context and motivation}
 Automatic theorem provers have many applications, and are particularly useful as backends to proof assistants. Speed is one of the main limitations of the use of theorem provers in this setting. Indeed, a prover can often be expected to run for no more than a few seconds for a given instance of a problem.
 
 %what we are trying to do (monomorphisation)\\
@@ -69,15 +64,11 @@ This paper presents an iterative method, first introduced in [sacha's thesis], t
 It is therefore aimed at being practically useful, to this end it forgoes completeness, this is the main theoretical weakness of this approach.
 
 %basic idea of the algorithm
-\subsection{Algorithm overview}
 A given problem is seen as a set of polymorphic clauses. Type variables of the problem are quantified at the clause level. The type arguments of the problem are collected and the polymorphic type arguments are matched against the monomorphic ones. This yields new type arguments, both polymorphic and monomorphic, the process is then repeated making use of the newly derived type arguments.
 
 After a set number of iterations, the newly derived type arguments are used to create new monomorphic clauses, by instantiating their type variables.
    
 A final step is required as the newly generated problem, whilst it does not contain type variables, still makes use of type constructors. Those can be erased through the mangling method presented in [encoding monomorphic and polymorphic types].
-
-
-\subsection{Evaluation results}
 
 
 % target page number: 0.5-1.5
@@ -368,18 +359,19 @@ The multiplier allows for a controlled increase of the number of type arguments,
 The cap acts as a final limit in the case the explosion is too fast despite the multiplier bound.
 
 \begin{table}[th]
-\caption{Monomorphic type argument generation}
+\caption{Evaluation of bounds for monomorphic type argument generation}
 \centering\begin{tabular}{@{}l*{9}{>{\centering\arraybackslash}p{1.1em}}@{}}
    \toprule
-   & \multicolumn{3}{c}{floor 1} & \multicolumn{3}{c}{floor 3} & \multicolumn{3}{c}{floor 9}\\
+   & &&& \multicolumn{3}{c}{floor} \\
+   & \multicolumn{3}{c}{1} & \multicolumn{3}{c}{3} & \multicolumn{3}{c}{9}\\
    \cmidrule(l){2-10}
-   \multirow{2}{2em}{cap} & \multicolumn{9}{c}{multiplier} \\
-      & 0.0 & 1.0 & 2.0 & 0.0 & 1.0 & 2.0 & 0.0 & 1.0 & 2.0\\
+   & &&& \multicolumn{3}{c}{multiplier} \\
+   \multirow{1}{2em}{cap} & 0 & 1 & 2 & 0 & 1 & 2 & 0 & 1 & 2\\
     \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
     25   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     50   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     100  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    none & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    \(\infty\) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     \bottomrule
 \end{tabular}
 \end{table}
@@ -387,22 +379,39 @@ The cap acts as a final limit in the case the explosion is too fast despite the 
 \bigskip
 \bigskip
 
-If the floor and multiplier are set to 0 and 0.0, no new polymorphic type arguments will be generated, as a result the cap will be irrelevant.
+If the floor and multiplier are set to 0 and 0, no new polymorphic type arguments will be generated, as a result the cap will be irrelevant.
 
 \begin{table}[th]
-\caption{Polymorphic type argument generation}
+\caption{Evaluation of bounds for polymorphic type argument generation}
 \centering\begin{tabular}{@{}l*{9}{>{\centering\arraybackslash}p{1.1em}}@{}}
    \toprule
-   & \multicolumn{3}{c}{floor 0} & \multicolumn{3}{c}{floor 3} & \multicolumn{3}{c}{floor 6}\\
+   & &&& \multicolumn{3}{c}{floor} \\
+   & \multicolumn{3}{c}{0} & \multicolumn{3}{c}{3} & \multicolumn{3}{c}{6}\\
    \cmidrule(l){2-10}
-   \multirow{2}{2em}{cap} & \multicolumn{9}{c}{multiplier} \\
-      & 0.0 & 0.5 & 1.0 & 0.0 & 0.5 & 1.0 & 0.0 & 0.5 & 1.0 \\
+   & &&& \multicolumn{3}{c}{multiplier} \\
+    \multirow{1}{2em}{cap} & 0 & 0.5 & 1 & 0 & 0.5 & 1 & 0 & 0.5 & 1 \\
     \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
     10   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     20   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    50   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    none & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    40   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    \(\infty\) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[th]
+\caption{Evaluation of bounds for substitution generation}
+\centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1em}}@{}}
+   \toprule
+   & \multicolumn{4}{c}{mono subst}\\
+   \multirow{1}{4em}{subst cap} & 2 & 5 & 7 & 10\\
+   \midrule
+   50   & 0 & 0 & 0 & 0\\
+   100  & 0 & 0 & 0 & 0\\
+   500  & 0 & 0 & 0 & 0\\
+   \(\infty\) & 0 & 0 & 0 & 0\\
+   
+   \bottomrule
 \end{tabular}
 \end{table}
 
@@ -411,106 +420,45 @@ This table groups two bounds that directly affect the number of clauses generate
 The choice to also include e-timeout in this table is due to the fact that E being successful in solving a monomorphised problem in a certain time limit has been observed to be highly dependent on the number of clauses it is given.
 
 \begin{table}[th]
-\caption{Clause generation}
+\caption{Evaluation of bounds directly related to the size of the output problem}
 \centering\begin{tabular}{@{}l*{9}{>{\centering\arraybackslash}p{1.1em}}@{}}
    \toprule
-   & \multicolumn{3}{c}{cap 500} & \multicolumn{3}{c}{cap 2000} & \multicolumn{3}{c}{no cap}\\
+   & &&& \multicolumn{3}{c}{cap} \\
+   & \multicolumn{3}{c}{500} & \multicolumn{3}{c}{2000} & \multicolumn{3}{c}{\(\infty\)}\\
    \cmidrule(l){2-10}
-   \multirow{2}{4em}{E timeout} & \multicolumn{9}{c}{multiplier} \\
-      & 1.0 & 2.0 & 3.0 & 1.0 & 2.0 & 3.0 & 1.0 & 2.0 & 3.0 \\
+   & &&& \multicolumn{3}{c}{multiplier} \\
+    \multirow{1}{5.4em}{E timeout (s)} & 1 & 2 & 3 & 1 & 2 & 3 & 1 & 2 & 3 \\
     \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
-    2s   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    5s   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    10s  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    none & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    2   &   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    5   &   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    10  &   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    \(\infty\)& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     \bottomrule
 \end{tabular}
 \end{table}
 The next table gathers the bounds linked to substitutions generation, the first one limits the number of monomorphising substitutions that are generated per clause during the final phase. The second one gives an absolute cap on the overall number of substitutions generated at each clause during the type argument generation.
 
-\begin{table}[th]
-\caption{Substitution generation}
-\centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1em}}@{}}
-   \toprule
-   \multirow{2}{4em}{subst cap} & \multicolumn{4}{c}{mono subst}\\
-   & 2 & 5 & 7 & 10\\
-   \midrule
-   50   & 0 & 0 & 0 & 0\\
-   100  & 0 & 0 & 0 & 0\\
-   500  & 0 & 0 & 0 & 0\\
-   none & 0 & 0 & 0 & 0\\
-   
-   \bottomrule
-\end{tabular}
-\end{table}
 
 This last table attempts to determine which are the best bounds related to the depth at which the monomorphisation problem is run as well as how long zipperposition is allowed to run before monomorphisation (and the subsequent call of E) is ran.
 
 \begin{table}[th]
 % not super happy with caption
-\caption{Problem depth}
+\caption{Evaluation of parameters indirectly related to the size of the output problem}
 \centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1em}}@{}}
    \toprule
-   \multirow{2}{3em}{loop nb} & \multicolumn{4}{c}{E call step}\\
-   & 0 & 15 & 45 & 90\\
+   & \multicolumn{4}{c}{loop nb} \\
+   \multirow{1}{4.5em}{E call step} & 2 & 3 & 4 & 5\\
    \midrule
-   2 & 0 & 0 & 0 & 0\\
-   3 & 0 & 0 & 0 & 0\\
-   4 & 0 & 0 & 0 & 0\\
-   5 & 0 & 0 & 0 & 0\\
+   0 & 0 & 0 & 0 & 0\\
+   15 & 0 & 0 & 0 & 0\\
+   45 & 0 & 0 & 0 & 0\\
+   90 & 0 & 0 & 0 & 0\\
    
    \bottomrule
 \end{tabular}
 \end{table}
 
 
-% We have two options, either use the current tables and make a tiered old/new test structure, or test everyting at once, which would be possible (32 options vs 16 with the tiered approach) however the results would most likely not be very pleasant to present, a highlight would have to be selected.
-
-% final tests to make sure everything plays well together
-\begin{table}[ht]
-\caption{Problem size refinement}
-\centering\begin{tabular}{@{}lcccc@{}}
-   \toprule
-   & \multicolumn{4}{c}{substitution generation} \\
-   & \multicolumn{2}{c}{old} & \multicolumn{2}{c}{new} \\
-   \cmidrule(lr){2-5} 
-   \multirow{2}{4.5em}{clause gen} & \multicolumn{4}{c}{problem depth} \\
-   & old & new & old & new \\
-   \cmidrule(lr){2-3} \cmidrule(lr){4-5}
-   old & 0  & 0 & 0 & 0 \\
-   new & 0  & 0 & 0 & 0\\
-   \bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[ht]
-\caption{Type argument generation refinement}
-\centering\begin{tabular}{@{}llcc@{}}
-   \toprule
-   && \multicolumn{2}{c}{mono bounds} \\
-   && old & new\\
-   \cmidrule(r){3-4}
-   \multirow{2}{5.4em}{poly bounds}
-   &\multicolumn{1}{l}{old} & 0  & 0 \\
-   &\multicolumn{1}{l}{new} & 0  & 0 \\
-   \bottomrule
-\end{tabular}
-\end{table}
-
-
-\begin{table}[ht]
-\caption{Final bounds refinement}
-\centering\begin{tabular}{@{}llcc@{}}
-   \toprule
-   && \multicolumn{2}{c}{type argument bounds} \\
-   && old & new\\
-   \cmidrule(r){3-4}
-   \multirow{2}{5.4em}{problem size bounds}
-   &\multicolumn{1}{l}{old} & 0  & 0 \\
-   &\multicolumn{1}{l}{new} & 0  & 0 \\
-   \bottomrule
-\end{tabular}
-\end{table}
 
 \subsection{Monomorphisation as preprocessor}
 
