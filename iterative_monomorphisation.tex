@@ -52,6 +52,10 @@ email=jasmin.blanchette@ifi.lmu.de,
 % target page number: 2-2.5
 \section{Introduction}
 
+\cite{mono-trans}
+\cite{expr-poly-types}
+\cite{sb-phd}
+
 Automatic theorem provers have many applications, and are particularly useful as backends to proof assistants. Speed is one of the main limitations of the use of theorem provers in this setting. Indeed, a prover can often be expected to run for no more than a few seconds for a given instance of a problem.
 
 %what we are trying to do (monomorphisation)\\
@@ -391,9 +395,9 @@ If the floor and multiplier are set to 0 and 0, no new polymorphic type argument
    & &&& \multicolumn{3}{c}{multiplier} \\
     \multirow{1}{2em}{cap} & 0 & 0.5 & 1 & 0 & 0.5 & 1 & 0 & 0.5 & 1 \\
     \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
-    10   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    20   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    40   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    10 &   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    20 &   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    40 &   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     \(\infty\) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     \bottomrule
 \end{tabular}
@@ -429,9 +433,9 @@ The choice to also include e-timeout in this table is due to the fact that E bei
    & &&& \multicolumn{3}{c}{multiplier} \\
     \multirow{1}{5.4em}{E timeout (s)} & 1 & 2 & 3 & 1 & 2 & 3 & 1 & 2 & 3 \\
     \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
-    2   &   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    5   &   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    10  &   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    2   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    5   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    10  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     \(\infty\)& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     \bottomrule
 \end{tabular}
@@ -496,19 +500,12 @@ This last table attempts to determine which are the best bounds related to the d
 % target page number: 0.5-1
 \section{Related work}
 
-\begin{itemize}
-    \item part of Sascha Boehme's thesis (Proving Theorems of Higher-Order Logic with SMT Solvers)
-    \item How to Encode Polymorphic Types Safely and Efﬁciently, section 4
-
-    \item Expressing polymorphic types in a many-sorted language
-    \item Encoding Monomorphic and Polymorphic Types
-\end{itemize}
-
 % target page number: 0.5-1
 \section{Conclusion}
 
 % summary 
 
 % Future avenues
+\bibliography{citations}
 
 \end{document}
