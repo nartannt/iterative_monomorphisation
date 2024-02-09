@@ -56,25 +56,27 @@ email=jasmin.blanchette@ifi.lmu.de,
 \cite{expr-poly-types}
 \cite{sb-phd}
 
-Automatic theorem provers have many applications, and are particularly useful as backends to proof assistants. Speed is one of the main limitations of the use of theorem provers in this setting. Indeed, a prover can often be expected to run for no more than a few seconds for a given instance of a problem.
-
 %what we are trying to do (monomorphisation)\\
-This paper presents an iterative method, first introduced in [sacha's thesis], that allows for higher order polymorphic problems to be approximated monomorphically. This is done through the generation of increasingly large monomorphic type arguments which are used to instantiate the type variables of the original problem. This algorithm aims to acheive the following:
+This paper presents an iterative method, first introduced in \cite{sb-phd} (section 2.2.1), that allows for higher order polymorphic problems to be approximated monomorphically. This algorithm aims to achieve the following:
    \begin{itemize}
-      \item allow for existing higher order monomorphic theorem provers to be extended to higher order polymorphic languages
-      \item improve the performance of existing native polymorphic theorem provers on polymorphic problems
+      \item extend higher order theorem provers to polymorphic languages
+      \item improve the performance of existing native polymorphic theorem provers
    \end{itemize}
 
-It is therefore aimed at being practically useful, to this end it forgoes completeness, this is the main theoretical weakness of this approach.
+This algorithm is implemented in Zipperpostion, a higher order polymorphic automatic theorem prover written in OCaml. This implementation allows for the E prover, which does not support polymorphism, to be used as a backend to Zipperposition. The viability of this approach is then evaluated, both as an improvement to Zipperposition and as a means to increase the performance of other provers.
 
+\medskip
 %basic idea of the algorithm
-A given problem is seen as a set of polymorphic clauses. Type variables of the problem are quantified at the clause level. The type arguments of the problem are collected and the polymorphic type arguments are matched against the monomorphic ones. This yields new type arguments, both polymorphic and monomorphic, the process is then repeated making use of the newly derived type arguments.
+The algorithm works as follows:
+we assume problems to be sets of clauses. All type arguments of the problem are collected and the polymorphic type arguments are matched against the monomorphic ones. This yields new type arguments, both polymorphic and monomorphic. The process is then repeated making use of the newly derived type arguments.
 
-After a set number of iterations, the newly derived type arguments are used to create new monomorphic clauses, by instantiating their type variables.
+These iterations are required to generate all 
+
+After a set number of iterations, the new type arguments are used to instantiate type variables, generating new monomorphic clauses.
    
-A final step is required as the newly generated problem, whilst it does not contain type variables, still makes use of type constructors. Those can be erased through the mangling method presented in [encoding monomorphic and polymorphic types].
+Finally, we ``mangle'' the types in the output clauses using the method presented in \cite{mono-trans}, in order to remove type constructors from the output problem.
 
-
+This approach sacrifices completeness for the sake of performance. The loss of completeness occurs at the conceptual level due to the finite number of iterations. It also occurs on the practical level, due to the explosive nature of the procedure, various bounds limit the number of generated clauses.
 % target page number: 0.5-1.5
 \section{Background}
 
