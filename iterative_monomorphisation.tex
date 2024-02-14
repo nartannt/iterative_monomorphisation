@@ -1,6 +1,6 @@
 \documentclass[]{ceurart}
 
-\sloppy
+%\sloppy
 
 \usepackage{soul}
 \usepackage{caption}
@@ -36,9 +36,12 @@ email=jasmin.blanchette@ifi.lmu.de,
 
 
 \begin{abstract}
-   Monomorphisation methods allows the extension of some higher order theorem provers to polymorphic logics. This paper presents an iterative approach to monomorphisation with two main goals: creating an efficient method for extending higher order provers to polymorphic logics and improving the performance of existing provers which natively support polymorphism.
-   
-   We first present the iterative monomorphisation algorithm, before discussing its implementation in Zipperposition. Finally, the implementation is evaluated as an alternative to native polymorphism and as a means to strenghen Zipperposition.
+Monomorphisation makes it possible to extend monormophic provers to support
+polymorphic logics. We propose an iterative approach, which is necessarily
+incomplete but which works well in practice. It is implemented in the
+Zipperposition prover, where it can be used to translate away polymorphism
+before invoking a monomorphic prover. Our empirical evaluation reveals that
+iterative monorphisation is a viable alternative to native polymorphism.
 \end{abstract}
 
 \begin{keywords}
