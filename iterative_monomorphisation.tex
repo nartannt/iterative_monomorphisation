@@ -14,8 +14,11 @@
 
 \lstset{breaklines=true}
 
-\begin{document}
+\newcommand\ty[1]{\textsf{#1}}
+\newcommand\sym[1]{\textsf{#1}}
+\newcommand\var[1]{\mathit{#1}}
 
+\begin{document}
 
 \copyrightyear{2024}
 \copyrightclause{Copyright for this paper by its authors. Use permitted under Creative Commons License Attribution 4.0 International (CC BY 4.0)}
@@ -36,17 +39,12 @@ email=jasmin.blanchette@ifi.lmu.de,
 
 
 \begin{abstract}
-Monomorphisation makes it possible to extend monormophic provers to support
-polymorphic logics. We propose an iterative approach, which is necessarily
-incomplete but which works well in practice. It is implemented in the
-Zipperposition prover, where it can be used to translate away polymorphism
-before invoking a monomorphic prover. Our empirical evaluation reveals that
-iterative monorphisation is a viable alternative to native polymorphism.
+Monomorphisation makes it possible to extend monormophic provers to support polymorphic logics. We propose an iterative approach, which is necessarily incomplete but which works well in practice. It is implemented in the Zipperposition prover, where it can be used to translate away polymorphism before invoking a monomorphic prover. Our empirical evaluation reveals that iterative monorphisation is a viable alternative to native polymorphism.
 \end{abstract}
 
 \begin{keywords}
-   polymorphism\sep
-   higher order logic\sep
+   Polymorphism\sep
+   monomorphism\sep
    automatic theorem proving
 \end{keywords}
 
@@ -55,42 +53,86 @@ iterative monorphisation is a viable alternative to native polymorphism.
 % target page number: 2-2.5
 \section{Introduction}
 
-%\cite{mono-trans}
-%\cite{expr-poly-types}
-%\cite{sb-phd}
+{
+\obeylines
 
-%what we are trying to do (monomorphisation)\\
-This paper presents an iterative method, first introduced in \cite{sb-phd} (section 2.2.1), that allows for higher order polymorphic problems to be approximated monomorphically. This algorithm aims to achieve the following:
-   \begin{itemize}
-      \item extend higher order theorem provers to polymorphic languages
-      \item improve the performance of existing native polymorphic theorem provers
-   \end{itemize}
+  * apps are rank-1 polymorphic, but provers are mono
+  * there's a gap
+  * one solution is to extend the provers to support polymorphism;
+    this was done e.g. for Vampire \cite{xxx}
+  * but this is a lot of work, and needs to be done for every prover
 
-This algorithm is implemented in Zipperpostion, a higher order polymorphic automatic theorem prover written in OCaml. As a result, the E prover, which does not support polymorphism, can be used as a backend to Zipperposition. The viability of this approach is then evaluated, both as an improvement to Zipperposition and as a means to increase the performance of other provers.
+\bigskip
 
-\smallskip
+  * the alternative is to translate polymorphic problems to monomorphic problems
+    * two main approaches:
+      * complete encoding of polymorphism, using guards or tags,
+        as in Blanchette et al.~\cite{xxx} and Bobot et al.~\cite{xxx}
+      * incomplete encoding of polymorphism based on iterative monomorphisation
+        such as introduced by Böhme \cite[Section 2.2.1]{sb-phd}, whereby type
+        variables are heuristically instantiated by concrete types
 
-[sumarry of results]
+\bigskip
 
-\medskip
-%basic idea of the algorithm
-The algorithm works as follows:
-we assume problems to be sets of clauses. All type arguments of the problem are collected and the polymorphic type arguments are matched against the monomorphic ones. This yields new type arguments, both polymorphic and monomorphic. The process is then repeated making use of the newly derived type arguments.
+  * By a type version of Herbrand's theorem, if a set of polymorphic
+    formulas is unsatisfiable, then there exists a finite set of monomorphic
+    instances of the formulas that is also unsatisfiable. However, this
+    finite set cannot be computed \cite{xxx}; hence any approach based on
+    instantiation of type variables is incomplete.
 
-\smallskip
+\bigskip
 
-These iterations are required in order to account for inductively defined types. Consider the type constructor \verb|list| which takes a type argument, if we obtain \verb|list(alpha)| where \verb|alpha| is a type variable, it may be possible to generate the types \verb|list(int)|, \verb|list(list(int))|, ... However because new types are obtained through matching, \verb|list(list(int))| can only be obtained once \verb|list(int)| has already been added to the set of monomorphic types. This example also makes it clear that the set of types that can be generated is infinite, this explains why the number of iterations is bounded.
+  * Böhme's iterative approach is implemented as part of the SMT integration
+    \cite{xxx} in Isabelle/HOL. This implementation is also used by
+    Sledgehammer \cite{xxx} to interface automatic theorem provers based on
+    superposition.
 
-\smallskip
+\bigskip
 
-After a set number of iterations, the new type arguments are used to instantiate the type variables in the problem's clauses, generating new monomorphic clauses.
-   
-Finally, we ``mangle'' the types in the output clauses using the method presented in \cite{mono-trans}, in order to remove type constructors from the output problem.
+  * The main drawback of Böhme's approach is that it is only briefly documented,
+    as a single paragraph in his PhD thesis \cite[Section 2.2.1]{sb-phd}
+  * In this paper, we present an algorithm inspired by his description and
+    implementation (Section~\ref{sec:high-level-algorithm}).
+    * we aimed at mathematical precision, so that people who want to reimplement
+      the algorithm can follow this blueprint
+    * we also show how to bound the algorithm to avoid explosions in practice
+      (Section~\ref{sec:low-level-algorithm}).
+      ``the explosive nature of the procedures requires various bounds which
+      limit the number of type arguments and clauses that are generated.''
 
-This approach sacrifices completeness for the sake of performance. The loss of completeness occurs at the level of the algorithm; a finite number of iterations and at the implementation level; the explosive nature of the procedures requires various bounds which limit the number of type arguments and clauses that are generated.
+}
+
+The algorithm works as follows. We assume problems to be sets of formulas. All type arguments of the problem are collected, and the polymorphic type arguments are matched against the monomorphic ones. This yields new type arguments, both polymorphic and monomorphic. The process is then repeated using the newly derived type arguments.
+
+These iterations are required to account for $n$-ary type constructors. Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(\alpha)$, where $\alpha$ is a type variable, it may be possible to generate the types $\ty{list}(\ty{int})$, $\ty{list}(\ty{list}(\ty{int}))$, etc. However, because new types emerge through matching, $\ty{list}(\ty{list}(\ty{int}))$ can be obtained only once $\ty{list}(\ty{int})$ has already been added to the set of monomorphic types. This example also makes it clear that the set of types that can be generated is infinite.
+
+To keep the number of generated formulas finite, we limit the number of iterations. After the iterations are completed, the new type arguments are used to instantiate the type variables in the problem's formulas, generating new monomorphic clauses. Finally, because monomorphic provers generally do not support $n$-ary type constructors, types must be mangled. For example, the compound type $\ty{list}(\ty{int})$ could be mangled to $\ty{list\_int}$.
+
+We implemented this algorithm in Zipperpostion, a higher order automatic theorem prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E as a backend. Our algorithm makes it possible, for the first time, to use E with polymorphic problems. Moreover, our implementation of the algorithm in Zipperposition can be used as a preprocessor to interface with other stand-alone provers.
+
+Our empirical evaluation on TPTP problems \cite{xxx} attempts to answer three questions (Section~\ref{sec:evaluation}):
+%
+\begin{enumerate}
+\item Is the new Zipperposition with the E backend more successful on polymorphic problems than Zipperposition without backend?
+
+\item How competitive are monomorphic provers on monomorphised polymorphic problems?
+
+\item Is iterative monomophisation more effective than the native polymorphism implemented in polymorphic provers?
+\end{enumerate}
+
+We find that:
+%
+\begin{enumerate}
+\item Zipperposition benefits substantially from the E backend.
+
+\item E with monomorphisation comes close second to the polymorphic prover Vampire.
+
+\item For Leo-III and Vampire, we find that monomorphisation is indeed more effective than native polymorphism.
+\end{enumerate}
 
 % target page number: 0.5-1.5
 \section{Background}
+\label{sec:background}
 
 % mention alternatives, (guards, tags) and current implementation in Isabelle
 
@@ -116,6 +158,7 @@ Definitions :
 % target page number: 2-4
 % needs to be re-written
 \section{High level algorithm}
+\label{sec:high-level-algorithm}
 
 We consider a problem \(P\) to be a set of clauses \(C_1, \dots, C_n\).
 
@@ -177,6 +220,7 @@ Furthermore, the finite number of iterations of the algorithm consitutes an addi
 
 % target page number: 2-4
 \section{Low level algorithm}
+\label{sec:low-level-algorithm}
 
 This section presents a more detailed description of the algorithm, it follows closely the implementation in Zipperposition.
 
@@ -344,6 +388,7 @@ Implementation in Zipperposition.
 
 % target page number: 2-4
 \section{Evaluation}
+\label{sec:evaluation}
 
 % Provide complete list of problems explain which ones were excluded and why
 
@@ -513,9 +558,11 @@ This last table attempts to determine which are the best bounds related to the d
 
 % target page number: 0.5-1
 \section{Related work}
+\label{sec:related-work}
 
 % target page number: 0.5-1
 \section{Conclusion}
+\label{sec:conclusion}
 
 % summary 
 
