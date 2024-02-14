@@ -74,7 +74,7 @@ Monomorphisation makes it possible to extend monormophic provers to support poly
 
 \bigskip
 
-  * By a type version of Herbrand's theorem, if a set of polymorphic
+  * By a type version of compactness, if a set of polymorphic
     formulas is unsatisfiable, then there exists a finite set of monomorphic
     instances of the formulas that is also unsatisfiable. However, this
     finite set cannot be computed \cite{xxx}; hence any approach based on
@@ -108,7 +108,7 @@ These iterations are required to account for $n$-ary type constructors. Consider
 
 To keep the number of generated formulas finite, we limit the number of iterations. After the iterations are completed, the new type arguments are used to instantiate the type variables in the problem's formulas, generating new monomorphic clauses. Finally, because monomorphic provers generally do not support $n$-ary type constructors, types must be mangled. For example, the compound type $\ty{list}(\ty{int})$ could be mangled to $\ty{list\_int}$.
 
-We implemented this algorithm in Zipperpostion, a higher order automatic theorem prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E as a backend. Our algorithm makes it possible, for the first time, to use E with polymorphic problems. Moreover, our implementation of the algorithm in Zipperposition can be used as a preprocessor to interface with other stand-alone provers.
+We implemented this algorithm in Zipperpostion \cite{xxx}, a higher order automatic theorem prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E \cite{xxx} as a backend. Our algorithm makes it possible, for the first time, to use E with polymorphic problems. Moreover, our implementation of the algorithm in Zipperposition can be used as a preprocessor to interface with other stand-alone provers.
 
 Our empirical evaluation on TPTP problems \cite{xxx} attempts to answer three questions (Section~\ref{sec:evaluation}):
 %
@@ -120,14 +120,14 @@ Our empirical evaluation on TPTP problems \cite{xxx} attempts to answer three qu
 \item Is iterative monomophisation more effective than the native polymorphism implemented in polymorphic provers?
 \end{enumerate}
 
-We find that:
+Our findings are as follows:
 %
 \begin{enumerate}
 \item Zipperposition benefits substantially from the E backend.
 
 \item E with monomorphisation comes close second to the polymorphic prover Vampire.
 
-\item For Leo-III and Vampire, we find that monomorphisation is indeed more effective than native polymorphism.
+\item For Leo-III \cite{xxx} and Vampire \cite{xxx}, we find that monomorphisation is indeed more effective than native polymorphism.
 \end{enumerate}
 
 % target page number: 0.5-1.5
