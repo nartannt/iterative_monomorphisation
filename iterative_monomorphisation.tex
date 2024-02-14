@@ -52,9 +52,9 @@ email=jasmin.blanchette@ifi.lmu.de,
 % target page number: 2-2.5
 \section{Introduction}
 
-\cite{mono-trans}
-\cite{expr-poly-types}
-\cite{sb-phd}
+%\cite{mono-trans}
+%\cite{expr-poly-types}
+%\cite{sb-phd}
 
 %what we are trying to do (monomorphisation)\\
 This paper presents an iterative method, first introduced in \cite{sb-phd} (section 2.2.1), that allows for higher order polymorphic problems to be approximated monomorphically. This algorithm aims to achieve the following:
@@ -65,18 +65,27 @@ This paper presents an iterative method, first introduced in \cite{sb-phd} (sect
 
 This algorithm is implemented in Zipperpostion, a higher order polymorphic automatic theorem prover written in OCaml. This implementation allows for the E prover, which does not support polymorphism, to be used as a backend to Zipperposition. The viability of this approach is then evaluated, both as an improvement to Zipperposition and as a means to increase the performance of other provers.
 
+\smallskip
+
+[sumarry of results]
+
 \medskip
 %basic idea of the algorithm
 The algorithm works as follows:
 we assume problems to be sets of clauses. All type arguments of the problem are collected and the polymorphic type arguments are matched against the monomorphic ones. This yields new type arguments, both polymorphic and monomorphic. The process is then repeated making use of the newly derived type arguments.
 
-These iterations are required to generate all 
+\smallskip
 
-After a set number of iterations, the new type arguments are used to instantiate type variables, generating new monomorphic clauses.
+These iterations are required in order to account for inductively defined types. Consider the type constructor \verb|list| which takes a type argument, if we obtain \verb|list(alpha)| where \verb|alpha| is a type variable, it may be possible to generate the types \verb|list(int)|, \verb|list(list(int))|, ... However because new types are obtained through matching, \verb|list(list(int))| can only be obtained once \verb|list(int)| has already been added to the set of monomorphic types. This example also makes it clear that the set of types that can be generated is infinite, this explains why the number of iterations is bounded.
+
+\smallskip
+
+After a set number of iterations, the new type arguments are used to instantiate the type variables in the problem's clauses, generating new monomorphic clauses.
    
 Finally, we ``mangle'' the types in the output clauses using the method presented in \cite{mono-trans}, in order to remove type constructors from the output problem.
 
-This approach sacrifices completeness for the sake of performance. The loss of completeness occurs at the conceptual level due to the finite number of iterations. It also occurs on the practical level, due to the explosive nature of the procedure, various bounds limit the number of generated clauses.
+This approach sacrifices completeness for the sake of performance. The loss of completeness occurs at the level of the algorithm; a finite number of iterations and at the implementation level; the explosive nature of the procedures requires various bounds which limit the number of type arguments and clauses that are generated.
+
 % target page number: 0.5-1.5
 \section{Background}
 
