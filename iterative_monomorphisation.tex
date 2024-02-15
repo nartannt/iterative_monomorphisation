@@ -39,7 +39,7 @@ email=jasmin.blanchette@ifi.lmu.de,
 
 
 \begin{abstract}
-Monomorphisation makes it possible to extend monormophic provers to support polymorphic logics. We propose an iterative approach, which is necessarily incomplete but which works well in practice. It is implemented in the Zipperposition prover, where it can be used to translate away polymorphism before invoking a monomorphic prover. Our empirical evaluation reveals that iterative monorphisation is a viable alternative to native polymorphism.
+Monomorphisation makes it possible to extend monomorphic provers to support polymorphic logics. We propose an iterative approach, which is necessarily incomplete but which works well in practice. It is implemented in the Zipperposition prover, where it can be used to translate away polymorphism before invoking a monomorphic prover. Our empirical evaluation reveals that iterative monomorphisation is a viable alternative to native polymorphism.
 \end{abstract}
 
 \begin{keywords}
@@ -53,54 +53,57 @@ Monomorphisation makes it possible to extend monormophic provers to support poly
 % target page number: 2-2.5
 \section{Introduction}
 
-{
-\obeylines
 
-  * apps are rank-1 polymorphic, but provers are mono
-  * there's a gap
-  * one solution is to extend the provers to support polymorphism;
-    this was done e.g. for Vampire \cite{xxx}
-  * but this is a lot of work, and needs to be done for every prover
+One of the main applications of automatic theorem provers is making the use of proof assistants easier. Many proof assistants support rank-1 polymorphism, however, many automatic theorem provers only operate on monomorphic logics. One approach to close this gap is extending existing provers, allowing them to natively support polymorphism, as was the case for Vampire \cite{vamp}. The main drawbacks of this solution are the amount of work required to extend these provers and the fact that it needs to be done from scratch for every monomorphic prover.
 
-\bigskip
+  % apps are rank-1 polymorphic, but provers are mono
+  % there's a gap
+  % one solution is to extend the provers to support polymorphism;
+  % this was done e.g. for Vampire \cite{xxx}
+  % but this is a lot of work, and needs to be done for every prover
 
-  * the alternative is to translate polymorphic problems to monomorphic problems
-    * two main approaches:
-      * complete encoding of polymorphism, using guards or tags,
-        as in Blanchette et al.~\cite{xxx} and Bobot et al.~\cite{xxx}
-      * incomplete encoding of polymorphism based on iterative monomorphisation
-        such as introduced by Böhme \cite[Section 2.2.1]{sb-phd}, whereby type
-        variables are heuristically instantiated by concrete types
+The alternative would be to translate polymorphic problems into monomorphic problems. There are two main approaches to this, the first is a complete encoding of polymorphism using guards and tags \cite{mono-trans} into a monomorphic logic. The second solution is an incomplete encoding of polymorphism based on iterative monomorphisation, as introduced by B\"ome \cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating type variables with concrete types.
 
-\bigskip
+ % * the alternative is to translate polymorphic problems to monomorphic problems
+ %   * two main approaches:
+ %     * complete encoding of polymorphism, using guards or tags,
+ %       as in Blanchette et al.~\cite{mono-trans} and Bobot et al.~\cite{expr-poly-types}
+ %     * incomplete encoding of polymorphism based on iterative monomorphisation
+ %       such as introduced by Böhme \cite[Section 2.2.1]{sb-phd}, whereby type
+ %       variables are heuristically instantiated by concrete types
 
-  * By a type version of compactness, if a set of polymorphic
-    formulas is unsatisfiable, then there exists a finite set of monomorphic
-    instances of the formulas that is also unsatisfiable. However, this
-    finite set cannot be computed \cite{xxx}; hence any approach based on
-    instantiation of type variables is incomplete.
+By compactness, we have that in first order logic, given a polymorphic formula \(F\), there exist an equisatisfiable finite set of monomorphic instances of \(F\). However such a set cannot be computed \cite[Section 2, Theorem 1]{expr-poly-types}, consequently any monomorphisation method based on instantiation of type variables is incomplete.
 
-\bigskip
+  %* By a type version of compactness, if a set of polymorphic
+  %  formulas is unsatisfiable, then there exists a finite set of monomorphic
+  %  instances of the formulas that is also unsatisfiable. However, this
+  %  finite set cannot be computed \cite[Section 2, Theorem 1]{expr-poly-types}; hence any approach based on
+  %  instantiation of type variables is incomplete.
 
-  * Böhme's iterative approach is implemented as part of the SMT integration
-    \cite{xxx} in Isabelle/HOL. This implementation is also used by
-    Sledgehammer \cite{xxx} to interface automatic theorem provers based on
-    superposition.
+
+B\"ome's iterative approach is implemented as part of the SMT integration \cite[Chapter 2]{sb-phd} in Isabelle/HOL. This implementation is also used by Sledgehammer \cite{judgement, hammer} to interface with superposition based automatic theorem provers. However, it is is only briefly documented as a single subsection in his PhD thesis \cite[Section 2.2.1]{sb-phd}.
 
 \bigskip
 
-  * The main drawback of Böhme's approach is that it is only briefly documented,
-    as a single paragraph in his PhD thesis \cite[Section 2.2.1]{sb-phd}
-  * In this paper, we present an algorithm inspired by his description and
-    implementation (Section~\ref{sec:high-level-algorithm}).
-    * we aimed at mathematical precision, so that people who want to reimplement
-      the algorithm can follow this blueprint
-    * we also show how to bound the algorithm to avoid explosions in practice
-      (Section~\ref{sec:low-level-algorithm}).
-      ``the explosive nature of the procedures requires various bounds which
-      limit the number of type arguments and clauses that are generated.''
+In this paper, we present an algorithm based on his description and implementation (Section~\ref{sec:high-level-algorithm}). We also provide a more detailed description to allow the algorithm to be implemented by following the paper. Additionally, this descriptions shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
 
-}
+
+% * Böhme's iterative approach is implemented as part of the SMT integration \cite[Chapter 2]{sb-phd}
+%     in Isabelle/HOL. This implementation is also used by
+%    Sledgehammer \cite{judgement, hammer} to interface automatic theorem provers based on
+%    superposition.
+%
+%  * The main drawback of Böhme's approach is that it is only briefly documented,
+%    as a single paragraph in his PhD thesis \cite[Section 2.2.1]{sb-phd}
+%  * In this paper, we present an algorithm inspired by his description and
+%    implementation (Section~\ref{sec:high-level-algorithm}).
+%    * we aimed at mathematical precision, so that people who want to reimplement
+%      the algorithm can follow this blueprint
+%    * we also show how to bound the algorithm to avoid explosions in practice
+%      (Section~\ref{sec:low-level-algorithm}).
+%      ``the explosive nature of the procedures requires various bounds which
+%      limit the number of type arguments and clauses that are generated.''
+
 
 The algorithm works as follows. We assume problems to be sets of formulas. All type arguments of the problem are collected, and the polymorphic type arguments are matched against the monomorphic ones. This yields new type arguments, both polymorphic and monomorphic. The process is then repeated using the newly derived type arguments.
 
@@ -108,16 +111,18 @@ These iterations are required to account for $n$-ary type constructors. Consider
 
 To keep the number of generated formulas finite, we limit the number of iterations. After the iterations are completed, the new type arguments are used to instantiate the type variables in the problem's formulas, generating new monomorphic clauses. Finally, because monomorphic provers generally do not support $n$-ary type constructors, types must be mangled. For example, the compound type $\ty{list}(\ty{int})$ could be mangled to $\ty{list\_int}$.
 
-We implemented this algorithm in Zipperpostion \cite{xxx}, a higher order automatic theorem prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E \cite{xxx} as a backend. Our algorithm makes it possible, for the first time, to use E with polymorphic problems. Moreover, our implementation of the algorithm in Zipperposition can be used as a preprocessor to interface with other stand-alone provers.
+\bigskip
 
-Our empirical evaluation on TPTP problems \cite{xxx} attempts to answer three questions (Section~\ref{sec:evaluation}):
+We implemented this algorithm in Zipperpostion \cite{zipp}, a higher order automatic theorem prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E \cite{e} as a backend. Our algorithm makes it possible, for the first time, to use E with polymorphic problems. Moreover, our implementation of the algorithm in Zipperposition can be used as a preprocessor to interface with other stand-alone provers.
+
+Our empirical evaluation on TPTP problems \cite{tptp} attempts to answer three questions (Section~\ref{sec:evaluation}):
 %
 \begin{enumerate}
 \item Is the new Zipperposition with the E backend more successful on polymorphic problems than Zipperposition without backend?
 
 \item How competitive are monomorphic provers on monomorphised polymorphic problems?
 
-\item Is iterative monomophisation more effective than the native polymorphism implemented in polymorphic provers?
+\item Is iterative monomorphisation more effective than the native polymorphism implemented in polymorphic provers?
 \end{enumerate}
 
 Our findings are as follows:
@@ -127,7 +132,7 @@ Our findings are as follows:
 
 \item E with monomorphisation comes close second to the polymorphic prover Vampire.
 
-\item For Leo-III \cite{xxx} and Vampire \cite{xxx}, we find that monomorphisation is indeed more effective than native polymorphism.
+\item For Leo-III \cite{leo-iii} and Vampire \cite{vamp}, we find that monomorphisation is indeed more effective than native polymorphism.
 \end{enumerate}
 
 % target page number: 0.5-1.5
@@ -143,7 +148,7 @@ We want our starting logic to be:
     \item higher order
     \item polymorphic: we want atomic types, type constructors and universally quantified type variables
 \end{itemize}
-our target logic to be the same thing except we foregoe type constructors and type variables 
+our target logic to be the same thing except we forego type constructors and type variables 
 we want our target logic to be a subset of the starting logic
 
 
@@ -151,7 +156,7 @@ Definitions :
 \begin{itemize}
    \item type arguments % part of the logic
    \item monomorphic and polymorphic types
-   \item matching % being overly precise probably uncecessary
+   \item matching 
    \item term, literal, clause  % also part logic
 \end{itemize}
 
@@ -182,7 +187,7 @@ A single iteration of the algorithm will do the following:
 
       Each such matching may return a substitution which instantiates one or more type variables of \(C_i\) (that would also be in the type arguments of \(f\))
 
-   \item Once all such substiutions have been computed. We apply each substitutions to the clause they were generated from. These newly created clauses are added to the problem and the newly generated type arguments (both ground and uninstantiated) will be added to \(U\) and \(I\) to be used for the next iteration.
+   \item Once all such substitutions have been computed. We apply each substitutions to the clause they were generated from. These newly created clauses are added to the problem and the newly generated type arguments (both ground and uninstantiated) will be added to \(U\) and \(I\) to be used for the next iteration.
 \end{itemize}
 
 After a set number of iterations, we take all clauses with no type variables and mangle their types [see relevant paper]. The resulting set of clauses forms a problem \(P'\) with the following properties:
@@ -212,10 +217,10 @@ Consider the following problem [note that we need a consistent notation for type
 The algorithm only matches against ground type arguments. This is the case because polymorphic type unification is undecidable (quick ref) and whilst interweaving phases of unification with the current algorithm would be theoretically possible, it would most likely not be of any practical use. Indeed, the current implementation is already very explosive and generating new substitutions with a costly unification procedure would most likely not result in any improvements.
 
 
-The previous problem would therefore never instantiate a clause, despite the problem becoming trvially contradictory if the the last clause and any of the first two are instantiated.
+The previous problem would therefore never instantiate a clause, despite the problem becoming trivially contradictory if the last clause and any of the first two are instantiated.
 
 
-Furthermore, the finite number of iterations of the algorithm consitutes an additional source of incompleteness in practice.
+Furthermore, the finite number of iterations of the algorithm constitutes an additional source of incompleteness in practice.
 %find example that would require a list list list int to be solved but only allow such a type to be generated after 3 iterations
 
 % target page number: 2-4
