@@ -16,7 +16,7 @@
 \newcommand\sym[1]{\textsf{#1}}
 \newcommand\var[1]{\mathit{#1}}
 
-\newtheorem{definition}{Definition}
+\newdefinition{definition}{Definition}
 
 \begin{document}
 
@@ -65,7 +65,8 @@ Monomorphisation makes it possible to extend monomorphic provers to support poly
 % target page number: 2-2.5
 \section{Introduction}
 
-One of the main applications of automatic theorem provers is to provide automation to users of proof assistants. Many proof assistants, such as HOL4 \cite{xxx}, HOL Light \cite{xxx} and Isabelle/HOL \cite{xxx}, support rank-1 polymorphism, where type quantification is allowed only at the top level of a formula. On the other hand, many provers operate only on monomorphic logics. One approach to close this gap is to extend provers to natively support polymorphism, as has been done for Vampire \cite{vamp}. This, however, entails a lot of work that needs to be redone for every prover.
+One of the main applications of automatic theorem provers is to provide automation to users of proof assistants. Many proof assistants, such as HOL4 \cite{slind-norrish-2008}, HOL Light \cite{harrison-2009}, and
+Isabelle/HOL \cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed only at the top level of formulae. On the other hand, many automatic provers operate only on monomorphic logics. One approach to close this gap is to extend provers to natively support polymorphism, as has been done for Vampire \cite{bhayat-reger-2020}. This, however, entails a lot of work that needs to be redone for every prover.
 
   % apps are rank-1 polymorphic, but provers are mono
   % there's a gap
@@ -73,7 +74,7 @@ One of the main applications of automatic theorem provers is to provide automati
   % this was done e.g. for Vampire \cite{xxx}
   % but this is a lot of work, and needs to be done for every prover
 
-The alternative is to translate polymorphic problems to monomorphic problems. One approach is to encode polymorphism using guards or tags \cite{mono-trans} in a monomorphic logic. Another is to encode polymorphism using {iterative monomorphisation}, as introduced by B\"ohme \cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
+The alternative is to translate polymorphic problems to monomorphic problems. One approach is to encode polymorphism using dedicated function or predicate symbols \cite{mono-trans} in a monomorphic logic. Another approach is to encode polymorphism using {iterative monomorphisation}, as introduced by B\"ohme \cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
 
  % * the alternative is to translate polymorphic problems to monomorphic problems
  %   * two main approaches:
@@ -93,9 +94,9 @@ bound to be incomplete.
   %  instantiation of type variables is incomplete.
 
 
-B\"ohme's iterative approach is implemented as part of the SMT (satisfiability modulo theories) integration \cite[Chapter 2]{sb-phd} in Isabelle/HOL. This implementation is also used by Sledgehammer \cite{judgement, hammer} to interface with superposition based automatic theorem provers. However, it is is only documented as a single subsection in his PhD thesis \cite[Section 2.2.1]{sb-phd}.
+B\"ohme's iterative approach is implemented as part of the SMT (satisfiability modulo theories) integration \cite[Chapter 2]{sb-phd} in Isabelle/HOL. This implementation is also used by Sledgehammer \cite{judgement, hammer} to interface with superposition based automatic theorem provers. However, it is is documented only as a single subsection in his PhD thesis \cite[Section 2.2.1]{sb-phd}.
 
-In this paper, we present an algorithm based on his description and implementation (Section~\ref{sec:high-level-algorithm}). We also provide a more detailed description to help future implementers. In addition, this description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
+In this paper, we present an algorithm based on our understanding of his description and implementation (Section~\ref{sec:high-level-algorithm}). We also provide a more detailed description to help future implementers. In addition, this description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
 
 % * Böhme's iterative approach is implemented as part of the SMT integration \cite[Chapter 2]{sb-phd}
 %     in Isabelle/HOL. This implementation is also used by
@@ -148,32 +149,47 @@ Our findings are as follows:
 \section{Background}
 \label{sec:background}
 
+{\obeylines
+
+\noindent\kern\parindent
+  * algorithm works a priori with any rank-1 polymorphic logic
+
+  * in particular, it works with polymorphic first- and higher-order logic as 
+    embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-201x,th1}
+
+  * the algorithm does not need to inspect the precise structure of formulae
+  * instead, it works on monomorphic or polymorphic instances of symbols that 
+    occur in the formulae
+  * type quantification is implicit, meaning that all type variables occurring
+    in a formula are assumed to be universally quantified at the formula's top
+    level
+}
+
+\bigskip
+
 % TH1 ugly for height of 1 reasons, can be fixed with case feature
-%The base logic of the implementation will be TPTP's TH1 \cite{th1}, a higher-order logic with rank-1 polymorphism. We will assume the initial problem to be a set of TH1 formulae. The choice of this logic is motivated by the widespread support it enjoys among higher-order provers. However, iterative monomorphisation only 
-The implementation require problems to be based on TPTP's TH1 (or TF1) logic \cite{th1} because it is the a widespread standard among provers for higher-order rank-1 polymorphic logics. However, the iterative monomorphisation algorithm relies only on assumptions regarding type construction and use in the problem. Consequently, the precise forms of formulae, terms or literals are irrelevant.
 
-
-\begin{definition}[Function symbol]
-   A function symbol \(f\), has two arities which define the number of arguments and type arguments it takes. The type arguments are enumerated between angled brackets and the other arguments between parentheses, e.g.: \(f\langle \tau_1, ..., \tau_n\rangle (x_1, ..., x_m)\)
-
-   In a well formed problem, the number of type arguments to which a function symbol is applied is assumed to correspond to the relevant arity. In other words, we expect all function symbols of type argument arity \(n\) to have \(n\) type arguments.
+\begin{definition}%[Type]
+A \emph{type} \(\tau\) can be a type variable (e.g.\ \(\alpha\)) or
+the application of an \(n\)-ary type constructor to \(n\) types (e.g.\ \(\ty{list}(\alpha)\)).
+If $n = 0$, we omit the parentheses (e.g.\ \(\ty{int}\)).
 \end{definition}
 
-% TODO: WARNING - heavily inspired from sections 2.2-2.3 of the th1 paper
-\begin{definition}[Type]
-A type \(\tau\) can be:
-\begin{itemize}
-   \item a constant, e.g.: \(\ty{int}\)
-   \item a type variable universally quantified at the formula level, e.g.: \(\alpha\)
-   \item built from an \(n\)-ary type constructor applied to \(n\) types, e.g.: \(\ty{map}(\ty{int}, \ty{list}(\alpha))\)
-\end{itemize}
-
+\begin{definition}%[Monomorphism and polymorphism]
+A type is \emph{monomorphic} if it contains no type variables; otherwise it is \emph{polymorphic}.
 \end{definition}
 
-\begin{definition}[Monomorphic, Polymorphic types]
-A type is monomorphic if it contains no type variables, otherwise it is polymorphic.
+\begin{definition}%[Function symbol]
+A (function or predicate) \emph{symbol} \(f\) has a type arity that defines the number of type arguments it takes. These arguments are listed between angle brackets: \(f\langle \tau_1, \dots, \tau_n\rangle\), where each $\tau_i$ is a type.
 \end{definition}
 
+{
+\obeylines
+
+* substitutions
+
+* matching
+}
 
 % target page number: 2-4
 \section{High level algorithm}
@@ -181,14 +197,16 @@ A type is monomorphic if it contains no type variables, otherwise it is polymorp
 
 We consider a problem \(P\) to be a set of formulae \(F_1, \dots, F_n\).
 
+TODO: Use $\Phi_1$ etc.
+
 \subsection{Initialisation step}
 The initial phase of the algorithm consists in gathering the maps \(M\) and \(P\), defined as follows:
 \begin{itemize}
-    \item Given a type \(n\)-ary function symbol \(f \in P\), we define \(M(f)\), the set of all \(n\)-uples of monomorphic type arguments passed to \(f\) in \(P\).
+    \item Given a type \(n\)-ary symbol \(f \in P\), we define \(M(f)\), the set of all \(n\)-uples of monomorphic type arguments passed to \(f\) in \(P\).
 
     For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) occurs in \(P\) (with \(\tau_1, \tau_2\) and \( \tau_3\) monomorphic) then, \((\tau_1, \tau_2, \tau_3) \in M(f) \).
 
- \item Given a formula \(F \in P\) and a type \(n\)-ary function symbol \(f \in F\), we define \(P(C, f)\), the set \(n\)-uples of polymorphic type arguments passed to \(f\) in \(F\). 
+ \item Given a formula \(F \in P\) and a type \(n\)-ary symbol \(f \in F\), we define \(P(C, f)\), the set \(n\)-uples of polymorphic type arguments passed to \(f\) in \(F\). 
 
     It is important to paramatrise \(P\) with the formula of \(f\) because type variables are quantified at the formula level. This is not necessary for \(M\) because its types do not contain type variables.
 
@@ -198,7 +216,7 @@ The initial phase of the algorithm consists in gathering the maps \(M\) and \(P\
 A single iteration of the algorithm will do the following:
 
 \begin{itemize}
-   \item For each clause \(C_i \in P\) and each function symbol \(f \in C_i\), we consider the uninstantiated type arguments \(U(C_i, f)\) these type type arguments are matched against all ground type arguments of \(I(f)\)
+   \item For each clause \(C_i \in P\) and each symbol \(f \in C_i\), we consider the uninstantiated type arguments \(U(C_i, f)\) these type type arguments are matched against all ground type arguments of \(I(f)\)
 
       [We have an issue: we don't define matching, don't think we need to go into a lot of detail]
 
@@ -216,6 +234,10 @@ After a set number of iterations, we take all clauses with no type variables and
 
 
 This algorithm is clearly sound as the newly derived clauses are instances of the initial clauses where universally quantified types have been replaced by concrete types.
+
+\subsection{Example}
+
+TODO
 
 % target page number: 2-4
 \section{Low level algorithm}
@@ -237,11 +259,11 @@ The main departures from the high-level description of the algorithm are the fol
 \Function{Type arguments}{Literal: lit}
 
    \State let \(t_1\), \(t_2\) be the terms of \(lit\)
-   \State recursively collect the function symbols and associated type arguments of \(t_1\) and \(t_2\) into a list of pairs
+   \State recursively collect the symbols and associated type arguments of \(t_1\) and \(t_2\) into a list of pairs
 
    \State \Comment Going a bit fast here, probably need to reformulate, but don't go into details, it's not important
 
-   \State \Return the list of (function symbol, type argument) pairs
+   \State \Return the list of (symbol, type argument) pairs
 
 \EndFunction
 \end{algorithmic}
@@ -274,7 +296,7 @@ The main departures from the high-level description of the algorithm are the fol
 \end{algorithmic}
 \end{algorithm}
 
-This function is very basic and simply gathers all the type arguments of the various function symbols of the problem and sorts them depending on whether they are ground or not.
+This function is very basic and simply gathers all the type arguments of the various symbols of the problem and sorts them depending on whether they are ground or not.
 
 
 \begin{algorithm}[tbh]
@@ -316,7 +338,7 @@ This function is very basic and simply gathers all the type arguments of the var
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-In the Zipperposition implemntation this iteration procedure is limited by several bounds. The number of new type arguments that can be generated for each function symbol is limited by user-defined bounds. These bounds can be defined proportionally. Additionally, the number of new type arguments can be limited at the clause level. In both cases, the bounds for the new ground type arguments and non-ground type arguments can be set independently.
+In the Zipperposition implemntation this iteration procedure is limited by several bounds. The number of new type arguments that can be generated for each symbol is limited by user-defined bounds. These bounds can be defined proportionally. Additionally, the number of new type arguments can be limited at the clause level. In both cases, the bounds for the new ground type arguments and non-ground type arguments can be set independently.
 
 A consequences of these bounds is that in order to avoid unecessary computations, the program will iteratively apply substitutions until either the ground or non-ground bound is reached. Then substitutions can be discarded depending on whether they instantiate a given set of type arguments or not.
 
@@ -396,12 +418,12 @@ Implementation in Zipperposition.
 
 Considering the total number of parameters, it would be impractical to exhaustively test all option combinations. Consequently, options have been grouped together into sets of 2 or 3 options that will be more thouroughly tested. Two options will be part of the same group if it is deemed likely that a change in one of the options will significantly impact how much a change in the second option will affect the overall results.
 
-The first two groups of options are natural as they affect how many new monomorphic and polymorphic type arguments are generated respectively for each function symbol at each iteration. These options are closely linked and must be set together if they are to be relevant.
+The first two groups of options are natural as they affect how many new monomorphic and polymorphic type arguments are generated respectively for each symbol at each iteration. These options are closely linked and must be set together if they are to be relevant.
 
-During an iteration, for each function symbol (for each clause in the polymorphic case), the number of newly generated type arguments is determined by this formula:
+During an iteration, for each symbol (for each clause in the polymorphic case), the number of newly generated type arguments is determined by this formula:
 \( \min(\text{cap}, \max(\text{floor}, \text{multiplier} \times \text{number of type arguments})) \)
 
-The multiplier allows for a controlled increase of the number of type arguments, relative to the size of the problem whilst the floor prevents some function symbols seeing no new type arguments if the multiplier is too low.
+The multiplier allows for a controlled increase of the number of type arguments, relative to the size of the problem whilst the floor prevents some symbols seeing no new type arguments if the multiplier is too low.
 The cap acts as a final limit in the case the explosion is too fast despite the multiplier bound.
 
 \begin{table}[th]
