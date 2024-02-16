@@ -51,7 +51,7 @@ email=jasmin.blanchette@ifi.lmu.de,
 
 
 \begin{abstract}
-Monomorphisation makes it possible to extend monomorphic provers to support polymorphic logics. We propose an iterative approach, which is necessarily incomplete but which works well in practice. It is implemented in the Zipperposition prover, where it can be used to translate away polymorphism before invoking a monomorphic prover. Our empirical evaluation reveals that iterative monomorphisation is a viable alternative to native polymorphism.
+Monomorphisation can be used to extend monomorphic provers to support polymorphic logics. We propose an iterative approach, which is necessarily incomplete but which works well in practice. It is implemented in the Zipperposition prover, where it can be used to translate away polymorphism before invoking the monomorphic prover E as a backend. Our evaluation demonstrates that this approach increases Zipperposition's success rate. Moreover, we find iterative monomorphisation to be competitive with native implementations of polymorphism.
 \end{abstract}
 
 \begin{keywords}
@@ -146,8 +146,8 @@ Our findings are as follows:
 \end{enumerate}
 
 % target page number: 0.5-1.5
-\section{Background}
-\label{sec:background}
+\section{Preliminaries}
+\label{sec:preliminaries}
 
 {\obeylines
 
@@ -565,6 +565,9 @@ This last table attempts to determine which are the best bounds related to the d
 \section{Related work}
 \label{sec:related-work}
 
+  * Böhme
+  * similar algo implemented in Why3?
+
 % target page number: 0.5-1
 \section{Conclusion}
 \label{sec:conclusion}
@@ -572,6 +575,11 @@ This last table attempts to determine which are the best bounds related to the d
 % summary 
 
 % Future avenues
+
+\section*{Acknowledgements}
+
+* Sascha Böhme
+
 \bibliography{citations}
 
 \end{document}
