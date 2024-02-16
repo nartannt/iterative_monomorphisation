@@ -65,8 +65,7 @@ Monomorphisation makes it possible to extend monomorphic provers to support poly
 % target page number: 2-2.5
 \section{Introduction}
 
-
-One of the main applications of automatic theorem provers is reducing the workload when using proof assistants. Many proof assistants support rank-1 polymorphism, however, many automatic theorem provers only operate on monomorphic logics. One approach to close this gap is extending existing provers, allowing them to natively support polymorphism, as was the case for Vampire \cite{vamp}. The main drawbacks of this solution are the amount of work required to extend such provers and that it needs to be done from scratch for every monomorphic prover.
+One of the main applications of automatic theorem provers is to provide automation to users of proof assistants. Many proof assistants, such as HOL4 \cite{xxx}, HOL Light \cite{xxx} and Isabelle/HOL \cite{xxx}, support rank-1 polymorphism, where type quantification is allowed only at the top level of a formula. On the other hand, many provers operate only on monomorphic logics. One approach to close this gap is to extend provers to natively support polymorphism, as has been done for Vampire \cite{vamp}. This, however, entails a lot of work that needs to be redone for every prover.
 
   % apps are rank-1 polymorphic, but provers are mono
   % there's a gap
@@ -74,7 +73,7 @@ One of the main applications of automatic theorem provers is reducing the worklo
   % this was done e.g. for Vampire \cite{xxx}
   % but this is a lot of work, and needs to be done for every prover
 
-The alternative would be to translate polymorphic problems into monomorphic problems. There are two main ideas to do this, the first is a complete encoding of polymorphism using guards or tags \cite{mono-trans} into a monomorphic logic. The second solution is an incomplete encoding of polymorphism based on iterative monomorphisation, as introduced by B\"ome \cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating type variables with concrete types.
+The alternative is to translate polymorphic problems to monomorphic problems. One approach is to encode polymorphism using guards or tags \cite{mono-trans} in a monomorphic logic. Another is to encode polymorphism using {iterative monomorphisation}, as introduced by B\"ohme \cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
 
  % * the alternative is to translate polymorphic problems to monomorphic problems
  %   * two main approaches:
@@ -84,7 +83,8 @@ The alternative would be to translate polymorphic problems into monomorphic prob
  %       such as introduced by Böhme \cite[Section 2.2.1]{sb-phd}, whereby type
  %       variables are heuristically instantiated by concrete types
 
-By compactness, we have that in first order logic, given a polymorphic formula \(F\), there exist an equisatisfiable finite set of monomorphic instances of \(F\). However such a set cannot be computed \cite[Section 2, Theorem 1]{expr-poly-types}, consequently any monomorphisation method based on instantiation of type variables is incomplete.
+By a type version of the compactness theorem, we have that in first order logic, given a polymorphic formula \(\varphi\), there exist an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, such a set cannot be computed \cite[Theorem 1]{expr-poly-types}. As a result, any monomorphisation method based on instantiation of type variables is
+bound to be incomplete.
 
   %* By a type version of compactness, if a set of polymorphic
   %  formulae is unsatisfiable, then there exists a finite set of monomorphic
@@ -93,12 +93,9 @@ By compactness, we have that in first order logic, given a polymorphic formula \
   %  instantiation of type variables is incomplete.
 
 
-B\"ome's iterative approach is implemented as part of the SMT integration \cite[Chapter 2]{sb-phd} in Isabelle/HOL. This implementation is also used by Sledgehammer \cite{judgement, hammer} to interface with superposition based automatic theorem provers. However, it is is only documented as a single subsection in his PhD thesis \cite[Section 2.2.1]{sb-phd}.
+B\"ohme's iterative approach is implemented as part of the SMT (satisfiability modulo theories) integration \cite[Chapter 2]{sb-phd} in Isabelle/HOL. This implementation is also used by Sledgehammer \cite{judgement, hammer} to interface with superposition based automatic theorem provers. However, it is is only documented as a single subsection in his PhD thesis \cite[Section 2.2.1]{sb-phd}.
 
-\bigskip
-
-In this paper, we present an algorithm based on his description and implementation (Section~\ref{sec:high-level-algorithm}). We also provide a more detailed description to allow the algorithm to be implemented by following the paper. Additionally, this description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
-
+In this paper, we present an algorithm based on his description and implementation (Section~\ref{sec:high-level-algorithm}). We also provide a more detailed description to help future implementers. In addition, this description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
 
 % * Böhme's iterative approach is implemented as part of the SMT integration \cite[Chapter 2]{sb-phd}
 %     in Isabelle/HOL. This implementation is also used by
@@ -117,17 +114,17 @@ In this paper, we present an algorithm based on his description and implementati
 %      limit the number of type arguments and clauses that are generated.''
 
 
-The algorithm works as follows. We assume problems to be sets of formulae. All type arguments of the problem are collected, and the polymorphic type arguments are matched against the monomorphic ones. This yields new type arguments, both polymorphic and monomorphic. The process is then repeated using the newly derived type arguments.
+The algorithm works as follows. We assume problems to be sets of formulae. All symbols of the problem are collected, and the polymorphic instances of symbols are matched against the monomorphic ones. This yields new instances of symbols, both polymorphic and monomorphic. The process is then iterated
+a number of times, making use of the newly generated instances.
 
-These iterations are required to account for $n$-ary type constructors. Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(\alpha)$, where $\alpha$ is a type variable, it may be possible to generate the types $\ty{list}(\ty{int})$, $\ty{list}(\ty{list}(\ty{int}))$, etc. However, because new types emerge through matching, $\ty{list}(\ty{list}(\ty{int}))$ can be obtained only once $\ty{list}(\ty{int})$ has already been added to the set of monomorphic types. This example also makes it clear that the set of types that can be generated is infinite.
+%These iterations are required to account for $n$-ary type constructors.
+Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(\alpha)$, where $\alpha$ is a type variable, it may be possible to generate the types $\ty{list}(\ty{int})$, $\ty{list}(\ty{list}(\ty{int}))$, etc. However, because new types emerge through matching, $\ty{list}(\ty{list}(\ty{int}))$ can be obtained only once the $\ty{list}(\ty{int})$ instance has already been generated. This example also makes it clear that the set of instances that can be generated is infinite.
 
-To keep the number of generated formulae finite, we limit the number of iterations. After the iterations are completed, the new type arguments are used to instantiate the type variables in the problem's formulae, generating new monomorphic clauses. Finally, because monomorphic provers generally do not support $n$-ary type constructors, types must be mangled. For example, the compound type $\ty{list}(\ty{int})$ could be mangled to the constant $\ty{list\_int}$.
+To keep the number of generated formulae finite, we limit the number of iterations. After the iterations are completed, the new monomorphic symbol instances are used to instantiate the polymorphic symbols in the problem's formulae, generating new monomorphic formulae. Finally, because monomorphic provers generally do not support $n$-ary type constructors, types must be `mangled'; for example, the compound type $\ty{list}(\ty{int})$ could be mangled to the constant $\ty{list\_int}$.
 
-\bigskip
+We implemented iterative monormorphisation in Zipperpostion \cite{zipp}, a higher order prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E \cite{e} as a backend. This means that E can now be used with polymorphic problems. Moreover, our implementation of the algorithm in Zipperposition can be used as a preprocessor to interface with other stand-alone provers.
 
-We implemented this algorithm in Zipperpostion \cite{zipp}, a higher order automatic theorem prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E \cite{e} as a backend. Our algorithm makes it possible, for the first time, to use E with polymorphic problems. Moreover, our implementation of the algorithm in Zipperposition can be used as a preprocessor to interface with other stand-alone provers.
-
-Our empirical evaluation on TPTP problems \cite{tptp} attempts to answer three questions (Section~\ref{sec:evaluation}):
+Our empirical evaluation on TPTP \cite{tptp} problems attempts to answer three questions (Section~\ref{sec:evaluation}):
 %
 \begin{enumerate}
 \item Is the new Zipperposition with the E backend more successful on polymorphic problems than Zipperposition without backend?
@@ -153,7 +150,7 @@ Our findings are as follows:
 
 % TH1 ugly for height of 1 reasons, can be fixed with case feature
 %The base logic of the implementation will be TPTP's TH1 \cite{th1}, a higher-order logic with rank-1 polymorphism. We will assume the initial problem to be a set of TH1 formulae. The choice of this logic is motivated by the widespread support it enjoys among higher-order provers. However, iterative monomorphisation only 
-The implementation require problems to be based on TPTP's TH1 (or TF1) logic \cite{th1} because it is the a widespread standard among automatic provers for higher-order rank-1 polymorphic logics. However, the iterative monomorphisation algorithm relies only on assumptions regarding type construction and use in the problem. Consequently, the precise forms of formulae, terms or literals are irrelevant.
+The implementation require problems to be based on TPTP's TH1 (or TF1) logic \cite{th1} because it is the a widespread standard among provers for higher-order rank-1 polymorphic logics. However, the iterative monomorphisation algorithm relies only on assumptions regarding type construction and use in the problem. Consequently, the precise forms of formulae, terms or literals are irrelevant.
 
 
 \begin{definition}[Function symbol]
@@ -464,7 +461,7 @@ If the floor and multiplier are set to 0 and 0, no new polymorphic type argument
 \end{tabular}
 \end{table}
 
-This table groups two bounds that directly affect the number of clauses generated, a first one that allows at most a number of new clauses equal to ``multiplier" times the original number of clauses. And the cap that gives an absolute bound over the total number of clauses generated.
+This table groups two bounds that directly affect the number of clauses generated, a first one that allows at most a number of new clauses equal to `multiplier' times the original number of clauses. And the cap that gives an absolute bound over the total number of clauses generated.
 
 The choice to also include e-timeout in this table is due to the fact that E being successful in solving a monomorphised problem in a certain time limit has been observed to be highly dependent on the number of clauses it is given.
 
