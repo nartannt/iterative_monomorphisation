@@ -1,7 +1,5 @@
 \documentclass[]{ceurart}
 
-%\sloppy
-
 \usepackage{soul}
 \usepackage{caption}
 \usepackage{booktabs}
@@ -18,12 +16,26 @@
 \newcommand\sym[1]{\textsf{#1}}
 \newcommand\var[1]{\mathit{#1}}
 
+\newtheorem{definition}{Definition}
+
 \begin{document}
 
 \copyrightyear{2024}
 \copyrightclause{Copyright for this paper by its authors. Use permitted under Creative Commons License Attribution 4.0 International (CC BY 4.0)}
 
 \conference{Submitted draft} % TODO update
+
+% TODO, at the end check the following
+%   - formulas -> formulae
+%   - clause -> formula
+%   - monomorphization -> monomorphisation
+%   - higer order -> higer-order
+%   - TH1 with ugly 1
+%   - correctly spelled TPTP, Leo-III, Zipperposition, E, Vampire
+%   - use of formula vs clause
+%   - polymorphic and monomorphic
+%   - title of bits of the algorithms
+%   - eg or ex -> e.g.
 
 \title{Iterative Monomorphisation}
 
@@ -139,49 +151,55 @@ Our findings are as follows:
 \section{Background}
 \label{sec:background}
 
-% mention alternatives, (guards, tags) and current implementation in Isabelle
-Definitions :
+% TH1 ugly for height of 1 reasons, can be fixed with case feature
+%The base logic of the implementation will be TPTP's TH1 \cite{th1}, a higher-order logic with rank-1 polymorphism. We will assume the initial problem to be a set of TH1 formulae. The choice of this logic is motivated by the widespread support it enjoys among higher-order provers. However, iterative monomorphisation only 
+The implementation require problems to be based on TPTP's TH1 (or TF1) logic \cite{th1} because it is the a widespread standard among automatic provers for higher-order rank-1 polymorphic logics. However, the iterative monomorphisation algorithm relies only on assumptions regarding type construction and use in the problem. Consequently, the precise forms of formulae, terms or literals are irrelevant.
+
+
+\begin{definition}[Function symbol]
+   A function symbol \(f\), has two arities which define the number of arguments and type arguments it takes. The type arguments are enumerated between angled brackets and the other arguments between parentheses, e.g.: \(f\langle \tau_1, ..., \tau_n\rangle (x_1, ..., x_m)\)
+
+   In a well formed problem, the number of type arguments to which a function symbol is applied is assumed to correspond to the relevant arity. In other words, we expect all function symbols of type argument arity \(n\) to have \(n\) type arguments.
+\end{definition}
+
+% TODO: WARNING - heavily inspired from sections 2.2-2.3 of the th1 paper
+\begin{definition}[Type]
+A type \(\tau\) can be:
 \begin{itemize}
-   \item our logic (TF1), our starting and target logics (with and without polymorphism)
-   \item notations
-   \item type arguments
-   \item monomorphic and polymorphic types
-   \item matching 
-   \item term, literal, clause 
+   \item a constant, e.g.: \(\ty{int}\)
+   \item a type variable universally quantified at the formula level, e.g.: \(\alpha\)
+   \item built from an \(n\)-ary type constructor applied to \(n\) types, e.g.: \(\ty{map}(\ty{int}, \ty{list}(\alpha))\)
 \end{itemize}
 
-% TH1 ugly for height of 1 reasons, can be fixed with case feature
-Our starting logic will be TPTP's TH1 \cite{th1}, a higher-order logic with rank-1 polymorphism. We will assume the initial problem to be TH1 formulae.
+\end{definition}
 
-types are either constants, type variables, or a type constructor of a certain arity applied to other types
-
-we consider a set of function symbols, with type arguments and arguments of a certain arity
-
-a problem is made up of a set of formulae, type variables are quantified at the formula level
-
-note that in the implementation, a problem is a conjunction of disjunctive clauses, this is only relevant when the problem is parsed when the initial type arguments are collected and at the very end when the final clauses are generated
+\begin{definition}[Monomorphic, Polymorphic types]
+A type is monomorphic if it contains no type variables, otherwise it is polymorphic.
+\end{definition}
 
 
 % target page number: 2-4
-% needs to be re-written
 \section{High level algorithm}
 \label{sec:high-level-algorithm}
 
-We consider a problem \(P\) to be a set of clauses \(C_1, \dots, C_n\).
+We consider a problem \(P\) to be a set of formulae \(F_1, \dots, F_n\).
 
-Algorithm :
+\subsection{Initialisation step}
+The initial phase of the algorithm consists in gathering the maps \(M\) and \(P\), defined as follows:
 \begin{itemize}
-    \item Let \(F\) be the set of all function symbols in \(P\).
-    \item Given a function symbol \(f \in F\), we define \(I(f)\), the set of all ground type arguments that are passed to \(f\) is instantiated in \(P\).
+    \item Given a type \(n\)-ary function symbol \(f \in P\), we define \(M(f)\), the set of all \(n\)-uples of monomorphic type arguments passed to \(f\) in \(P\).
 
-    For instance if \(f^{a \rightarrow b}\) occurs in \(P\) (with \(a\) and \(b\) ground types) then, \(a \rightarrow b \in I(f) \).
- \item Given a clause \(C \in P\) and a function symbol \(f \in C\), we define \(U(C, f)\), the set of uninstantiated type arguments passed to \(f\) in \(C\). 
+    For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) occurs in \(P\) (with \(\tau_1, \tau_2\) and \( \tau_3\) monomorphic) then, \((\tau_1, \tau_2, \tau_3) \in M(f) \).
 
-    It is important to paramatrise \(U\) with the clause of \(f\) because type variables are quantified at the clause level. This is not necessary for \(I\) because its type arguments do not contain type variables.
+ \item Given a formula \(F \in P\) and a type \(n\)-ary function symbol \(f \in F\), we define \(P(C, f)\), the set \(n\)-uples of polymorphic type arguments passed to \(f\) in \(F\). 
+
+    It is important to paramatrise \(P\) with the formula of \(f\) because type variables are quantified at the formula level. This is not necessary for \(M\) because its types do not contain type variables.
 
 \end{itemize}
 
+\subsection{Iteration}
 A single iteration of the algorithm will do the following:
+
 \begin{itemize}
    \item For each clause \(C_i \in P\) and each function symbol \(f \in C_i\), we consider the uninstantiated type arguments \(U(C_i, f)\) these type type arguments are matched against all ground type arguments of \(I(f)\)
 
@@ -375,23 +393,7 @@ Implementation in Zipperposition.
 \label{sec:evaluation}
 
 % Provide complete list of problems explain which ones were excluded and why
-
-Compare the following:
-    \begin{itemize}
-        \item E on original portfolio mode
-        \item E with original portfolio mode and monomorphisation
-        \item adjusted portforlio mode 
-
-        \item when E is called
-        \item using zipp only as monomorphiser (passing the result to E, Vampire, Satallax, Leo-III)
-
-        \item test different bounds
-    \end{itemize}
-
-\break
-
-
-We ignore the following bounds: ty var limit per clause, subst per ty var, limiting the new type args per clause
+% We ignore the following bounds: ty var limit per clause, subst per ty var, limiting the new type args per clause
 
 \subsection{Parameter optimisation}
 
