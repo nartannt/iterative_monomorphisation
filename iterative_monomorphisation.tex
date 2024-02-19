@@ -158,11 +158,11 @@ Our findings are as follows:
 \section{Preliminaries}
 \label{sec:preliminaries}
 
-This algorithm does not need to inspect the structure of the problem's formulae because it relies exclusively on the formulae's monomorphic and polymorphic symbol instances. The notion of formula is necessary as type variables are assumed to be universally quantified at a formula's top level. The precise form of a formula can nevertheless be left unspecified.
+This algorithm works independently of the structure of the problem's formulae. It relies exclusively on the formulae's monomorphic and polymorphic symbol instances. Type variables are assumed to be universally quantified at a formula's top level. The precise form of formulae is left unspecified.
+%
+Due to this generality, iterative monomorphisation can be used with any reasonable rank-1 polymorphic logic. In particular, it can operate in the polymorphic first- and higher-order logics embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-2013,th1}, implemented by several automatic provers.
 
-Iterative monomorphisation can therefore be used in a vast range of rank-1 polymorphic logic. In particular, it can operate in the polymorphic first- and higher-order logics embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-2013,th1}, popular among automatic provers.
-
-The following terms are used in the algorithm descriptions.
+%The following terms are used in the algorithm descriptions.
 
 %{\obeylines
 %
@@ -180,13 +180,13 @@ The following terms are used in the algorithm descriptions.
 %    level
 %}
 
-\bigskip
-
 % TH1 ugly for height of 1 reasons, can be fixed with case feature
+
+Our abstract framework relies on the following basic definitions.
 
 \begin{definition}%[Type]
 A \emph{type} \(\tau\) can be a type variable (e.g.\ \(\alpha\)) or
-the application of an \(n\)-ary type constructor to \(n\) types (e.g.\ \(\ty{list}(\alpha)\)).
+the application of an \(n\)-ary type constructor to \(n\) types (e.g.\ \(\ty{list}(\alpha)\), \(\ty{map}(\ty{int},\ty{string})\)).
 If $n = 0$, we omit the parentheses (e.g.\ \(\ty{int}\)).
 \end{definition}
 
@@ -195,19 +195,22 @@ A type is \emph{monomorphic} if it contains no type variables; otherwise it is \
 \end{definition}
 
 \begin{definition}%[Function symbol]
-A (function or predicate) \emph{symbol} \(f\) has a type arity that defines the number of type arguments it takes. These arguments are listed between angle brackets: \(f\langle \tau_1, \dots, \tau_n\rangle\), where each $\tau_i$ is a type.
-
-A \emph{symbol instance} refers to a symbol provided with its type arguments.
+A (function or predicate) {symbol} \(f\) has a \emph{type arity} that defines the number of type arguments it takes. A \emph{symbol instance} is a symbol applied to type arguments listed between angle brackets: \(f\langle \tau_1, \dots, \tau_n\rangle\), where each $\tau_i$ is a type. If $n = 0$, we omit the brackets (e.g.\ $f$).
 \end{definition}
 
 \begin{definition} % HEAVILY inspired from 2.4 in mono-trans (it is the definition of a substitution, there's bound to be some comonality between all of them) 
-A \emph{substitution} \(\sigma\) is a function mapping one or more type variables to corresponding monomorphic type. Substitutions are in practice mostly be applied to formulae. Given a formula \(\Phi\), the formula obtained by replacing each type variable \(\alpha\) in \(\Phi\) by \(\sigma\alpha\) is written \(\sigma\Phi\).
-
+A (type) \emph{substitution} is a partial function mapping a finite number of type variables to corresponding types. Substitutions are written as
+$\sigma = \{\alpha_1\mapsto\tau_1, \dots, \alpha_n\mapsto\tau_n\}$. They are assumed to be lifted to formulae; thus, $\sigma(\varphi)$ yields the variant of $\varphi$ in which each $\alpha_i$ is replaced by $\tau_i$.
+%The substitution %$\{\alpha_1\mapsto\tau_1, \dots, \alpha_n\mapsto\tau_n\}$
+%is \emph{monomorphising} if the types $\tau_i$ are all monomorphic.
 \end{definition}
 
 \begin{definition}
-   Given a monomorphic type \(\tau_1\) and a polymorphic type \(\tau_2\), \emph{matching} \(\tau_2\) against \(\tau_1\) will either fail or yield a substitution \(\sigma\) such that \(\sigma\tau_2 = \tau_1\). Note that in the second case \(\sigma\tau_2\) is monomorphic.
+Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\) will either fail or yield a substitution \(\sigma\) such that \(\sigma\upsilon = \tau\).
 \end{definition}
+
+In the following sections, we will always match a polymorphic type $\upsilon$ against a monomorphic type $\tau$.
+% and, on success, obtain a monomorphising substitution.
 
 %{
 %\obeylines
@@ -223,7 +226,7 @@ A \emph{substitution} \(\sigma\) is a function mapping one or more type variable
 
 We consider a problem \(P\) to be a set of formulae \(F_1, \dots, F_n\).
 
-TODO: Use $\Phi_1$ etc.
+TODO: Use $\Phi$ for problem and $\varphi_1$ etc.
 
 \subsection{Initialisation step}
 The initial phase of the algorithm consists in gathering the maps \(M\) and \(P\), defined as follows:
