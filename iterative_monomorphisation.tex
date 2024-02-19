@@ -43,8 +43,12 @@
 %   - use \Phi instead of F for formulae
 %   - concrete types -> monomorphic types
 %   - use in not \in when we are not precisely dealing with set membership
-%
-%
+%   - $\Phi$ for problem and $\varphi_1$ etc.
+%   - n-uples -> n-tuples
+%   - ize -> ise (in cas i forgot any)
+%   - remove vertical space before lists (if allowed)
+%   - add full stops to end of sentences in itemize
+%   - B\"ome -> B\"ohme
 
 \title{Iterative Monomorphisation}
 
@@ -198,75 +202,80 @@ A type is \emph{monomorphic} if it contains no type variables; otherwise it is \
 A (function or predicate) {symbol} \(f\) has a \emph{type arity} that defines the number of type arguments it takes. A \emph{symbol instance} is a symbol applied to type arguments listed between angle brackets: \(f\langle \tau_1, \dots, \tau_n\rangle\), where each $\tau_i$ is a type. If $n = 0$, we omit the brackets (e.g.\ $f$).
 \end{definition}
 
-\begin{definition} % HEAVILY inspired from 2.4 in mono-trans (it is the definition of a substitution, there's bound to be some comonality between all of them) 
+\begin{definition}
 A (type) \emph{substitution} is a partial function mapping a finite number of type variables to corresponding types. Substitutions are written as
 $\sigma = \{\alpha_1\mapsto\tau_1, \dots, \alpha_n\mapsto\tau_n\}$. They are assumed to be lifted to formulae; thus, $\sigma(\varphi)$ yields the variant of $\varphi$ in which each $\alpha_i$ is replaced by $\tau_i$.
-%The substitution %$\{\alpha_1\mapsto\tau_1, \dots, \alpha_n\mapsto\tau_n\}$
-%is \emph{monomorphising} if the types $\tau_i$ are all monomorphic.
 \end{definition}
+
+\begin{definition}
+Two substitutions \(\{\alpha_1 \mapsto \tau_1, \dots, \alpha_n\mapsto\tau_n\}\) and \(\{\beta_1 \mapsto \upsilon_1, \dots, \beta_m\mapsto\upsilon_m\}\) are \emph{compatible} if for all \(i, j\): \(\alpha_i = \beta_j\) implies \(\tau_i = \upsilon_j\). 
+\end{definition}
+
 
 \begin{definition}
 Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\) will either fail or yield a substitution \(\sigma\) such that \(\sigma\upsilon = \tau\).
 \end{definition}
 
 In the following sections, we will always match a polymorphic type $\upsilon$ against a monomorphic type $\tau$.
-% and, on success, obtain a monomorphising substitution.
-
-%{
-%\obeylines
-%
-%* substitutions
-%
-%* matching
-%}
 
 % target page number: 2-4
 \section{High level algorithm}
 \label{sec:high-level-algorithm}
 
-We consider a problem \(P\) to be a set of formulae \(F_1, \dots, F_n\).
+We consider an initial problem \(\Phi\) to be a set of formulae \(\varphi_1, \dots, \varphi_n\).
 
-TODO: Use $\Phi$ for problem and $\varphi_1$ etc.
 
-\subsection{Initialisation step}
-The initial phase of the algorithm consists in gathering the maps \(M\) and \(P\), defined as follows:
+\subsection{Collection}
+The initial phase of each iteration consists in collecting the elements of the maps \(M\) and \(P\), defined as follows:
 \begin{itemize}
-    \item Given a type \(n\)-ary symbol \(f \in P\), we define \(M(f)\), the set of all \(n\)-uples of monomorphic type arguments passed to \(f\) in \(P\).
+    \item Given a type \(n\)-ary symbol \(f\) in \(\Phi\). \(M(f)\) is the set of all \(n\)-tuples of monomorphic type arguments to which \(f\) is applied in \(\Phi\).
 
-    For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) occurs in \(P\) (with \(\tau_1, \tau_2\) and \( \tau_3\) monomorphic) then, \((\tau_1, \tau_2, \tau_3) \in M(f) \).
+    For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) (with \(\tau_1, \tau_2\) and \( \tau_3\) monomorphic) occurs in \(\Phi\) then, \((\tau_1, \tau_2, \tau_3) \in M(f) \).
 
- \item Given a formula \(F \in P\) and a type \(n\)-ary symbol \(f \in F\), we define \(P(C, f)\), the set \(n\)-uples of polymorphic type arguments passed to \(f\) in \(F\). 
+ \item Given a formula \(\varphi \in \Phi\) and a type \(n\)-ary symbol \(f\) in \(\varphi\). \(P(\varphi, f)\) is the set of all \(n\)-tuples of type arguments to which \(f\) is applied in \(\varphi\). At least one of these type arguments must be polymorphic.
+    
+    For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) (with at least one of \(\tau_1, \tau_2\) or \( \tau_3\) polymorphic) occurs in \(\varphi\) then, \((\tau_1, \tau_2, \tau_3) \in P(\varphi, f) \).
 
-    It is important to paramatrise \(P\) with the formula of \(f\) because type variables are quantified at the formula level. This is not necessary for \(M\) because its types do not contain type variables.
+    It is important to parametrise \(P\) with both \(\varphi\) and \(f\) because type variables are quantified at the formula level. This is not necessary for \(M\) since all the types it contains are monomorphic.
 
 \end{itemize}
 
 \subsection{Iteration}
-A single iteration of the algorithm will do the following:
-
+A single iteration will consist in the following:
 \begin{itemize}
-   \item For each clause \(C_i \in P\) and each symbol \(f \in C_i\), we consider the uninstantiated type arguments \(U(C_i, f)\) these type type arguments are matched against all ground type arguments of \(I(f)\)
 
-      [We have an issue: we don't define matching, don't think we need to go into a lot of detail]
+   \item The maps \(M\) and \(P\) are initialised with respect to \(\Phi\).
 
-      Each such matching may return a substitution which instantiates one or more type variables of \(C_i\) (that would also be in the type arguments of \(f\))
+   \item An empty set of formulae \(\Psi\) is created.
 
-   \item Once all such substitutions have been computed. We apply each substitutions to the clause they were generated from. These newly created clauses are added to the problem and the newly generated type arguments (both ground and uninstantiated) will be added to \(U\) and \(I\) to be used for the next iteration.
+   \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) in \(\varphi\):
+
+      An empty set of substitutions \(\Sigma_{\varphi, f}\) is created, then, for each type argument tuple \((\tau_1, \dots, \tau_n) \in  P(\varphi, f)\) and each type argument tuple \((\upsilon_1, \dots, \upsilon_n) \in M(f)\):
+
+      Each \(\tau_i\) is matched against its corresponding \(\upsilon_i\) possibly yielding the substitution \(\sigma_i\).
+      If all \(n\) matchings are successful and the substitutions are two by two compatible, \(\sigma_1 \circ \dots \circ \sigma_n\) is added to \(\Sigma_{\varphi, f}\).
+
+   \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) in \(\varphi\), for each substitution \(\sigma \in \Sigma_{\varphi, f}\):
+      
+      \(\sigma(\varphi)\) is added to \(\Psi\).
+
+   \item The initial problem \(\Phi\) is replaced with \(\Phi \cup \Psi\).
+
 \end{itemize}
 
-After a set number of iterations, we take all clauses with no type variables and mangle their types [see relevant paper]. The resulting set of clauses forms a problem \(P'\) with the following properties:
-\begin{itemize}
-   \item \(P'\) is monomorphic [rewrite that as saying \(P'\) is in the monomorphic fragment of the original logic]
-   \item if a contradiction can be derived from \(P'\), then a contradiction can be derived from \(P\) [soundness]
-   \item we do not however have the converse [completeness]
-\end{itemize}
 
+After a set number of iterations, all monomorphic formulae are collected from \(\Phi\) and output.
 
-This algorithm is clearly sound as the newly derived clauses are instances of the initial clauses where universally quantified types have been replaced by concrete types.
+This algorithm is clearly sound as the newly derived formulae are instances of the initial formulae where universally quantified type variables have been instantiated with monomorphic types.
 
 \subsection{Example}
 
-TODO
+Consider a problem made up of the following formulae:
+\begin{enumerate}
+   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha,\ty{list}(\alpha)\rangle(a, b)\)
+   \item \(\forall i: \ty{int}, j: \ty{list}(\ty{int}), f\langle \ty{int}, \ty{list}(\ty{int})\rangle(i, j)\)
+\end{enumerate}
+
 
 % target page number: 2-4
 \section{Low level algorithm}
@@ -276,57 +285,15 @@ This section presents a more detailed description of the algorithm, it follows c
 
 The main departures from the high-level description of the algorithm are the following:
 \begin{itemize}
-   \item the substitutions are directly applied to the type arguments, instead of the clauses, this also dispenses us from having to re-extract the type arguments from the clauses at each iteration
-   \item as a result the new clauses are generated only once all substitutions have been computed and iteratively applied to the various type arguments
-   \item some operations are performed in a different order to avoid useless computations [which ones?]
-   \item bounds are used at almost all steps of the process as the various enumerations are highly explosive and require bounds in order to be useful in a practical setting
-   \item the various sets are implemented with maps
+   \item substitutions are directly applied to the type arguments, instead of the formulae, this also dispenses us from having to re-extract the type arguments from the clauses at each iteration
+   \item new clauses are generated only once all substitutions have been computed
+   \item bounds are used at almost all stages of the algorithm as the various enumerations are highly explosive and must be limited in a practical setting
+   \item type arguments are separated into old and new sets, thereby avoiding computing the same matchings for each iteration
+   \item once the new formulae are generated, their monomorphic types are mangled
 \end{itemize}
 
-\begin{algorithm}[th]
-\begin{algorithmic}[1]
-\Function{Type arguments}{Literal: lit}
 
-   \State let \(t_1\), \(t_2\) be the terms of \(lit\)
-   \State recursively collect the symbols and associated type arguments of \(t_1\) and \(t_2\) into a list of pairs
-
-   \State \Comment Going a bit fast here, probably need to reformulate, but don't go into details, it's not important
-
-   \State \Return the list of (symbol, type argument) pairs
-
-\EndFunction
-\end{algorithmic}
-\end{algorithm}
-
-
-\begin{algorithm}[tbh]
-\begin{algorithmic}[1]
-\Function{Initialisation}{Problem: P}
-   \ForAll{clause \(C \in P\)}
-      \ForAll{literal \(lit \in C\)}
-         \State let fun\_sym\_ty\_args = Type arguments(lit)
-         \ForAll{(fun\_sym, ty\_args) in fun\_sym\_ty\_args}
-         \If{\( \forall ty\_arg \in ty\_args. is\_ground(ty\_arg)\) }
-
-            \State \(I(fun\_sym) = I(fun\_sym) \cup \{ty\_args\}\)
-
-         \Else
-
-            \State \(U(C, fun\_sym) = U(C, fun\_sym) \cup \{ty\_args\}\)
-
-         \EndIf
-         \EndFor
-      \EndFor
-   \EndFor
-
-   \State \Return (I, U)
-
-\EndFunction
-\end{algorithmic}
-\end{algorithm}
-
-This function is very basic and simply gathers all the type arguments of the various symbols of the problem and sorts them depending on whether they are ground or not.
-
+We assume that the maps \(P\) and \(M\) have been collected from the initial problem. This step is dependent on the precise form of the formulae which has been left undefined.
 
 \begin{algorithm}[tbh]
 \begin{algorithmic}[1]
