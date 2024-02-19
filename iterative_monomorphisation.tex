@@ -36,6 +36,15 @@
 %   - polymorphic and monomorphic
 %   - title of bits of the algorithms
 %   - eg or ex -> e.g.
+%   - function symbol -> symbol instance (depends on context)
+%   - ... -> \dots
+%   - comma splices!!!!
+%   - ``'' -> `'
+%   - use \Phi instead of F for formulae
+%   - concrete types -> monomorphic types
+%   - use in not \in when we are not precisely dealing with set membership
+%
+%
 
 \title{Iterative Monomorphisation}
 
@@ -149,21 +158,27 @@ Our findings are as follows:
 \section{Preliminaries}
 \label{sec:preliminaries}
 
-{\obeylines
+This algorithm does not need to inspect the structure of the problem's formulae because it relies exclusively on the formulae's monomorphic and polymorphic symbol instances. The notion of formula is necessary as type variables are assumed to be universally quantified at a formula's top level. The precise form of a formula can nevertheless be left unspecified.
 
-\noindent\kern\parindent
-  * algorithm works a priori with any rank-1 polymorphic logic
+Iterative monomorphisation can therefore be used in a vast range of rank-1 polymorphic logic. In particular, it can operate in the polymorphic first- and higher-order logics embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-2013,th1}, popular among automatic provers.
 
-  * in particular, it works with polymorphic first- and higher-order logic as 
-    embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-201x,th1}
+The following terms are used in the algorithm descriptions.
 
-  * the algorithm does not need to inspect the precise structure of formulae
-  * instead, it works on monomorphic or polymorphic instances of symbols that 
-    occur in the formulae
-  * type quantification is implicit, meaning that all type variables occurring
-    in a formula are assumed to be universally quantified at the formula's top
-    level
-}
+%{\obeylines
+%
+%\noindent\kern\parindent
+%  * algorithm works a priori with any rank-1 polymorphic logic
+%
+%  * in particular, it works with polymorphic first- and higher-order logic as 
+%    embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-2013,th1}
+%
+%  * the algorithm does not need to inspect the precise structure of formulae
+%  * instead, it works on monomorphic or polymorphic instances of symbols that 
+%    occur in the formulae
+%  * type quantification is implicit, meaning that all type variables occurring
+%    in a formula are assumed to be universally quantified at the formula's top
+%    level
+%}
 
 \bigskip
 
@@ -181,15 +196,26 @@ A type is \emph{monomorphic} if it contains no type variables; otherwise it is \
 
 \begin{definition}%[Function symbol]
 A (function or predicate) \emph{symbol} \(f\) has a type arity that defines the number of type arguments it takes. These arguments are listed between angle brackets: \(f\langle \tau_1, \dots, \tau_n\rangle\), where each $\tau_i$ is a type.
+
+A \emph{symbol instance} refers to a symbol provided with its type arguments.
 \end{definition}
 
-{
-\obeylines
+\begin{definition} % HEAVILY inspired from 2.4 in mono-trans (it is the definition of a substitution, there's bound to be some comonality between all of them) 
+A \emph{substitution} \(\sigma\) is a function mapping one or more type variables to corresponding monomorphic type. Substitutions are in practice mostly be applied to formulae. Given a formula \(\Phi\), the formula obtained by replacing each type variable \(\alpha\) in \(\Phi\) by \(\sigma\alpha\) is written \(\sigma\Phi\).
 
-* substitutions
+\end{definition}
 
-* matching
-}
+\begin{definition}
+   Given a monomorphic type \(\tau_1\) and a polymorphic type \(\tau_2\), \emph{matching} \(\tau_2\) against \(\tau_1\) will either fail or yield a substitution \(\sigma\) such that \(\sigma\tau_2 = \tau_1\). Note that in the second case \(\sigma\tau_2\) is monomorphic.
+\end{definition}
+
+%{
+%\obeylines
+%
+%* substitutions
+%
+%* matching
+%}
 
 % target page number: 2-4
 \section{High level algorithm}
