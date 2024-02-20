@@ -189,13 +189,13 @@ Due to this generality, iterative monomorphisation can be used with any reasonab
 Our abstract framework relies on the following basic definitions.
 
 \begin{definition}%[Type]
-A \emph{type} \(\tau\) can be a type variable (e.g.\ \(\alpha\)) or
+A (\emph{polymorphic}) \emph{type} \(\tau\) can be a type variable (e.g.\ \(\alpha\)) or
 the application of an \(n\)-ary type constructor to \(n\) types (e.g.\ \(\ty{list}(\alpha)\), \(\ty{map}(\ty{int},\ty{string})\)).
 If $n = 0$, we omit the parentheses (e.g.\ \(\ty{int}\)).
 \end{definition}
 
 \begin{definition}%[Monomorphism and polymorphism]
-A type is \emph{monomorphic} if it contains no type variables; otherwise it is \emph{polymorphic}.
+A type is \emph{monomorphic} if it contains no type variables.
 \end{definition}
 
 \begin{definition}%[Function symbol]
@@ -203,17 +203,17 @@ A (function or predicate) {symbol} \(f\) has a \emph{type arity} that defines th
 \end{definition}
 
 \begin{definition}
-A (type) \emph{substitution} is a partial function mapping a finite number of type variables to corresponding types. Substitutions are written as
+A (\emph{type}) \emph{substitution} is a partial function mapping a finite number of type variables to corresponding types. Substitutions are written as
 $\sigma = \{\alpha_1\mapsto\tau_1, \dots, \alpha_n\mapsto\tau_n\}$. They are assumed to be lifted to formulae; thus, $\sigma(\varphi)$ yields the variant of $\varphi$ in which each $\alpha_i$ is replaced by $\tau_i$.
 \end{definition}
 
 \begin{definition}
-Two substitutions \(\{\alpha_1 \mapsto \tau_1, \dots, \alpha_n\mapsto\tau_n\}\) and \(\{\beta_1 \mapsto \upsilon_1, \dots, \beta_m\mapsto\upsilon_m\}\) are \emph{compatible} if for all \(i, j\), \(\alpha_i = \beta_j\) implies \(\tau_i = \upsilon_j\). 
+Two substitutions \(\{\alpha_1 \mapsto \tau_1, \dots, \alpha_m\mapsto\tau_m\}\) and \(\{\beta_1 \mapsto \upsilon_1, \dots, \beta_n\mapsto\upsilon_n\}\) are \emph{compatible} if \(\alpha_i = \beta_j\) implies \(\tau_i = \upsilon_j\) for all \(i, j\).
 \end{definition}
 
 
 \begin{definition}
-Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\) will either fail or yield a substitution \(\sigma\) such that \(\sigma\upsilon = \tau\).
+Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\) will either fail or yield a substitution \(\sigma\) such that \(\sigma(\upsilon) = \tau\).
 \end{definition}
 
 In the following sections, we will always match a polymorphic type $\upsilon$ against a monomorphic type $\tau$.
@@ -222,20 +222,25 @@ In the following sections, we will always match a polymorphic type $\upsilon$ ag
 \section{High level algorithm}
 \label{sec:high-level-algorithm}
 
-We consider an initial problem \(\Phi\) to be a set of formulae \(\varphi_1, \dots, \varphi_n\).
-
+We start with a high level description of the iterative monomorphisation algorithm. The algorithm takes a polymorphic problem as argument and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase (Section~\ref{ssec:collection}) and a processing phase (Section~\ref{ssec:processing}).
 
 \subsection{Collection}
-The initial phase of each iteration consists in collecting the elements of the maps \(M\) and \(P\).
+\label{ssec:collection}
 
-Given a type \(n\)-ary symbol \(f\) in \(\Phi\). \(M(f)\) is the set of all \(n\)-tuples of monomorphic type arguments to which \(f\) is applied in \(\Phi\). For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) (with \(\tau_1, \tau_2\) and \( \tau_3\) monomorphic) occurs in \(\Phi\) then, \((\tau_1, \tau_2, \tau_3) \in M(f) \).
+The initial phase of each iteration consists of computing two maps, \(M\) and \(P\), from the input problem~$\Phi$:
 
-Given a formula \(\varphi \in \Phi\) and a type \(n\)-ary symbol \(f\) in \(\varphi\). \(P(\varphi, f)\) is the set of all remaining \(n\)-tuples of type arguments to which \(f\) is applied in \(\varphi\) which are not in \(M(f)\). Meaning that at least one the type arguments is polymorphic. For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) (with at least one of \(\tau_1, \tau_2\) or \( \tau_3\) polymorphic) occurs in \(\varphi\) then, \((\tau_1, \tau_2, \tau_3) \in P(\varphi, f) \).
+\begin{itemize}
+\item Given a symbol \(f\) occurring in \(\Phi\), the set \(M(f)\) consists of all tuples of monomorphic type arguments to which \(f\) is applied in \(\Phi\). For example, if \(\sym{foldl}\langle \ty{nat}, \ty{int}\rangle\) occurs in \(\Phi\), then \((\ty{nat}, \ty{int}) \in M(\sym{foldl}) \).
 
-It is important to parametrise \(P\) with both \(\varphi\) and \(f\) because type variables are quantified at the formula level. This is not necessary for \(M\) since all the types it contains are monomorphic.
+\item Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(P(\varphi, f)\) consists of all tuples of type arguments to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in P(\varphi, \sym{foldl}) \).
+\end{itemize}
+
+It is important to parametrise \(P\) with \(\varphi\) because type variables are quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
 
 
-\subsection{Iteration}
+\subsection{Processing}
+\label{ssec:processing}
+
 Each iteration of the algorithm follows these steps:
 \begin{itemize}
 
