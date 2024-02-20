@@ -267,7 +267,7 @@ This algorithm is clearly sound as the newly derived formulae are instances of t
 Consider a problem made up of the following formulae:
 \begin{enumerate}
    \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
-   \item \(\forall i: \ty{int}, f\langle \ty{int}\rangle(i)\)
+   \item \(f\langle \ty{int}\rangle(0)\)
 \end{enumerate}
 
 \begin{table}[ht]
@@ -276,10 +276,10 @@ Consider a problem made up of the following formulae:
    \toprule
                & Initialisation & Iteration 1 & Iteration 2 & Iteration 3\\
    \midrule
-   \(M\)       & \((\ty{int})\)                     & -                     & \((\ty{list}(\ty{int}))\) \\
-   \(P(1, f)\) & \((\alpha)\; (\ty{list}(\alpha))\) & -                     & - \\
-   \(P(2, f)\) & \(\emptyset\)                      & -                     & - & \(\emptyset\) \\
-   \(\Phi\)    & [1] \; [2]                         & \(\sigma(\text{[1]})\)& \(\sigma'(\text{[1]})\)& \\
+   \(M\)       & \((\ty{int})\) & - &\(+(\ty{list}(\ty{int}))\) & \(+(\ty{list}(\ty{list}(\ty{int})))\) \\
+   \(P(1, f)\) & \((\alpha)\; (\ty{list}(\alpha))\) & - & - & -\\
+   \(P(2, f)\) & \(\emptyset\) & - & - & - \\
+   \(\Phi\)    & [1] \; [2] &\(+\sigma(\text{[1]})\)&\(+\sigma'(\text{[1]})\)& \(+\sigma''(\text{[1]})\)\\
    \bottomrule
 \end{tabular}
 \end{table}
@@ -287,13 +287,25 @@ Consider a problem made up of the following formulae:
 
 On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
 
-At the beginning of the second iteration, the clause generated in the previous iteration is used to update \(M\).
+At the beginning of the second iteration, the clause generated in the previous iteration is used to update \(M(f)\), adding \((\ty{list}(\ty{int}))\). \(P\) has no new elements. Similarly to the first iteration we attempt the following matchings:
+\begin{itemize}
+   \item \(\alpha\) against \(\ty{int}\) which succeeds resulting in \(\sigma\)
+   \item \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails
+   \item \(\alpha\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma'=\{\alpha\mapsto\ty{list}(\ty{int})\}\)
+   \item \(\ty{list}(\alpha)\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma\)
+\end{itemize}
+
+From these substitutions, a single new formula can be generated from the application of \(\sigma'\) to [1], giving us: \(\sigma'(\text{[1]}) = \forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\)
+
+This new formula will be used to add \((\ty{list}(\ty{list}(\ty{int})))\) to \(M(f)\) at the beginning of the third iteration. Similarly to the previous iteration, a single new formula will be generated. It is obtained by applying the new substitution \(\sigma'' = \{\alpha\mapsto\ty{list}(\ty{list}(\ty{int}))\}\) to [1].
+
+This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. It also shows that the high-level description is unsuitable for direct implementation. Indeed, many operations, from matchings to substitution applications, are unnecessarily repeated. Additionally, in practice input problems will be far larger and more explosive, any reasonable implementation will require bounds to be useful.
 
 % target page number: 2-4
 \section{Low level algorithm}
 \label{sec:low-level-algorithm}
 
-This section presents a more detailed description of the algorithm, it follows closely the implementation in Zipperposition.
+This section presents a more detailed description of a practical adaptation of iterative monomorphisation, it closely follows the implementation in Zipperposition.
 
 The main departures from the high-level description of the algorithm are the following:
 \begin{itemize}
