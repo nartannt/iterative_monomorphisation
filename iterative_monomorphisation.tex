@@ -205,6 +205,8 @@ A (function or predicate) {symbol} \(f\) has a \emph{type arity} that defines th
 \begin{definition}
 A (\emph{type}) \emph{substitution} is a partial function mapping a finite number of type variables to corresponding types. Substitutions are written as
 $\sigma = \{\alpha_1\mapsto\tau_1, \dots, \alpha_n\mapsto\tau_n\}$. They are assumed to be lifted to formulae; thus, $\sigma(\varphi)$ yields the variant of $\varphi$ in which each $\alpha_i$ is replaced by $\tau_i$.
+
+Given \(\tau\) and \(\upsilon\) two substitutions, \(\tau \circ \upsilon\) is the successive application of \(\upsilon\) then \(\tau\).
 \end{definition}
 
 \begin{definition}
@@ -222,7 +224,8 @@ In the following sections, we will always match a polymorphic type $\upsilon$ ag
 \section{High level algorithm}
 \label{sec:high-level-algorithm}
 
-We start with a high level description of the iterative monomorphisation algorithm. The algorithm takes a polymorphic problem as argument and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase (Section~\ref{ssec:collection}) and a processing phase (Section~\ref{ssec:processing}).
+%We start with a high level description of the iterative monomorphisation algorithm.
+The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase (Section~\ref{ssec:collection}) and a processing phase (Section~\ref{ssec:processing}).
 
 \subsection{Collection}
 \label{ssec:collection}
@@ -241,70 +244,94 @@ It is important to parametrise \(P\) with \(\varphi\) because type variables are
 \subsection{Processing}
 \label{ssec:processing}
 
-Each iteration of the algorithm follows these steps:
-\begin{itemize}
+Each iteration follows these steps:
+\begin{enumerate}
 
-   \item The maps \(M\) and \(P\) are initialised with respect to \(\Phi\).
+   \item The maps \(M\) and \(P\) are initialised with respect to \(\Phi\) as per the collection phase.
 
    \item An empty set of formulae \(\Psi\) is created.
 
-   \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) in \(\varphi\):
+   \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) occuring in \(\varphi\):
 
-      An empty set of substitutions \(\Sigma_{\varphi, f}\) is created, then, for every type argument tuple \((\tau_1, \dots, \tau_n) \in  P(\varphi, f)\) and every type argument tuple \((\upsilon_1, \dots, \upsilon_n) \in M(f)\):
+      An empty set of substitutions \(\Sigma_{\varphi, f}\) is created, then for every tuple \((\tau_1, \dots, \tau_n) \in  P(\varphi, f)\) and tuple \((\upsilon_1, \dots, \upsilon_n) \in M(f)\):
 
-      Each \(\tau_i\) is matched against its corresponding \(\upsilon_i\) possibly yielding the substitution \(\sigma_i\). If all \(n\) matchings are successful and the substitutions are two by two compatible, \(\sigma_1 \circ \dots \circ \sigma_n\) is added to \(\Sigma_{\varphi, f}\).
+      \(\tau_i\) is matched against \(\upsilon_i\), possibly yielding the substitution \(\sigma_i\), for all \(i\). If all \(n\) matchings are successful and the substitutions are two by two compatible, \(\sigma_1 \circ \dots \circ \sigma_n\) is added to \(\Sigma_{\varphi, f}\).
 
-   \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) in \(\varphi\), for each substitution \(\sigma \in \Sigma_{\varphi, f}\):
-      
-      \(\sigma(\varphi)\) is added to \(\Psi\).
+   \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) in \(\varphi\), for each substitution \(\sigma \in \Sigma_{\varphi, f}\), the formula \(\sigma(\varphi)\) is added to \(\Psi\).
 
-   \item The initial problem \(\Phi\) is replaced with \(\Phi \cup \Psi\).
+   \item \(\Phi \cup \Psi\) is returned.
 
-\end{itemize}
+\end{enumerate}
 
 
-After a set number of iterations, all monomorphic formulae in \(\Phi\) are output.
+An arbitrary number of iterations can be performed, re-using the output of one iteration as the input for the next. The final step requires all monomorphic formulae returned by the last iteration to be output.
 
 This algorithm is clearly sound as the newly derived formulae are instances of the initial formulae where universally quantified type variables have been instantiated with monomorphic types.
 
 \subsection{Example}
 
-Consider a problem made up of the following formulae:
+Consider the initial problem:
 \begin{enumerate}
    \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
    \item \(f\langle \ty{int}\rangle(0)\)
 \end{enumerate}
 
+During the first iteration, the matching of \(\alpha\) against \(\ty{int}\) will allow the generation an additionnal clause, resulting in this problem:
+
+\begin{enumerate}
+   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
+   \item \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
+   \item \(f\langle \ty{int}\rangle(0)\)
+\end{enumerate}
+
+The second iteration will see \(\alpha\) matched against \(\ty{list}(\ty{int})\) leading to another clause being added to the problem:
+
+\begin{enumerate}
+   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
+   \item \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
+   \item \(\forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\)
+   \item \(f\langle \ty{int}\rangle(0)\)
+\end{enumerate}
+
+Similarly the third iteration yields:
+
+\begin{enumerate}
+   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
+   \item \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
+   \item \(\forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\)
+   \item \(\forall a: \ty{list}(\ty{list}(\ty{int})), b:\ty{list}(\ty{list}(\ty{list}(\ty{int}))), f\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(b)\)
+   \item \(f\langle \ty{int}\rangle(0)\)
+\end{enumerate}
+
 \begin{table}[ht]
-\caption{State of the algorithm}
-\centering\begin{tabular}{@{}lccccccc@{}}
+\caption{New formula}
+\centering\begin{tabular}{@{}ll@{}}
    \toprule
-               & Initialisation & Iteration 1 & Iteration 2 & Iteration 3\\
+   loop & new formula\\
    \midrule
-   \(M\)       & \((\ty{int})\) & - &\(+(\ty{list}(\ty{int}))\) & \(+(\ty{list}(\ty{list}(\ty{int})))\) \\
-   \(P(1, f)\) & \((\alpha)\; (\ty{list}(\alpha))\) & - & - & -\\
-   \(P(2, f)\) & \(\emptyset\) & - & - & - \\
-   \(\Phi\)    & [1] \; [2] &\(+\sigma(\text{[1]})\)&\(+\sigma'(\text{[1]})\)& \(+\sigma''(\text{[1]})\)\\
+   1 -& \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\) \\
+   2 -& \(\forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\) \\
+   3 -& \(\forall a: \ty{list}(\ty{list}(\ty{int})), b:\ty{list}(\ty{list}(\ty{list}(\ty{int}))), f\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(b)\) \\
    \bottomrule
 \end{tabular}
 \end{table}
+%
+%
+%On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
+%
+%At the beginning of the second iteration, the clause generated in the previous iteration is used to update \(M(f)\), adding \((\ty{list}(\ty{int}))\). \(P\) has no new elements. Similarly to the first iteration we attempt the following matchings:
+%\begin{itemize}
+%   \item \(\alpha\) against \(\ty{int}\) which succeeds resulting in \(\sigma\)
+%   \item \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails
+%   \item \(\alpha\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma'=\{\alpha\mapsto\ty{list}(\ty{int})\}\)
+%   \item \(\ty{list}(\alpha)\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma\)
+%\end{itemize}
+%
+%From these substitutions, a single new formula can be generated from the application of \(\sigma'\) to [1], giving us: \(\sigma'(\text{[1]}) = \forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\)
+%
+%This new formula will be used to add \((\ty{list}(\ty{list}(\ty{int})))\) to \(M(f)\) at the beginning of the third iteration. Similarly to the previous iteration, a single new formula will be generated. It is obtained by applying the new substitution \(\sigma'' = \{\alpha\mapsto\ty{list}(\ty{list}(\ty{int}))\}\) to [1].
 
-
-On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
-
-At the beginning of the second iteration, the clause generated in the previous iteration is used to update \(M(f)\), adding \((\ty{list}(\ty{int}))\). \(P\) has no new elements. Similarly to the first iteration we attempt the following matchings:
-\begin{itemize}
-   \item \(\alpha\) against \(\ty{int}\) which succeeds resulting in \(\sigma\)
-   \item \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails
-   \item \(\alpha\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma'=\{\alpha\mapsto\ty{list}(\ty{int})\}\)
-   \item \(\ty{list}(\alpha)\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma\)
-\end{itemize}
-
-From these substitutions, a single new formula can be generated from the application of \(\sigma'\) to [1], giving us: \(\sigma'(\text{[1]}) = \forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\)
-
-This new formula will be used to add \((\ty{list}(\ty{list}(\ty{int})))\) to \(M(f)\) at the beginning of the third iteration. Similarly to the previous iteration, a single new formula will be generated. It is obtained by applying the new substitution \(\sigma'' = \{\alpha\mapsto\ty{list}(\ty{list}(\ty{int}))\}\) to [1].
-
-This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. It also shows that the high-level description is unsuitable for direct implementation. Indeed, many operations, from matchings to substitution applications, are unnecessarily repeated. Additionally, in practice input problems will be far larger and more explosive, any reasonable implementation will require bounds to be useful.
+This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. Additionally, input problems are far larger and more explosive in practice and any reasonable implementation requires bounds to be useful.
 
 % target page number: 2-4
 \section{Low level algorithm}
