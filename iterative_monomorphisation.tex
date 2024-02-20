@@ -208,7 +208,7 @@ $\sigma = \{\alpha_1\mapsto\tau_1, \dots, \alpha_n\mapsto\tau_n\}$. They are ass
 \end{definition}
 
 \begin{definition}
-Two substitutions \(\{\alpha_1 \mapsto \tau_1, \dots, \alpha_n\mapsto\tau_n\}\) and \(\{\beta_1 \mapsto \upsilon_1, \dots, \beta_m\mapsto\upsilon_m\}\) are \emph{compatible} if for all \(i, j\): \(\alpha_i = \beta_j\) implies \(\tau_i = \upsilon_j\). 
+Two substitutions \(\{\alpha_1 \mapsto \tau_1, \dots, \alpha_n\mapsto\tau_n\}\) and \(\{\beta_1 \mapsto \upsilon_1, \dots, \beta_m\mapsto\upsilon_m\}\) are \emph{compatible} if for all \(i, j\), \(\alpha_i = \beta_j\) implies \(\tau_i = \upsilon_j\). 
 \end{definition}
 
 
@@ -226,22 +226,17 @@ We consider an initial problem \(\Phi\) to be a set of formulae \(\varphi_1, \do
 
 
 \subsection{Collection}
-The initial phase of each iteration consists in collecting the elements of the maps \(M\) and \(P\), defined as follows:
-\begin{itemize}
-    \item Given a type \(n\)-ary symbol \(f\) in \(\Phi\). \(M(f)\) is the set of all \(n\)-tuples of monomorphic type arguments to which \(f\) is applied in \(\Phi\).
+The initial phase of each iteration consists in collecting the elements of the maps \(M\) and \(P\).
 
-    For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) (with \(\tau_1, \tau_2\) and \( \tau_3\) monomorphic) occurs in \(\Phi\) then, \((\tau_1, \tau_2, \tau_3) \in M(f) \).
+Given a type \(n\)-ary symbol \(f\) in \(\Phi\). \(M(f)\) is the set of all \(n\)-tuples of monomorphic type arguments to which \(f\) is applied in \(\Phi\). For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) (with \(\tau_1, \tau_2\) and \( \tau_3\) monomorphic) occurs in \(\Phi\) then, \((\tau_1, \tau_2, \tau_3) \in M(f) \).
 
- \item Given a formula \(\varphi \in \Phi\) and a type \(n\)-ary symbol \(f\) in \(\varphi\). \(P(\varphi, f)\) is the set of all \(n\)-tuples of type arguments to which \(f\) is applied in \(\varphi\). At least one of these type arguments must be polymorphic.
-    
-    For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) (with at least one of \(\tau_1, \tau_2\) or \( \tau_3\) polymorphic) occurs in \(\varphi\) then, \((\tau_1, \tau_2, \tau_3) \in P(\varphi, f) \).
+Given a formula \(\varphi \in \Phi\) and a type \(n\)-ary symbol \(f\) in \(\varphi\). \(P(\varphi, f)\) is the set of all remaining \(n\)-tuples of type arguments to which \(f\) is applied in \(\varphi\) which are not in \(M(f)\). Meaning that at least one the type arguments is polymorphic. For example, if \(f\langle \tau_1, \tau_2, \tau_3\rangle\) (with at least one of \(\tau_1, \tau_2\) or \( \tau_3\) polymorphic) occurs in \(\varphi\) then, \((\tau_1, \tau_2, \tau_3) \in P(\varphi, f) \).
 
-    It is important to parametrise \(P\) with both \(\varphi\) and \(f\) because type variables are quantified at the formula level. This is not necessary for \(M\) since all the types it contains are monomorphic.
+It is important to parametrise \(P\) with both \(\varphi\) and \(f\) because type variables are quantified at the formula level. This is not necessary for \(M\) since all the types it contains are monomorphic.
 
-\end{itemize}
 
 \subsection{Iteration}
-A single iteration will consist in the following:
+Each iteration of the algorithm follows these steps:
 \begin{itemize}
 
    \item The maps \(M\) and \(P\) are initialised with respect to \(\Phi\).
@@ -250,10 +245,9 @@ A single iteration will consist in the following:
 
    \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) in \(\varphi\):
 
-      An empty set of substitutions \(\Sigma_{\varphi, f}\) is created, then, for each type argument tuple \((\tau_1, \dots, \tau_n) \in  P(\varphi, f)\) and each type argument tuple \((\upsilon_1, \dots, \upsilon_n) \in M(f)\):
+      An empty set of substitutions \(\Sigma_{\varphi, f}\) is created, then, for every type argument tuple \((\tau_1, \dots, \tau_n) \in  P(\varphi, f)\) and every type argument tuple \((\upsilon_1, \dots, \upsilon_n) \in M(f)\):
 
-      Each \(\tau_i\) is matched against its corresponding \(\upsilon_i\) possibly yielding the substitution \(\sigma_i\).
-      If all \(n\) matchings are successful and the substitutions are two by two compatible, \(\sigma_1 \circ \dots \circ \sigma_n\) is added to \(\Sigma_{\varphi, f}\).
+      Each \(\tau_i\) is matched against its corresponding \(\upsilon_i\) possibly yielding the substitution \(\sigma_i\). If all \(n\) matchings are successful and the substitutions are two by two compatible, \(\sigma_1 \circ \dots \circ \sigma_n\) is added to \(\Sigma_{\varphi, f}\).
 
    \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) in \(\varphi\), for each substitution \(\sigma \in \Sigma_{\varphi, f}\):
       
@@ -264,7 +258,7 @@ A single iteration will consist in the following:
 \end{itemize}
 
 
-After a set number of iterations, all monomorphic formulae are collected from \(\Phi\) and output.
+After a set number of iterations, all monomorphic formulae in \(\Phi\) are output.
 
 This algorithm is clearly sound as the newly derived formulae are instances of the initial formulae where universally quantified type variables have been instantiated with monomorphic types.
 
@@ -272,10 +266,28 @@ This algorithm is clearly sound as the newly derived formulae are instances of t
 
 Consider a problem made up of the following formulae:
 \begin{enumerate}
-   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha,\ty{list}(\alpha)\rangle(a, b)\)
-   \item \(\forall i: \ty{int}, j: \ty{list}(\ty{int}), f\langle \ty{int}, \ty{list}(\ty{int})\rangle(i, j)\)
+   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
+   \item \(\forall i: \ty{int}, f\langle \ty{int}\rangle(i)\)
 \end{enumerate}
 
+\begin{table}[ht]
+\caption{State of the algorithm}
+\centering\begin{tabular}{@{}lccccccc@{}}
+   \toprule
+               & Initialisation & Iteration 1 & Iteration 2 & Iteration 3\\
+   \midrule
+   \(M\)       & \((\ty{int})\)                     & -                     & \((\ty{list}(\ty{int}))\) \\
+   \(P(1, f)\) & \((\alpha)\; (\ty{list}(\alpha))\) & -                     & - \\
+   \(P(2, f)\) & \(\emptyset\)                      & -                     & - & \(\emptyset\) \\
+   \(\Phi\)    & [1] \; [2]                         & \(\sigma(\text{[1]})\)& \(\sigma'(\text{[1]})\)& \\
+   \bottomrule
+\end{tabular}
+\end{table}
+
+
+On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
+
+At the beginning of the second iteration, the clause generated in the previous iteration is used to update \(M\).
 
 % target page number: 2-4
 \section{Low level algorithm}
