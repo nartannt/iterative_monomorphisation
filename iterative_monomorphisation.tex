@@ -28,6 +28,22 @@
 \newdefinition{definition}{Definition}
 \newdefinition{example}[definition]{Example}
 
+
+\definecolor{grey}{rgb}{0.8,0.8,0.8}
+\definecolor{algoColorKeyword}{named}{grey}
+\makeatletter
+% Block with a vertical line
+\renewcommand{\algocf@Vsline}[1]{%
+   \strut\par\nointerlineskip%
+   \algocf@push{\skiprule}%
+   \hbox{%
+      {\color{algoColorKeyword}\vrule}
+      \vtop{\algocf@push{\skiptext}%
+      \vtop{\algocf@addskiptotal\advance\hsize by -\skiplength #1}}%
+   }%
+   \algocf@pop{\skiprule}%
+}
+
 \begin{document}
 
 \copyrightyear{2024}
@@ -45,6 +61,7 @@
 %   - use of formula vs clause
 %   - polymorphic and monomorphic
 %   - title of bits of the algorithms
+%   - TH1 ugly for height of 1 reasons, can be fixed with case feature
 %   - eg or ex -> e.g.
 %   - function symbol -> symbol instance (depends on context)
 %   - ... -> \dots
@@ -91,57 +108,18 @@ Monomorphisation can be used to extend monomorphic provers to support polymorphi
 One of the main applications of automatic theorem provers is to provide automation to users of proof assistants. Many proof assistants, such as HOL4 \cite{slind-norrish-2008}, HOL Light \cite{harrison-2009}, and
 Isabelle/HOL \cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed only at the top level of formulae. On the other hand, many automatic provers operate only on monomorphic logics. One approach to close this gap is to extend provers to natively support polymorphism, as has been done for Vampire \cite{bhayat-reger-2020}. This, however, entails a lot of work that needs to be redone for every prover.
 
-  % apps are rank-1 polymorphic, but provers are mono
-  % there's a gap
-  % one solution is to extend the provers to support polymorphism;
-  % this was done e.g. for Vampire \cite{xxx}
-  % but this is a lot of work, and needs to be done for every prover
-
 The alternative is to translate polymorphic problems to monomorphic problems. One approach is to encode polymorphism using dedicated function or predicate symbols \cite{mono-trans} in a monomorphic logic. Another approach is to encode polymorphism using {iterative monomorphisation}, as introduced by B\"ohme \cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
-
- % * the alternative is to translate polymorphic problems to monomorphic problems
- %   * two main approaches:
- %     * complete encoding of polymorphism, using guards or tags,
- %       as in Blanchette et al.~\cite{mono-trans} and Bobot et al.~\cite{expr-poly-types}
- %     * incomplete encoding of polymorphism based on iterative monomorphisation
- %       such as introduced by Böhme \cite[Section 2.2.1]{sb-phd}, whereby type
- %       variables are heuristically instantiated by concrete types
 
 By a type version of the compactness theorem, we have that in first order logic, given a polymorphic formula \(\varphi\), there exist an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, such a set cannot be computed \cite[Theorem 1]{expr-poly-types}. As a result, any monomorphisation method based on instantiation of type variables is
 bound to be incomplete.
-
-  %* By a type version of compactness, if a set of polymorphic
-  %  formulae is unsatisfiable, then there exists a finite set of monomorphic
-  %  instances of the formulae that is also unsatisfiable. However, this
-  %  finite set cannot be computed \cite[Section 2, Theorem 1]{expr-poly-types}; hence any approach based on
-  %  instantiation of type variables is incomplete.
-
 
 B\"ohme's iterative approach is implemented as part of the SMT (satisfiability modulo theories) integration \cite[Chapter 2]{sb-phd} in Isabelle/HOL. This implementation is also used by Sledgehammer \cite{judgement, hammer} to interface with superposition based automatic theorem provers. However, it is is documented only as a single subsection in his PhD thesis \cite[Section 2.2.1]{sb-phd}.
 
 In this paper, we present an algorithm based on our understanding of his description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed description to help future implementers. In addition, this description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
 
-% * Böhme's iterative approach is implemented as part of the SMT integration \cite[Chapter 2]{sb-phd}
-%     in Isabelle/HOL. This implementation is also used by
-%    Sledgehammer \cite{judgement, hammer} to interface automatic theorem provers based on
-%    superposition.
-%
-%  * The main drawback of Böhme's approach is that it is only briefly documented,
-%    as a single paragraph in his PhD thesis \cite[Section 2.2.1]{sb-phd}
-%  * In this paper, we present an algorithm inspired by his description and
-%    implementation (Section~\ref{sec:high level-algorithm}).
-%    * we aimed at mathematical precision, so that people who want to reimplement
-%      the algorithm can follow this blueprint
-%    * we also show how to bound the algorithm to avoid explosions in practice
-%      (Section~\ref{sec:low-level-algorithm}).
-%      ``the explosive nature of the procedures requires various bounds which
-%      limit the number of type arguments and clauses that are generated.''
-
-
 The algorithm works as follows. We assume problems to be sets of formulae. All symbols of the problem are collected, and the polymorphic instances of symbols are matched against the monomorphic ones. This yields new instances of symbols, both polymorphic and monomorphic. The process is then iterated
 a number of times, making use of the newly generated instances.
 
-%These iterations are required to account for $n$-ary type constructors.
 Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(\alpha)$, where $\alpha$ is a type variable, it may be possible to generate the types $\ty{list}(\ty{int})$, $\ty{list}(\ty{list}(\ty{int}))$, etc. However, because new types emerge through matching, $\ty{list}(\ty{list}(\ty{int}))$ can be obtained only once the $\ty{list}(\ty{int})$ instance has already been generated. This example also makes it clear that the set of instances that can be generated is infinite.
 
 To keep the number of generated formulae finite, we limit the number of iterations. After the iterations are completed, the new monomorphic symbol instances are used to instantiate the polymorphic symbols in the problem's formulae, generating new monomorphic formulae. Finally, because monomorphic provers generally do not support $n$-ary type constructors, types must be `mangled'; for example, the compound type $\ty{list}(\ty{int})$ could be mangled to the constant $\ty{list\_int}$.
@@ -149,7 +127,6 @@ To keep the number of generated formulae finite, we limit the number of iteratio
 We implemented iterative monormorphisation in Zipperpostion \cite{zipp}, a higher order prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E \cite{e} as a backend. This means that E can now be used with polymorphic problems. Moreover, our implementation of the algorithm in Zipperposition can be used as a preprocessor to interface with other stand-alone provers.
 
 Our empirical evaluation on TPTP \cite{tptp} problems attempts to answer three questions (Section~\ref{sec:evaluation}):
-%
 \begin{enumerate}
 \item Is the new Zipperposition with the E backend more successful on polymorphic problems than Zipperposition without backend?
 
@@ -159,7 +136,6 @@ Our empirical evaluation on TPTP \cite{tptp} problems attempts to answer three q
 \end{enumerate}
 
 Our findings are as follows:
-%
 \begin{enumerate}
 \item Zipperposition benefits substantially from the E backend.
 
@@ -173,42 +149,22 @@ Our findings are as follows:
 \label{sec:preliminaries}
 
 This algorithm works independently of the structure of the problem's formulae. It relies exclusively on the formulae's monomorphic and polymorphic symbol instances. Type variables are assumed to be implicitly universally quantified at a formula's top level. The precise form of formulae is left unspecified.
-%
 Due to this generality, iterative monomorphisation can be used with any reasonable rank-1 polymorphic logic. In particular, it can operate in the polymorphic first and higher order logics embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-2013,th1}, implemented by several automatic provers.
 
-%The following terms are used in the algorithm descriptions.
-
-%{\obeylines
-%
-%\noindent\kern\parindent
-%  * algorithm works a priori with any rank-1 polymorphic logic
-%
-%  * in particular, it works with polymorphic first and higher order logic as 
-%    embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-2013,th1}
-%
-%  * the algorithm does not need to inspect the precise structure of formulae
-%  * instead, it works on monomorphic or polymorphic instances of symbols that 
-%    occur in the formulae
-%  * type quantification is implicit, meaning that all type variables occurring
-%    in a formula are assumed to be universally quantified at the formula's top
-%    level
-%}
-
-% TH1 ugly for height of 1 reasons, can be fixed with case feature
 
 Our abstract framework relies on the following basic definitions.
 
-\begin{definition}%[Type]
+\begin{definition}
 A (\emph{polymorphic}) \emph{type} \(\tau\) can be a type variable (e.g.\ \(\alpha\)) or
 the application of an \(n\)-ary type constructor to \(n\) types (e.g.\ \(\ty{list}(\alpha)\), \(\ty{map}(\ty{int},\ty{string})\)).
 If $n = 0$, we omit the parentheses (e.g.\ \(\ty{int}\)).
 \end{definition}
 
-\begin{definition}%[Monomorphism and polymorphism]
+\begin{definition}
 A type is \emph{monomorphic} if it contains no type variables.
 \end{definition}
 
-\begin{definition}%[Function symbol]
+\begin{definition}
 A (function or predicate) {symbol} \(f\) has a \emph{type arity} that defines the number of type arguments it takes. A \emph{symbol instance} is a symbol applied to type arguments listed between angle brackets: \(f\langle \tau_1, \dots, \tau_n\rangle\), where each $\tau_i$ is a type. If $n = 0$, we omit the brackets (e.g.\ $f$).
 \end{definition}
 
@@ -233,15 +189,7 @@ In the following sections, we will always match a polymorphic type $\upsilon$ ag
 \section{High level algorithm}
 \label{sec:high level-algorithm}
 
-%We start with a high level description of the iterative monomorphisation algorithm.
-The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase
-% (Section~\ref{ssec:collection})
-and an instantiation phase.
-% (Section~\ref{ssec:instantiation})
-Once the iterations are completed, a final step filters out all non-monomorphic formulae returned by the last iteration.
-
-%\subsection{Collection}
-%\label{ssec:collection}
+The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step filters out all non-monomorphic formulae returned by the last iteration.
 
 The initial phase of each iteration consists of computing two maps, \(M\) and \(P\), from the input problem~$\Phi$.
 %
@@ -252,9 +200,6 @@ The initial phase of each iteration consists of computing two maps, \(M\) and \(
 \end{enumerate}
 
 These definitions depend on the precise form of the input formulae, which has been left undefined. It is important to parametrise \(P\) with \(\varphi\) because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
-
-%\subsection{Instantiation}
-%\label{ssec:instantiation}
 
 Once the maps \(M\) and \(P\) are initialised, each iteration performs the following steps to create new instances of formulae:
 
@@ -276,8 +221,6 @@ add the formula \((\sigma_1 \circ \dots \circ \sigma_n)(\varphi)\) to \(\Phi'\).
 \end{enumerate}
 
 The algorithm is clearly sound because the newly generated formulae are instances of the initial problem's formulae, where type variables have been instantiated with monomorphic types. It is, however, not guaranteed to be complete.
-
-%\subsection{Example}
 
 \begin{example}Consider the following problem:
 \begin{enumerate}
@@ -303,21 +246,6 @@ Similarly the third iteration adds
    \item[5.] \(\forall a: \ty{list}(\ty{list}(\ty{int})){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{list}(\ty{int}))){,}\; \sym{p}\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(\mathit{as})\)
 \end{enumerate}
 
-%
-%
-%On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, \mathit{as}:\ty{list}(\ty{int}), \sym{p}\langle\ty{int}\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
-%
-%At the beginning of the second iteration, the clause generated in the previous iteration is used to update \(M(f)\), adding \((\ty{list}(\ty{int}))\). \(P\) has no new elements. Similarly to the first iteration we attempt the following matchings:
-%\begin{itemize}
-%   \item \(\alpha\) against \(\ty{int}\) which succeeds resulting in \(\sigma\)
-%   \item \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails
-%   \item \(\alpha\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma'=\{\alpha\mapsto\ty{list}(\ty{int})\}\)
-%   \item \(\ty{list}(\alpha)\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma\)
-%\end{itemize}
-%
-%From these substitutions, a single new formula can be generated from the application of \(\sigma'\) to [1], giving us: \(\sigma'(\text{[1]}) = \forall a: \ty{list}(\ty{int}), \mathit{as}:\ty{list}(\ty{list}(\ty{int})), \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
-%
-%This new formula will be used to add \((\ty{list}(\ty{list}(\ty{int})))\) to \(M(f)\) at the beginning of the third iteration. Similarly to the previous iteration, a single new formula will be generated. It is obtained by applying the new substitution \(\sigma'' = \{\alpha\mapsto\ty{list}(\ty{list}(\ty{int}))\}\) to [1].
 \end{example}
 
 This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. Although the example may seem artificial, similar problems frequently arise in practice. For example, the \sym{concat} function of Isabelle/HOL, which is characterised in the base case by the equation \(\sym{concat}\langle\alpha\rangle\; \sym{Nil}\langle\ty{list}(\alpha)\rangle = \sym{Nil}\langle\alpha\rangle\), exhibits the same behavior. Any reasonable implementation requires bounds limiting the number of new type arguments, substitutions and formulae to be useful.
@@ -327,7 +255,6 @@ This example illustrates how an infinite number of new formulae can be generated
 \label{sec:low-level-algorithm}
 
 The algorithm presented in the previous section is simple but too naive for an implementation. In this section, we present a more low level algorithm with the following features.
-%
 \begin{enumerate}
     \item[\labelitemi] Bounds are used at several stages of the algorithm to curb the highly explosive enumerations.
 
@@ -340,7 +267,8 @@ The algorithm presented in the previous section is simple but too naive for an i
 
 \begin{quote}
 \begin{algorithm}[H]
-   \SetAlgoNoLine
+   \caption{Substitution Generation}
+%   \SetAlgoNoLine
 %   \LinesNumbered
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}
    \SetKwData{Continue}{continue}\SetKwData{SubstRes}{substitution\_result}
@@ -348,8 +276,8 @@ The algorithm presented in the previous section is simple but too naive for an i
    \SetKwFunction{Match}{match}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
 
-   \Input{\,\(\varphi\), \(M\), \(P\)}
-   \Output{\,a set of substitutions}
+   \Input{\,formula \(\varphi\), monomorphic type argument map \(M\), non-monomorphic type argument map \(P\)}
+   \Output{\,set of substitutions}
    \BlankLine
 
    \(S\leftarrow \emptyset\)\;
@@ -360,12 +288,16 @@ The algorithm presented in the previous section is simple but too naive for an i
          \(i \leftarrow 0\)\;
          \While{\(i \leq n\) \And \Continue}{
             \SubstRes \(\leftarrow\) \Match{\(\upsilon_i\), \(\tau_i\)}\;
-            \lIf{\SubstRes = \Success{\(\sigma_i\)} \And \Compatible{\(\sigma\), \(\sigma_i\)}}{
-               \(\sigma\leftarrow\sigma_i\circ\sigma\) 
+            \Case{\SubstRes = \Success{\(\sigma_i\)}}{
+               \lIf{\Compatible{\(\sigma\), \(\sigma_i\)}}{
+                  \(\sigma\leftarrow\sigma_i\circ\sigma\)}
+               \lElse{\Continue\(\leftarrow\)\False}
             }
-            \lElse{\Continue\(\leftarrow\)\False}
-            \(i\leftarrow i+1\)\;
+            \lOther{\Continue\(\leftarrow\)\False}
+
          }
+         \(i\leftarrow i+1\)\;
+         
          \lIf{\Continue}{\(S\leftarrow S\cup \{\sigma\}\)}
       }
 
