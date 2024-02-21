@@ -6,8 +6,9 @@
 \usepackage{listings}
 \usepackage{array}
 \usepackage{multirow}
-\usepackage{algorithm}
-\usepackage{algpseudocode}
+%\usepackage{algorithm}
+%\usepackage{algpseudocode}
+\usepackage[linesnumbered]{algorithm2e}
 \usepackage{amsmath}
 
 \lstset{breaklines=true}
@@ -336,124 +337,146 @@ This example illustrates how an infinite number of new formulae can be generated
 \section{Low level algorithm}
 \label{sec:low-level-algorithm}
 
-This section presents a more detailed description of a practical adaptation of iterative monomorphisation, it closely follows the implementation in Zipperposition. The main departures from the high-level description of the algorithm are the following:
+This section presents a detailed description of a practical adaptation of the high-level algorithm, it closely follows the implementation in Zipperposition. There are several significant departures from the high-level algorithm:
 \begin{itemize}
-   \item substitutions are applied to the type arguments, instead of the formulae. This dispenses us from having to extract type arguments from the clauses at each iteration
-   \item new clauses are generated only once all substitutions have been computed
+   \item substitutions are applied to the type arguments, instead of the formulae. This dispenses from having to extract type arguments from the formulae each iteration
+   \item new formulae are generated only once all substitutions have been computed in a separate step
    \item bounds are used at several stages of the algorithm as a means to curb the highly explosive enumerations
-   \item type arguments are separated into old and new sets, thereby avoiding computing the same matchings at each iteration
+   \item type arguments are separated into old and new sets, avoiding the computation of the same matchings each iteration
    \item once the new formulae are generated, their monomorphic types are mangled before the end result is output
 \end{itemize}
 
-We assume that the maps \(P\) and \(M\) have been collected from the initial problem. This step depends on the precise form of the input formulae which has been left undefined.
+The maps \(P\) and \(M\) are assumed to have been initialised from the initial problem. This step depends on the precise form of the input formulae which has been left undefined.
 
-\begin{algorithm}[tbh]
-\begin{algorithmic}[1]
-\Function{Iteration}{Problem: P, U, I, S}
-   \ForAll {clause \(C \in P\)}
-      \ForAll {\(fun\_sym, ty\_args \in U(C)\)}
-      \ForAll {\( ty\_args' \in I(fun\_sym) \)}
-            
-            \State \(subst = match(ty\_args, ty\_arg')\)
+\begin{algorithm}[H]
+   \LinesNumbered
+   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}
+   \SetKwData{Continue}{continue}\SetKwData{SubstRes}{substitution\_result}
+   \SetKwFunction{Success}{Success}\SetKwFunction{Compatible}{compatible}
+   \SetKwFunction{Match}{match}
+   \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
 
-            \State \Comment the match may fail in which case we simply continue with the loop
+   \Input{\(\varphi\), \(P\), \(M\)}
+   \Output{\(S\)}
+   \BlankLine
 
-            \State \(S(C) = S(C) \cup \{subst\}\)
-         \EndFor
-      \EndFor
-   
-   \EndFor
+   \(S\leftarrow \emptyset\)\;
+   \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P(\varphi)\)}{
+      \ForEach{\( (\tau_1, \dots,\tau_n) \in M(f) \)}{
+         \(\sigma\leftarrow \{\}\)\;
+         \Continue \(\leftarrow\) \True\;
+         \(i \leftarrow 0\)\;
+         \While{\(i \leq n\) \And \Continue}{
+            \SubstRes \(\leftarrow\) \Match{\(\upsilon_i\), \(\tau_i\)}\;
+            \lIf{\SubstRes = \Success{\(\sigma_i\)} \And \Compatible{\(\sigma\), \(\sigma_i\)}}{
+               \(\sigma\leftarrow\sigma_i\circ\sigma\) 
+            }
+            \lElse{\Continue\(\leftarrow\)\False}
+            \(i\leftarrow i+1\)\;
+         }
+         \lIf{\Continue}{\(S\leftarrow S\cup \{\sigma\}\)}
+      }
 
-   \ForAll {clause \(C \in P\)}
-      \ForAll {\(subst \in S(C)\)}
-         \ForAll {\(fun\_symbol, ty\_args \in U(C)\)}
-            \State \(ty\_args' = apply(subst, ty\_args)\)
+   }
+   \Return \(S\)\;
 
-            \If {\( \forall ty\_arg \in ty\_args'. is\_ground(ty\_arg)\) }
-
-               \State \(I(fun\_sym) = I(fun\_sym) \cup \{ty\_args'\}\)
-            \Else
-
-               \State \(U(C, fun\_sym) = U(C, fun\_sym) \cup \{ty\_args'\}\)
-            \EndIf
-
-         \EndFor
-      \EndFor
-   \EndFor
-
-   \State \Return (I, U, S)
-
-\EndFunction
-\end{algorithmic}
-\end{algorithm}
-In the Zipperposition implemntation this iteration procedure is limited by several bounds. The number of new type arguments that can be generated for each symbol is limited by user-defined bounds. These bounds can be defined proportionally. Additionally, the number of new type arguments can be limited at the clause level. In both cases, the bounds for the new ground type arguments and non-ground type arguments can be set independently.
-
-A consequences of these bounds is that in order to avoid unecessary computations, the program will iteratively apply substitutions until either the ground or non-ground bound is reached. Then substitutions can be discarded depending on whether they instantiate a given set of type arguments or not.
-
-Additionally, there are bounds for the number of substitutions that are generated.
-
-\begin{algorithm}[tbh]
-\begin{algorithmic}[1]
-\Function{Instantiate clause}{Clause: C, Substitutions S}
-
-   \If{\(C\) is ground}
-
-      \State \Return \(\{C\}\)
-
-   \Else
-
-      \State let \(v\) be a type variable in \(C\)
-      \State let new\_clauses be an empty set of clauses
-
-      \ForAll{subst \(\in S(C)\)}
-
-         \If{subst instantiates \(v\)}
-
-            \State \(C' = apply(subst, C)\)
-
-            \State let v\_clauses = Instantiate clause(C', S)
-
-         \EndIf
-
-         \State \( new\_clauses = new\_clauses \cup v\_clauses\)
-
-      \EndFor
-
-      \State \Return new\_clauses
-   \EndIf
-
-\EndFunction
-\end{algorithmic}
-\end{algorithm}
-This function differs from the implementation in a significant way, indeed, through experimentation it was found that the generated clauses were far more likely to be solved by E if the substitutions that are combined to instantiate the clause were derived from the same iteration. In practice, we therefore store the iteration at which each substition is generated and at the instantiation phase only apply substitutions from the same iteration.
-
-
-What the previous function does is essentially going through the tree of possible substitutions that instantiate the clause and collecting all possible instantiations. This is extremely explosive, and a hard cap on the number of clauses we want to generate is almost indispensable for any implementation.
-
-\begin{algorithm}[tbh]
-\begin{algorithmic}[1]
-\Function{Generate clauses}{Problem: P, Substitutions: S}
-
-\ForAll {clause \(C \in P\)}
-   \State let new\_clauses = Instantiate clause(C, S)
-   \State \(P = P \cup new\_clauses\)
-\EndFor
-
-\State \(P' = \emptyset \)
-
-\ForAll {clause \(C \in P\)}
-   \If{\(C\) is ground}
-      \State \(P' = P' \cup \{mangle(C)\}\)
-   \EndIf
-\EndFor
-
-\State \Return \(P'\)
-
-\EndFunction
-\end{algorithmic}
+\caption{Substitution Generation}
 \end{algorithm}
 
-Implementation in Zipperposition.
+%\begin{algorithm}[]
+%\begin{algorithmic}[1]
+%\Function{Substitution Generation}{Input: \(\varphi\), M, P}
+%   \State new\_substitutions = \(\emptyset\)
+%   \ForAll {\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P(\varphi)\)}
+%      \ForAll {\( (\tau_1, \dots,\tau_n) \in M(f) \)}
+%         \State \(\sigma\) = \{\}
+%         \State continue = true
+%         \While {\(i\leq n\) and continue}
+%            \State subtitution\_result = match(\(\upsilon_i\), \(\tau_i\))
+%            \If {substitution\_result = Success(\(\sigma_i\)) and compatible(\(\sigma_i\), \(\sigma\))}
+%               \State \(\sigma = \sigma \circ \sigma_i\)
+%            \Else
+%               \State continue = false
+%            \EndIf
+%
+%         \EndWhile
+%
+%      \EndFor
+%   \EndFor
+%
+%   \State \Return (I, U, S)
+%
+%\EndFunction
+%\end{algorithmic}
+%\end{algorithm}
+%In the Zipperposition implemntation this iteration procedure is limited by several bounds. The number of new type arguments that can be generated for each symbol is limited by user-defined bounds. These bounds can be defined proportionally. Additionally, the number of new type arguments can be limited at the clause level. In both cases, the bounds for the new ground type arguments and non-ground type arguments can be set independently.
+%
+%A consequences of these bounds is that in order to avoid unecessary computations, the program will iteratively apply substitutions until either the ground or non-ground bound is reached. Then substitutions can be discarded depending on whether they instantiate a given set of type arguments or not.
+%
+%Additionally, there are bounds for the number of substitutions that are generated.
+%
+%\begin{algorithm}[tbh]
+%\begin{algorithmic}[1]
+%\Function{Instantiate clause}{Clause: C, Substitutions S}
+%
+%   \If{\(C\) is ground}
+%
+%      \State \Return \(\{C\}\)
+%
+%   \Else
+%
+%      \State let \(v\) be a type variable in \(C\)
+%      \State let new\_clauses be an empty set of clauses
+%
+%      \ForAll{subst \(\in S(C)\)}
+%
+%         \If{subst instantiates \(v\)}
+%
+%            \State \(C' = apply(subst, C)\)
+%
+%            \State let v\_clauses = Instantiate clause(C', S)
+%
+%         \EndIf
+%
+%         \State \( new\_clauses = new\_clauses \cup v\_clauses\)
+%
+%      \EndFor
+%
+%      \State \Return new\_clauses
+%   \EndIf
+%
+%\EndFunction
+%\end{algorithmic}
+%\end{algorithm}
+%This function differs from the implementation in a significant way, indeed, through experimentation it was found that the generated clauses were far more likely to be solved by E if the substitutions that are combined to instantiate the clause were derived from the same iteration. In practice, we therefore store the iteration at which each substition is generated and at the instantiation phase only apply substitutions from the same iteration.
+%
+%
+%What the previous function does is essentially going through the tree of possible substitutions that instantiate the clause and collecting all possible instantiations. This is extremely explosive, and a hard cap on the number of clauses we want to generate is almost indispensable for any implementation.
+%
+%\begin{algorithm}[tbh]
+%\begin{algorithmic}[1]
+%\Function{Generate clauses}{Problem: P, Substitutions: S}
+%
+%\ForAll {clause \(C \in P\)}
+%   \State let new\_clauses = Instantiate clause(C, S)
+%   \State \(P = P \cup new\_clauses\)
+%\EndFor
+%
+%\State \(P' = \emptyset \)
+%
+%\ForAll {clause \(C \in P\)}
+%   \If{\(C\) is ground}
+%      \State \(P' = P' \cup \{mangle(C)\}\)
+%   \EndIf
+%\EndFor
+%
+%\State \Return \(P'\)
+%
+%\EndFunction
+%\end{algorithmic}
+%\end{algorithm}
+%
+%Implementation in Zipperposition.
 
 % target page number: 2-4
 \section{Evaluation}
