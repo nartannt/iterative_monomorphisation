@@ -274,30 +274,30 @@ The algorithm is clearly sound because the newly generated formulae are instance
 \begin{example}Consider the following problem:
 \begin{enumerate}
    \item \(\sym{p}\langle \ty{int}\rangle(0)\)
-   \item \(\forall a: \alpha{,}\; \mathit{as}:\ty{list}(\alpha){,}\; \sym{p}\langle\alpha\rangle(a) \land \sym{p}\langle \ty{list}(\alpha)\rangle(\mathit{as})\)
+   \item \(\forall a: \alpha{,}\; \mathit{as}:\ty{list}(\alpha){,}\; \sym{p}\langle\alpha\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\alpha)\rangle(\mathit{as})\)
 \end{enumerate}
 %
 The first iteration matches \(\alpha\) against \(\ty{int}\) for $\sym{p}$, generating the formula
 %
 \begin{enumerate}
-   \item[3.] \(\forall a: \ty{int}{,}\; \mathit{as}:\ty{list}(\ty{int}){,}\; \sym{p}\langle\ty{int}\rangle(a) \land \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
+   \item[3.] \(\forall a: \ty{int}{,}\; \mathit{as}:\ty{list}(\ty{int}){,}\; \sym{p}\langle\ty{int}\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
 \end{enumerate}
 %
 The second iteration matches \(\alpha\) against \(\ty{list}(\ty{int})\), leading to the formula
 %
 \begin{enumerate}
-   \item[4.] \(\forall a: \ty{list}(\ty{int}){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{int})){,}\; \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \land \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
+   \item[4.] \(\forall a: \ty{list}(\ty{int}){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{int})){,}\; \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
 \end{enumerate}
 %
 Similarly the third iteration adds
 %
 \begin{enumerate}
-   \item[5.] \(\forall a: \ty{list}(\ty{list}(\ty{int})){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{list}(\ty{int}))){,}\; \sym{p}\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \land \sym{p}\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(\mathit{as})\)
+   \item[5.] \(\forall a: \ty{list}(\ty{list}(\ty{int})){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{list}(\ty{int}))){,}\; \sym{p}\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(\mathit{as})\)
 \end{enumerate}
 
 %
 %
-%On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, \mathit{as}:\ty{list}(\ty{int}), \sym{p}\langle\ty{int}\rangle(a) \land \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
+%On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, \mathit{as}:\ty{list}(\ty{int}), \sym{p}\langle\ty{int}\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
 %
 %At the beginning of the second iteration, the clause generated in the previous iteration is used to update \(M(f)\), adding \((\ty{list}(\ty{int}))\). \(P\) has no new elements. Similarly to the first iteration we attempt the following matchings:
 %\begin{itemize}
@@ -307,7 +307,7 @@ Similarly the third iteration adds
 %   \item \(\ty{list}(\alpha)\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma\)
 %\end{itemize}
 %
-%From these substitutions, a single new formula can be generated from the application of \(\sigma'\) to [1], giving us: \(\sigma'(\text{[1]}) = \forall a: \ty{list}(\ty{int}), \mathit{as}:\ty{list}(\ty{list}(\ty{int})), \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \land \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
+%From these substitutions, a single new formula can be generated from the application of \(\sigma'\) to [1], giving us: \(\sigma'(\text{[1]}) = \forall a: \ty{list}(\ty{int}), \mathit{as}:\ty{list}(\ty{list}(\ty{int})), \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
 %
 %This new formula will be used to add \((\ty{list}(\ty{list}(\ty{int})))\) to \(M(f)\) at the beginning of the third iteration. Similarly to the previous iteration, a single new formula will be generated. It is obtained by applying the new substitution \(\sigma'' = \{\alpha\mapsto\ty{list}(\ty{list}(\ty{int}))\}\) to [1].
 \end{example}
