@@ -18,6 +18,7 @@
 \newcommand\var[1]{\mathit{#1}}
 
 \newdefinition{definition}{Definition}
+\newdefinition{example}[definition]{Example}
 
 \begin{document}
 
@@ -163,7 +164,7 @@ Our findings are as follows:
 \section{Preliminaries}
 \label{sec:preliminaries}
 
-This algorithm works independently of the structure of the problem's formulae. It relies exclusively on the formulae's monomorphic and polymorphic symbol instances. Type variables are assumed to be universally quantified at a formula's top level. The precise form of formulae is left unspecified.
+This algorithm works independently of the structure of the problem's formulae. It relies exclusively on the formulae's monomorphic and polymorphic symbol instances. Type variables are assumed to be implicitly universally quantified at a formula's top level. The precise form of formulae is left unspecified.
 %
 Due to this generality, iterative monomorphisation can be used with any reasonable rank-1 polymorphic logic. In particular, it can operate in the polymorphic first- and higher-order logics embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-2013,th1}, implemented by several automatic provers.
 
@@ -225,26 +226,29 @@ In the following sections, we will always match a polymorphic type $\upsilon$ ag
 \label{sec:high-level-algorithm}
 
 %We start with a high level description of the iterative monomorphisation algorithm.
-The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase (Section~\ref{ssec:collection}) and a processing phase (Section~\ref{ssec:processing}). Once the iterations are completed, a final step filters out all non-monomorphic formulae returned by the last iteration.
+The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase
+% (Section~\ref{ssec:collection})
+and an instantiation phase.
+% (Section~\ref{ssec:instantiation})
+Once the iterations are completed, a final step filters out all non-monomorphic formulae returned by the last iteration.
 
-\subsection{Collection}
-\label{ssec:collection}
+%\subsection{Collection}
+%\label{ssec:collection}
 
-The initial phase of each iteration consists of computing two maps, \(M\) and \(P\), from the input problem~$\Phi$:
+The initial phase of each iteration consists of computing two maps, \(M\) and \(P\), from the input problem~$\Phi$.
+%
+\begin{enumerate}
+\item[\labelitemi] Given a symbol \(f\) occurring in \(\Phi\), the set \(M(f)\) consists of all tuples of monomorphic type arguments to which \(f\) is applied in \(\Phi\). For example, if \(\sym{foldl}\langle \ty{nat}, \ty{int}\rangle\) occurs in \(\Phi\), then \((\ty{nat}, \ty{int}) \in M(\sym{foldl}) \).
 
-\begin{itemize}
-\item Given a symbol \(f\) occurring in \(\Phi\), the set \(M(f)\) consists of all tuples of monomorphic type arguments to which \(f\) is applied in \(\Phi\). For example, if \(\sym{foldl}\langle \ty{nat}, \ty{int}\rangle\) occurs in \(\Phi\), then \((\ty{nat}, \ty{int}) \in M(\sym{foldl}) \).
-
-\item Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(P(\varphi, f)\) consists of all tuples of type arguments to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in P(\varphi, \sym{foldl}) \).
-\end{itemize}
+\item[\labelitemi] Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(P(\varphi, f)\) consists of all tuples of type arguments to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in P(\varphi, \sym{foldl}) \).
+\end{enumerate}
 
 It is important to parametrise \(P\) with \(\varphi\) because type variables are quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
 
+%\subsection{Instantiation}
+%\label{ssec:instantiation}
 
-\subsection{Processing}
-\label{ssec:processing}
-
-Once the maps \(M\) and \(P\) are initialised, each iteration performs the following processing steps:
+Once the maps \(M\) and \(P\) are initialised, each iteration performs the following steps to create new instances of formulae:
 
 \begin{enumerate}
 
@@ -263,61 +267,37 @@ add the formula \((\sigma_1 \circ \dots \circ \sigma_n)(\varphi)\) to \(\Phi'\).
 
 \end{enumerate}
 
+The algorithm is clearly sound because the newly generated formulae are instances of the initial problem's formulae, where type variables have been instantiated with monomorphic types. It is, however, not guaranteed to be complete.
 
-An arbitrary number of iterations can be executed, using the output of one iteration as the input of the next.
+%\subsection{Example}
 
-This algorithm is clearly sound as the newly generated formulae are instances of the initial problem's formulae where universally quantified type variables have been instantiated with monomorphic types.
-
-\subsection{Example}
-
-Consider the initial problem:
+\begin{example}Consider the following problem:
 \begin{enumerate}
-   \item \(f\langle \ty{int}\rangle(0)\)
-   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
+   \item \(\sym{p}\langle \ty{int}\rangle(0)\)
+   \item \(\forall a: \alpha{,}\; \mathit{as}:\ty{list}(\alpha){,}\; \sym{p}\langle\alpha\rangle(a) \land \sym{p}\langle \ty{list}(\alpha)\rangle(\mathit{as})\)
+\end{enumerate}
+%
+The first iteration matches \(\alpha\) against \(\ty{int}\) for $\sym{p}$, generating the formula
+%
+\begin{enumerate}
+   \item[3.] \(\forall a: \ty{int}{,}\; \mathit{as}:\ty{list}(\ty{int}){,}\; \sym{p}\langle\ty{int}\rangle(a) \land \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
+\end{enumerate}
+%
+The second iteration matches \(\alpha\) against \(\ty{list}(\ty{int})\), leading to the formula
+%
+\begin{enumerate}
+   \item[4.] \(\forall a: \ty{list}(\ty{int}){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{int})){,}\; \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \land \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
+\end{enumerate}
+%
+Similarly the third iteration adds
+%
+\begin{enumerate}
+   \item[5.] \(\forall a: \ty{list}(\ty{list}(\ty{int})){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{list}(\ty{int}))){,}\; \sym{p}\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \land \sym{p}\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(\mathit{as})\)
 \end{enumerate}
 
-During the first iteration, the matching of \(\alpha\) against \(\ty{int}\) will allow the generation an additionnal clause, resulting in this problem:
-
-\begin{enumerate}
-   \item \(f\langle \ty{int}\rangle(0)\)
-   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
-   \item \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
-\end{enumerate}
-
-The second iteration will see \(\alpha\) matched against \(\ty{list}(\ty{int})\) leading to another clause being added to the problem:
-
-\begin{enumerate}
-   \item \(f\langle \ty{int}\rangle(0)\)
-   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
-   \item \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
-   \item \(\forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\)
-\end{enumerate}
-
-Similarly the third iteration yields:
-
-\begin{enumerate}
-   \item \(f\langle \ty{int}\rangle(0)\)
-   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
-   \item \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
-   \item \(\forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\)
-   \item \(\forall a: \ty{list}(\ty{list}(\ty{int})), b:\ty{list}(\ty{list}(\ty{list}(\ty{int}))), f\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(b)\)
-\end{enumerate}
-
-\begin{table}[ht]
-\caption{New formula}
-\centering\begin{tabular}{@{}ll@{}}
-   \toprule
-   loop & new formula\\
-   \midrule
-   1 -& \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\) \\
-   2 -& \(\forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\) \\
-   3 -& \(\forall a: \ty{list}(\ty{list}(\ty{int})), b:\ty{list}(\ty{list}(\ty{list}(\ty{int}))), f\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(b)\) \\
-   \bottomrule
-\end{tabular}
-\end{table}
 %
 %
-%On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
+%On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, \mathit{as}:\ty{list}(\ty{int}), \sym{p}\langle\ty{int}\rangle(a) \land \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
 %
 %At the beginning of the second iteration, the clause generated in the previous iteration is used to update \(M(f)\), adding \((\ty{list}(\ty{int}))\). \(P\) has no new elements. Similarly to the first iteration we attempt the following matchings:
 %\begin{itemize}
@@ -327,11 +307,12 @@ Similarly the third iteration yields:
 %   \item \(\ty{list}(\alpha)\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma\)
 %\end{itemize}
 %
-%From these substitutions, a single new formula can be generated from the application of \(\sigma'\) to [1], giving us: \(\sigma'(\text{[1]}) = \forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\)
+%From these substitutions, a single new formula can be generated from the application of \(\sigma'\) to [1], giving us: \(\sigma'(\text{[1]}) = \forall a: \ty{list}(\ty{int}), \mathit{as}:\ty{list}(\ty{list}(\ty{int})), \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \land \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
 %
 %This new formula will be used to add \((\ty{list}(\ty{list}(\ty{int})))\) to \(M(f)\) at the beginning of the third iteration. Similarly to the previous iteration, a single new formula will be generated. It is obtained by applying the new substitution \(\sigma'' = \{\alpha\mapsto\ty{list}(\ty{list}(\ty{int}))\}\) to [1].
+\end{example}
 
-This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. Input problems are far larger and more explosive in practice. Any reasonable implementation requires bounds limiting the number of new type arguments, substitutions and formulae to be useful.
+This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. Although the example may seem artificial, similar problems frequently arise in practice. For example, the \sym{concat} function of Isabelle/HOL \cite{xxx}, which is characterised in the base case by the equation \(\sym{concat}\langle\alpha\rangle\; \sym{Nil}\langle\ty{list}(\alpha)\rangle = \sym{Nil}\langle\alpha\rangle\), exhibits the same behavior. Any reasonable implementation requires bounds limiting the number of new type arguments, substitutions and formulae to be useful.
 
 % target page number: 2-4
 \section{Low level algorithm}
@@ -635,6 +616,8 @@ This last table attempts to determine which are the best bounds related to the d
 % target page number: 0.5-1
 \section{Related work}
 \label{sec:related-work}
+
+  * explicitly quantified formulas a la TPTP, existentials, how to eliminate
 
   * Böhme
   * similar algo implemented in Why3?
