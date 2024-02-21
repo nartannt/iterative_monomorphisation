@@ -205,8 +205,7 @@ A (function or predicate) {symbol} \(f\) has a \emph{type arity} that defines th
 \begin{definition}
 A (\emph{type}) \emph{substitution} is a partial function mapping a finite number of type variables to corresponding types. Substitutions are written as
 $\sigma = \{\alpha_1\mapsto\tau_1, \dots, \alpha_n\mapsto\tau_n\}$. They are assumed to be lifted to formulae; thus, $\sigma(\varphi)$ yields the variant of $\varphi$ in which each $\alpha_i$ is replaced by $\tau_i$.
-
-Given \(\tau\) and \(\upsilon\) two substitutions, \(\tau \circ \upsilon\) is the successive application of \(\upsilon\) then \(\tau\).
+Given two substitutions \(\tau, \upsilon\), the successive application of \(\tau\) and \(\upsilon\) is denoted by \(\upsilon \circ \tau\).
 \end{definition}
 
 \begin{definition}
@@ -225,7 +224,7 @@ In the following sections, we will always match a polymorphic type $\upsilon$ ag
 \label{sec:high-level-algorithm}
 
 %We start with a high level description of the iterative monomorphisation algorithm.
-The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase (Section~\ref{ssec:collection}) and a processing phase (Section~\ref{ssec:processing}).
+The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase (Section~\ref{ssec:collection}) and a processing phase (Section~\ref{ssec:processing}). Once the iterations are completed, a final step filters out all non-monomorphic formulae returned by the last iteration.
 
 \subsection{Collection}
 \label{ssec:collection}
@@ -238,33 +237,33 @@ The initial phase of each iteration consists of computing two maps, \(M\) and \(
 \item Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(P(\varphi, f)\) consists of all tuples of type arguments to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in P(\varphi, \sym{foldl}) \).
 \end{itemize}
 
-It is important to parametrise \(P\) with \(\varphi\) because type variables are quantified at the formula level. The formula indicates the scope of [the?] type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
+It is important to parametrise \(P\) with \(\varphi\) because type variables are quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
 
 
 \subsection{Processing}
 \label{ssec:processing}
 
-Each iteration follows these steps:
+Once the maps \(M\) and \(P\) are initialised, each iteration performs the following processing steps:
+
 \begin{enumerate}
 
-   \item The maps \(M\) and \(P\) are initialised with respect to \(\Phi\) as per the collection phase.
-
-   \item An empty set of formulae \(\Psi\) is created.
+   \item Create an empty set of formulae \(\Phi'\).
 
    \item For each formula \(\varphi \in \Phi\) and for each symbol \(f\) occuring in \(\varphi\):
+   \begin{enumerate}
+    \item[2.1.] For each tuple \((\tau_1, \dots, \tau_n) \in  M(f)\)        and each tuple \((\upsilon_1, \dots, \upsilon_n) \in P(\varphi, f)\),
+     for each \(i\), match \(\upsilon_i\) against \(\tau_i\), yielding the substitution \(\sigma_i\) in case of success.
 
-      An empty set of substitutions \(\Sigma_{\varphi, f}\) is created, then for each tuple \((\tau_1, \dots, \tau_n) \in  P(\varphi, f)\) and \((\upsilon_1, \dots, \upsilon_n) \in M(f)\):
+    \item[2.2.] If all \(n\) matchings are successful and the substitutions \(\sigma_i\) are pairwise compatible,
+add the formula \((\sigma_1 \circ \dots \circ \sigma_n)(\varphi)\) to \(\Phi'\).
+   \end{enumerate}
 
-      For all \(i\), we match \(\tau_i\) against \(\upsilon_i\), possibly yielding the substitution \(\sigma_i\). If all \(n\) matchings are successful and the substitutions are two by two compatible, \(\sigma_1 \circ \dots \circ \sigma_n\) is added to \(\Sigma_{\varphi, f}\).
-
-   \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) in \(\varphi\) and for each substitution \(\sigma \in \Sigma_{\varphi, f}\), the formula \(\sigma(\varphi)\) is added to \(\Psi\).
-
-   \item \(\Phi \cup \Psi\) is returned.
+   \item Return \(\Phi \cup \Phi'\).
 
 \end{enumerate}
 
 
-An arbitrary number of iterations can be executed, using the output of one iteration as the input for the next. The final step requires filtering all monomorphic formulae returned by the last iteration.
+An arbitrary number of iterations can be executed, using the output of one iteration as the input of the next.
 
 This algorithm is clearly sound as the newly generated formulae are instances of the initial problem's formulae where universally quantified type variables have been instantiated with monomorphic types.
 
