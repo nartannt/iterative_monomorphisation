@@ -238,7 +238,7 @@ The initial phase of each iteration consists of computing two maps, \(M\) and \(
 \item Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(P(\varphi, f)\) consists of all tuples of type arguments to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in P(\varphi, \sym{foldl}) \).
 \end{itemize}
 
-It is important to parametrise \(P\) with \(\varphi\) because type variables are quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
+It is important to parametrise \(P\) with \(\varphi\) because type variables are quantified at the formula level. The formula indicates the scope of [the?] type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
 
 
 \subsection{Processing}
@@ -251,56 +251,56 @@ Each iteration follows these steps:
 
    \item An empty set of formulae \(\Psi\) is created.
 
-   \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) occuring in \(\varphi\):
+   \item For each formula \(\varphi \in \Phi\) and for each symbol \(f\) occuring in \(\varphi\):
 
-      An empty set of substitutions \(\Sigma_{\varphi, f}\) is created, then for every tuple \((\tau_1, \dots, \tau_n) \in  P(\varphi, f)\) and tuple \((\upsilon_1, \dots, \upsilon_n) \in M(f)\):
+      An empty set of substitutions \(\Sigma_{\varphi, f}\) is created, then for each tuple \((\tau_1, \dots, \tau_n) \in  P(\varphi, f)\) and \((\upsilon_1, \dots, \upsilon_n) \in M(f)\):
 
-      \(\tau_i\) is matched against \(\upsilon_i\), possibly yielding the substitution \(\sigma_i\), for all \(i\). If all \(n\) matchings are successful and the substitutions are two by two compatible, \(\sigma_1 \circ \dots \circ \sigma_n\) is added to \(\Sigma_{\varphi, f}\).
+      For all \(i\), we match \(\tau_i\) against \(\upsilon_i\), possibly yielding the substitution \(\sigma_i\). If all \(n\) matchings are successful and the substitutions are two by two compatible, \(\sigma_1 \circ \dots \circ \sigma_n\) is added to \(\Sigma_{\varphi, f}\).
 
-   \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) in \(\varphi\), for each substitution \(\sigma \in \Sigma_{\varphi, f}\), the formula \(\sigma(\varphi)\) is added to \(\Psi\).
+   \item For each formula \(\varphi \in \Phi\), for each symbol \(f\) in \(\varphi\) and for each substitution \(\sigma \in \Sigma_{\varphi, f}\), the formula \(\sigma(\varphi)\) is added to \(\Psi\).
 
    \item \(\Phi \cup \Psi\) is returned.
 
 \end{enumerate}
 
 
-An arbitrary number of iterations can be performed, re-using the output of one iteration as the input for the next. The final step requires all monomorphic formulae returned by the last iteration to be output.
+An arbitrary number of iterations can be executed, using the output of one iteration as the input for the next. The final step requires filtering all monomorphic formulae returned by the last iteration.
 
-This algorithm is clearly sound as the newly derived formulae are instances of the initial formulae where universally quantified type variables have been instantiated with monomorphic types.
+This algorithm is clearly sound as the newly generated formulae are instances of the initial problem's formulae where universally quantified type variables have been instantiated with monomorphic types.
 
 \subsection{Example}
 
 Consider the initial problem:
 \begin{enumerate}
-   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
    \item \(f\langle \ty{int}\rangle(0)\)
+   \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
 \end{enumerate}
 
 During the first iteration, the matching of \(\alpha\) against \(\ty{int}\) will allow the generation an additionnal clause, resulting in this problem:
 
 \begin{enumerate}
+   \item \(f\langle \ty{int}\rangle(0)\)
    \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
    \item \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
-   \item \(f\langle \ty{int}\rangle(0)\)
 \end{enumerate}
 
 The second iteration will see \(\alpha\) matched against \(\ty{list}(\ty{int})\) leading to another clause being added to the problem:
 
 \begin{enumerate}
+   \item \(f\langle \ty{int}\rangle(0)\)
    \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
    \item \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
    \item \(\forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\)
-   \item \(f\langle \ty{int}\rangle(0)\)
 \end{enumerate}
 
 Similarly the third iteration yields:
 
 \begin{enumerate}
+   \item \(f\langle \ty{int}\rangle(0)\)
    \item \(\forall a: \alpha, b:\ty{list}(\alpha), f\langle\alpha\rangle(a) \land f\langle \ty{list}(\alpha)\rangle(b)\)
    \item \(\forall a: \ty{int}, b:\ty{list}(\ty{int}), f\langle\ty{int}\rangle(a) \land f\langle \ty{list}(\ty{int})\rangle(b)\)
    \item \(\forall a: \ty{list}(\ty{int}), b:\ty{list}(\ty{list}(\ty{int})), f\langle\ty{list}(\ty{int})\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{int}))\rangle(b)\)
    \item \(\forall a: \ty{list}(\ty{list}(\ty{int})), b:\ty{list}(\ty{list}(\ty{list}(\ty{int}))), f\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \land f\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(b)\)
-   \item \(f\langle \ty{int}\rangle(0)\)
 \end{enumerate}
 
 \begin{table}[ht]
@@ -331,25 +331,22 @@ Similarly the third iteration yields:
 %
 %This new formula will be used to add \((\ty{list}(\ty{list}(\ty{int})))\) to \(M(f)\) at the beginning of the third iteration. Similarly to the previous iteration, a single new formula will be generated. It is obtained by applying the new substitution \(\sigma'' = \{\alpha\mapsto\ty{list}(\ty{list}(\ty{int}))\}\) to [1].
 
-This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. Additionally, input problems are far larger and more explosive in practice and any reasonable implementation requires bounds to be useful.
+This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. Input problems are far larger and more explosive in practice. Any reasonable implementation requires bounds limiting the number of new type arguments, substitutions and formulae to be useful.
 
 % target page number: 2-4
 \section{Low level algorithm}
 \label{sec:low-level-algorithm}
 
-This section presents a more detailed description of a practical adaptation of iterative monomorphisation, it closely follows the implementation in Zipperposition.
-
-The main departures from the high-level description of the algorithm are the following:
+This section presents a more detailed description of a practical adaptation of iterative monomorphisation, it closely follows the implementation in Zipperposition. The main departures from the high-level description of the algorithm are the following:
 \begin{itemize}
-   \item substitutions are directly applied to the type arguments, instead of the formulae, this also dispenses us from having to re-extract the type arguments from the clauses at each iteration
+   \item substitutions are applied to the type arguments, instead of the formulae. This dispenses us from having to extract type arguments from the clauses at each iteration
    \item new clauses are generated only once all substitutions have been computed
-   \item bounds are used at almost all stages of the algorithm as the various enumerations are highly explosive and must be limited in a practical setting
-   \item type arguments are separated into old and new sets, thereby avoiding computing the same matchings for each iteration
-   \item once the new formulae are generated, their monomorphic types are mangled
+   \item bounds are used at several stages of the algorithm as a means to curb the highly explosive enumerations
+   \item type arguments are separated into old and new sets, thereby avoiding computing the same matchings at each iteration
+   \item once the new formulae are generated, their monomorphic types are mangled before the end result is output
 \end{itemize}
 
-
-We assume that the maps \(P\) and \(M\) have been collected from the initial problem. This step is dependent on the precise form of the formulae which has been left undefined.
+We assume that the maps \(P\) and \(M\) have been collected from the initial problem. This step depends on the precise form of the input formulae which has been left undefined.
 
 \begin{algorithm}[tbh]
 \begin{algorithmic}[1]
