@@ -8,7 +8,8 @@
 \usepackage{multirow}
 %\usepackage{algorithm}
 %\usepackage{algpseudocode}
-\usepackage[linesnumbered]{algorithm2e}
+\usepackage%[linesnumbered]
+  {algorithm2e}
 \usepackage{amsmath}
 
 \lstset{breaklines=true}
@@ -16,6 +17,13 @@
 \newcommand\ty[1]{\textsf{#1}}
 \newcommand\sym[1]{\textsf{#1}}
 \newcommand\var[1]{\mathit{#1}}
+
+%% TYPESETTING: hacks
+\newcommand\medrightarrow{\mathrel{{{\color{black}\relbar}\kern-0.9ex\rlap{\color{white}\ensuremath{\blacksquare}}\kern-0.9ex}\joinrel{\color{black}\rightarrow}}}
+\newcommand\medleftarrow{\mathrel{{\color{black}\leftarrow}\kern-0.9ex\rlap{\color{white}\ensuremath{\blacksquare}}\kern-0.9ex\joinrel{{\color{black}\relbar}}}}
+\newcommand\medleftrightarrow{\mathrel{\leftarrow\kern-1.685ex\rightarrow}}
+\newcommand\Medrightarrow{\mathrel{{{\color{black}\Relbar}\kern-0.9ex\rlap{\color{white}\ensuremath{\blacksquare}}\kern-0.9ex}\joinrel{\color{black}\Rightarrow}}}
+\newcommand\Medleftrightarrow{\mathrel{\Leftarrow\kern-1.685ex\Rightarrow}}
 
 \newdefinition{definition}{Definition}
 \newdefinition{example}[definition]{Example}
@@ -31,7 +39,7 @@
 %   - formulas -> formulae
 %   - clause -> formula
 %   - monomorphization -> monomorphisation
-%   - higer order -> higer-order
+%   - higher-order -> higher order
 %   - TH1 with ugly 1
 %   - correctly spelled TPTP, Leo-III, Zipperposition, E, Vampire
 %   - use of formula vs clause
@@ -111,7 +119,7 @@ bound to be incomplete.
 
 B\"ohme's iterative approach is implemented as part of the SMT (satisfiability modulo theories) integration \cite[Chapter 2]{sb-phd} in Isabelle/HOL. This implementation is also used by Sledgehammer \cite{judgement, hammer} to interface with superposition based automatic theorem provers. However, it is is documented only as a single subsection in his PhD thesis \cite[Section 2.2.1]{sb-phd}.
 
-In this paper, we present an algorithm based on our understanding of his description and implementation (Section~\ref{sec:high-level-algorithm}). We also provide a more detailed description to help future implementers. In addition, this description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
+In this paper, we present an algorithm based on our understanding of his description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed description to help future implementers. In addition, this description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
 
 % * Böhme's iterative approach is implemented as part of the SMT integration \cite[Chapter 2]{sb-phd}
 %     in Isabelle/HOL. This implementation is also used by
@@ -121,7 +129,7 @@ In this paper, we present an algorithm based on our understanding of his descrip
 %  * The main drawback of Böhme's approach is that it is only briefly documented,
 %    as a single paragraph in his PhD thesis \cite[Section 2.2.1]{sb-phd}
 %  * In this paper, we present an algorithm inspired by his description and
-%    implementation (Section~\ref{sec:high-level-algorithm}).
+%    implementation (Section~\ref{sec:high level-algorithm}).
 %    * we aimed at mathematical precision, so that people who want to reimplement
 %      the algorithm can follow this blueprint
 %    * we also show how to bound the algorithm to avoid explosions in practice
@@ -166,7 +174,7 @@ Our findings are as follows:
 
 This algorithm works independently of the structure of the problem's formulae. It relies exclusively on the formulae's monomorphic and polymorphic symbol instances. Type variables are assumed to be implicitly universally quantified at a formula's top level. The precise form of formulae is left unspecified.
 %
-Due to this generality, iterative monomorphisation can be used with any reasonable rank-1 polymorphic logic. In particular, it can operate in the polymorphic first- and higher-order logics embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-2013,th1}, implemented by several automatic provers.
+Due to this generality, iterative monomorphisation can be used with any reasonable rank-1 polymorphic logic. In particular, it can operate in the polymorphic first and higher order logics embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-2013,th1}, implemented by several automatic provers.
 
 %The following terms are used in the algorithm descriptions.
 
@@ -175,7 +183,7 @@ Due to this generality, iterative monomorphisation can be used with any reasonab
 %\noindent\kern\parindent
 %  * algorithm works a priori with any rank-1 polymorphic logic
 %
-%  * in particular, it works with polymorphic first- and higher-order logic as 
+%  * in particular, it works with polymorphic first and higher order logic as 
 %    embodied by TPTP's TF1 and TH1 syntaxes \cite{blanchette-paskevich-2013,th1}
 %
 %  * the algorithm does not need to inspect the precise structure of formulae
@@ -223,7 +231,7 @@ In the following sections, we will always match a polymorphic type $\upsilon$ ag
 
 % target page number: 2-4
 \section{High level algorithm}
-\label{sec:high-level-algorithm}
+\label{sec:high level-algorithm}
 
 %We start with a high level description of the iterative monomorphisation algorithm.
 The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase
@@ -243,7 +251,7 @@ The initial phase of each iteration consists of computing two maps, \(M\) and \(
 \item[\labelitemi] Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(P(\varphi, f)\) consists of all tuples of type arguments to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in P(\varphi, \sym{foldl}) \).
 \end{enumerate}
 
-It is important to parametrise \(P\) with \(\varphi\) because type variables are quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
+These definitions depend on the precise form of the input formulae, which has been left undefined. It is important to parametrise \(P\) with \(\varphi\) because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
 
 %\subsection{Instantiation}
 %\label{ssec:instantiation}
@@ -274,30 +282,30 @@ The algorithm is clearly sound because the newly generated formulae are instance
 \begin{example}Consider the following problem:
 \begin{enumerate}
    \item \(\sym{p}\langle \ty{int}\rangle(0)\)
-   \item \(\forall a: \alpha{,}\; \mathit{as}:\ty{list}(\alpha){,}\; \sym{p}\langle\alpha\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\alpha)\rangle(\mathit{as})\)
+   \item \(\forall a: \alpha{,}\; \mathit{as}:\ty{list}(\alpha){,}\; \sym{p}\langle\alpha\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\alpha)\rangle(\mathit{as})\)
 \end{enumerate}
 %
 The first iteration matches \(\alpha\) against \(\ty{int}\) for $\sym{p}$, generating the formula
 %
 \begin{enumerate}
-   \item[3.] \(\forall a: \ty{int}{,}\; \mathit{as}:\ty{list}(\ty{int}){,}\; \sym{p}\langle\ty{int}\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
+   \item[3.] \(\forall a: \ty{int}{,}\; \mathit{as}:\ty{list}(\ty{int}){,}\; \sym{p}\langle\ty{int}\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
 \end{enumerate}
 %
 The second iteration matches \(\alpha\) against \(\ty{list}(\ty{int})\), leading to the formula
 %
 \begin{enumerate}
-   \item[4.] \(\forall a: \ty{list}(\ty{int}){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{int})){,}\; \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
+   \item[4.] \(\forall a: \ty{list}(\ty{int}){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{int})){,}\; \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
 \end{enumerate}
 %
 Similarly the third iteration adds
 %
 \begin{enumerate}
-   \item[5.] \(\forall a: \ty{list}(\ty{list}(\ty{int})){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{list}(\ty{int}))){,}\; \sym{p}\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(\mathit{as})\)
+   \item[5.] \(\forall a: \ty{list}(\ty{list}(\ty{int})){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{list}(\ty{int}))){,}\; \sym{p}\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(\mathit{as})\)
 \end{enumerate}
 
 %
 %
-%On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, \mathit{as}:\ty{list}(\ty{int}), \sym{p}\langle\ty{int}\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
+%On the first iteration, two matchings are attempted, that of \(\alpha\) against \(\ty{int}\) which yields \(\sigma = \{\alpha \mapsto \ty{int}\}\) and that of \(\ty{list}(\alpha)\) against \(\ty{int}\) which fails. Then, \(\sigma\) is applied to [1], resulting in a new formula: \(\forall a: \ty{int}, \mathit{as}:\ty{list}(\ty{int}), \sym{p}\langle\ty{int}\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
 %
 %At the beginning of the second iteration, the clause generated in the previous iteration is used to update \(M(f)\), adding \((\ty{list}(\ty{int}))\). \(P\) has no new elements. Similarly to the first iteration we attempt the following matchings:
 %\begin{itemize}
@@ -307,38 +315,41 @@ Similarly the third iteration adds
 %   \item \(\ty{list}(\alpha)\) against \(\ty{list}(\ty{int})\) resulting in \(\sigma\)
 %\end{itemize}
 %
-%From these substitutions, a single new formula can be generated from the application of \(\sigma'\) to [1], giving us: \(\sigma'(\text{[1]}) = \forall a: \ty{list}(\ty{int}), \mathit{as}:\ty{list}(\ty{list}(\ty{int})), \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \longrightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
+%From these substitutions, a single new formula can be generated from the application of \(\sigma'\) to [1], giving us: \(\sigma'(\text{[1]}) = \forall a: \ty{list}(\ty{int}), \mathit{as}:\ty{list}(\ty{list}(\ty{int})), \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
 %
 %This new formula will be used to add \((\ty{list}(\ty{list}(\ty{int})))\) to \(M(f)\) at the beginning of the third iteration. Similarly to the previous iteration, a single new formula will be generated. It is obtained by applying the new substitution \(\sigma'' = \{\alpha\mapsto\ty{list}(\ty{list}(\ty{int}))\}\) to [1].
 \end{example}
 
-This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. Although the example may seem artificial, similar problems frequently arise in practice. For example, the \sym{concat} function of Isabelle/HOL \cite{xxx}, which is characterised in the base case by the equation \(\sym{concat}\langle\alpha\rangle\; \sym{Nil}\langle\ty{list}(\alpha)\rangle = \sym{Nil}\langle\alpha\rangle\), exhibits the same behavior. Any reasonable implementation requires bounds limiting the number of new type arguments, substitutions and formulae to be useful.
+This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. Although the example may seem artificial, similar problems frequently arise in practice. For example, the \sym{concat} function of Isabelle/HOL, which is characterised in the base case by the equation \(\sym{concat}\langle\alpha\rangle\; \sym{Nil}\langle\ty{list}(\alpha)\rangle = \sym{Nil}\langle\alpha\rangle\), exhibits the same behavior. Any reasonable implementation requires bounds limiting the number of new type arguments, substitutions and formulae to be useful.
 
 % target page number: 2-4
 \section{Low level algorithm}
 \label{sec:low-level-algorithm}
 
-This section presents a detailed description of a practical adaptation of the high-level algorithm, it closely follows the implementation in Zipperposition. There are several significant departures from the high-level algorithm:
-\begin{itemize}
-   \item substitutions are applied to the type arguments, instead of the formulae. This dispenses from having to extract type arguments from the formulae each iteration
-   \item new formulae are generated only once all substitutions have been computed in a separate step
-   \item bounds are used at several stages of the algorithm as a means to curb the highly explosive enumerations
-   \item type arguments are separated into old and new sets, avoiding the computation of the same matchings each iteration
-   \item once the new formulae are generated, their monomorphic types are mangled before the end result is output
-\end{itemize}
+The algorithm presented in the previous section is simple but too naive for an implementation. In this section, we present a more low level algorithm with the following features.
+%
+\begin{enumerate}
+    \item[\labelitemi] Bounds are used at several stages of the algorithm to curb the highly explosive enumerations.
 
-The maps \(P\) and \(M\) are assumed to have been initialised from the initial problem. This step depends on the precise form of the input formulae which has been left undefined.
+    \item[\labelitemi] Type arguments are separated into old and new sets to avoid re-computing some of the same matchings in successive iterations.
 
+    \item[\labelitemi] Substitutions are directly applied to the type arguments in $M$ and $P$ instead of the formulae. This dispenses from having to extract the type arguments from the formulae at each iteration. New formulae are generated only once all iterations are complete, in a separate, penultimate step.
+
+    \item[\labelitemi] Once the new formulae are generated, their monomorphic types are mangled before the end result is output.
+\end{enumerate}
+
+\begin{quote}
 \begin{algorithm}[H]
-   \LinesNumbered
+   \SetAlgoNoLine
+%   \LinesNumbered
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}
    \SetKwData{Continue}{continue}\SetKwData{SubstRes}{substitution\_result}
    \SetKwFunction{Success}{Success}\SetKwFunction{Compatible}{compatible}
    \SetKwFunction{Match}{match}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
 
-   \Input{\(\varphi\), \(P\), \(M\)}
-   \Output{\(S\)}
+   \Input{\,\(\varphi\), \(M\), \(P\)}
+   \Output{\,a set of substitutions}
    \BlankLine
 
    \(S\leftarrow \emptyset\)\;
@@ -360,9 +371,8 @@ The maps \(P\) and \(M\) are assumed to have been initialised from the initial p
 
    }
    \Return \(S\)\;
-
-\caption{Substitution Generation}
 \end{algorithm}
+\end{quote}
 
 %\begin{algorithm}[]
 %\begin{algorithmic}[1]
