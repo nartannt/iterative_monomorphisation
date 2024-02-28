@@ -8,9 +8,10 @@
 \usepackage{multirow}
 %\usepackage{algorithm}
 %\usepackage{algpseudocode}
-\usepackage%[linesnumbered]
-  {algorithm2e}
+\usepackage%[]
+   {algorithm2e}
 \usepackage{amsmath}
+
 
 \lstset{breaklines=true}
 
@@ -35,14 +36,16 @@
 % Block with a vertical line
 \renewcommand{\algocf@Vsline}[1]{%
    \strut\par\nointerlineskip%
+   \algocf@bblockcode%
    \algocf@push{\skiprule}%
-   \hbox{%
-      {\color{algoColorKeyword}\vrule}
+   \hbox{{\color{algoColorKeyword}\vrule}%
       \vtop{\algocf@push{\skiptext}%
       \vtop{\algocf@addskiptotal\advance\hsize by -\skiplength #1}}%
    }%
    \algocf@pop{\skiprule}%
+   \algocf@bblockcode%
 }
+\makeatother
 
 \begin{document}
 
@@ -265,18 +268,25 @@ The algorithm presented in the previous section is simple but too naive for an i
     \item[\labelitemi] Once the new formulae are generated, their monomorphic types are mangled before the end result is output.
 \end{enumerate}
 
+TODO:
+\begin{itemize}
+   \item substitution generation
+   \item clause generation
+   \item fitting everything together
+\end{itemize}
+
 \begin{quote}
 \begin{algorithm}[H]
    \caption{Substitution Generation}
 %   \SetAlgoNoLine
 %   \LinesNumbered
-   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}
+   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
    \SetKwData{Continue}{continue}\SetKwData{SubstRes}{substitution\_result}
    \SetKwFunction{Success}{Success}\SetKwFunction{Compatible}{compatible}
    \SetKwFunction{Match}{match}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
 
-   \Input{\,formula \(\varphi\), monomorphic type argument map \(M\), non-monomorphic type argument map \(P\)}
+   \Input{\,monomorphic type argument map \(M\), non-monomorphic type argument map \(P(\varphi)\)}
    \Output{\,set of substitutions}
    \BlankLine
 
@@ -285,7 +295,7 @@ The algorithm presented in the previous section is simple but too naive for an i
       \ForEach{\( (\tau_1, \dots,\tau_n) \in M(f) \)}{
          \(\sigma\leftarrow \{\}\)\;
          \Continue \(\leftarrow\) \True\;
-         \(i \leftarrow 0\)\;
+         \(i \leftarrow 1\)\;
          \While{\(i \leq n\) \And \Continue}{
             \SubstRes \(\leftarrow\) \Match{\(\upsilon_i\), \(\tau_i\)}\;
             \Case{\SubstRes = \Success{\(\sigma_i\)}}{
@@ -295,10 +305,12 @@ The algorithm presented in the previous section is simple but too naive for an i
             }
             \lOther{\Continue\(\leftarrow\)\False}
 
+            \(i\leftarrow i+1\)\;
          }
-         \(i\leftarrow i+1\)\;
          
-         \lIf{\Continue}{\(S\leftarrow S\cup \{\sigma\}\)}
+         \If{\Continue}{
+            \(S\leftarrow S\cup \{\sigma\}\)\;
+         }
       }
 
    }
@@ -306,6 +318,79 @@ The algorithm presented in the previous section is simple but too naive for an i
 \end{algorithm}
 \end{quote}
 
+
+Notes:
+   * In the implementation, the old and new maps are actually one map with function symbols pointing to pairs of sets of type arguments
+   * In the implementation, instead of tuples we have lists of types
+
+   * In order to later have an easier time we store susbtitutions in a map that gathers them by which type variable they instantiate.
+
+   * We assume the existence of "primitives" that compose substitutions, apply them to formulae ...
+
+\begin{quote}
+\begin{algorithm}[H]
+   \caption{Clause Monomorphisation Step}
+   
+   \LinesNumbered
+
+
+   \SetKwData{Subst}{substitutions}\SetKwData{TypeVars}{type\_variables}
+   \SetKwData{MaxMono}{max\_mono\_args}
+   \SetKwData{MaxPoly}{max\_poly\_args}
+   \SetKwData{MonoCap}{mono\_cap}\SetKwData{MonoMult}{mono\_mult}\SetKwData{MonoFloor}{mono\_floor}
+   \SetKwData{PolyCap}{poly\_cap}\SetKwData{PolyMult}{poly\_mult}\SetKwData{PolyFloor}{poly\_floor}
+   \SetKwData{UsedSubst}{used\_subst}
+
+   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
+
+   \SetKwFunction{SubstGen}{substitution\_generation}\SetKwFunction{TyVars}{type\_variables}
+   \SetKwFunction{Max}{max}\SetKwFunction{Min}{min}
+   \SetKwFunction{Domain}{subst\_domain}\SetKwFunction{Len}{len}
+   \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+
+   \Input{\,monomorphic type argument map \(M, M'\), new non-monomorphic type argument map \(P(\varphi), P'(\varphi)\)}
+   \Output{\,monomorphic type argument map, non-monomorphic type argument map, set of substitutions}
+   \BlankLine
+
+   \Subst \(\leftarrow\) \SubstGen{\(M\), \(P(\varphi)\)}\;
+   \Subst \(\leftarrow\) \Subst \(\cup\) \SubstGen{\(M'\), \(P(\varphi)\)}\;
+   \Subst \(\leftarrow\) \Subst \(\cup\) \SubstGen{\(M\), \(P'(\varphi)\)}\;
+   \BlankLine
+
+   \TypeVars \(\leftarrow\) \TyVars{\(\varphi\)}\;
+
+   \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M| \times\)\MonoMult}, \MonoCap}\;
+   \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P(\varphi)| \times\)\PolyMult}, \PolyCap}\;
+   \BlankLine
+
+   \UsedSubst \(\leftarrow\emptyset\)\;
+   \ForEach{\(\sigma\in \Subst\)}{
+      \ForEach{\(f\) occuring in \(\varphi\) }{
+         \ForEach{\((\tau_1, \dots, \tau_n)\in P(\varphi)(f)\)}{
+            \If{\TyVars{\((\tau_1, \dots, \tau_n)\)} \(\subseteq\) \Domain{\(\sigma\)}}{
+               \If{\(|M''| < \MaxMono\) \label{algo:relative_bound}}{
+                  \(M''(f)\leftarrow M''(f)\cup\{(\sigma(\tau_1),\dots,\sigma(\tau_n))\}\)\;
+                  \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;
+               }
+            }
+            \ElseIf{\(|P''(\varphi)| < \MaxPoly\)\label{algo:ref_2}} {
+               \(P''(\varphi)(f)\leftarrow P''(\varphi)(f)\cup\{(\sigma(\tau_1),\dots,\sigma(\tau_n))\}\)\;
+               \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;
+            }
+
+         }
+      }
+   }
+   \BlankLine
+
+   \Return \((M'', P''(\varphi), \UsedSubst)\)
+
+
+
+\end{algorithm}
+\end{quote}
+
+At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), if we add conditions dependent on the size of \(M''(f)\) (respectively \(P''(\varphi)(f)\)), it is possible to create more fine grained bounds. This may be useful if some function symbols have many type arguments relative to the overall bound thus preventing new type arguments of other function symbols from being generated. Then, adding a cap on the number of new type arguments per function symbol may help in smoothing out the distribution of new type arguments.
 %\begin{algorithm}[]
 %\begin{algorithmic}[1]
 %\Function{Substitution Generation}{Input: \(\varphi\), M, P}
