@@ -69,6 +69,7 @@
 %   - function symbol -> symbol instance (depends on context)
 %   - ... -> \dots
 %   - comma splices!!!!
+%   - add \; at the end of each algorithm line
 %   - ``'' -> `'
 %   - use \Phi instead of F for formulae
 %   - concrete types -> monomorphic types
@@ -251,7 +252,7 @@ Similarly the third iteration adds
 
 \end{example}
 
-This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. Although the example may seem artificial, similar problems frequently arise in practice. For example, the \sym{concat} function of Isabelle/HOL, which is characterised in the base case by the equation \(\sym{concat}\langle\alpha\rangle\; \sym{Nil}\langle\ty{list}(\alpha)\rangle = \sym{Nil}\langle\alpha\rangle\), exhibits the same behavior. Any reasonable implementation requires bounds limiting the number of new type arguments, substitutions and formulae to be useful.
+This example illustrates how an infinite number of new formulae can be generated from a simple initial problem. Although the example may seem artificial [contrived?], similar problems frequently arise in practice. For example, the \sym{concat} function of Isabelle/HOL, which is characterised in the base case by the equation \(\sym{concat}\langle\alpha\rangle\; \sym{Nil}\langle\ty{list}(\alpha)\rangle = \sym{Nil}\langle\alpha\rangle\), exhibits the same behavior. Any reasonable implementation requires bounds limiting the number of new type arguments, substitutions and formulae to be useful.
 
 % target page number: 2-4
 \section{Low level algorithm}
@@ -318,18 +319,28 @@ TODO:
 \end{algorithm}
 \end{quote}
 
+This function computes all possible matchings between the given type argument maps and returns the resulting substitutions. A single symbol may take multiple type arguments, they are treated as a unit. The matching of individual types from two type argument tuples must yield compatible substitutions, otherwise, they are discarded. This approach has the advantage of having the same behaviour whether a symbol has multiple type arguments, or a single type argument which encodes multiple type arguments. Adding a limit to the number of substitutions generated may be necessary if substitution generation becomes a bottleneck. In this case, it is a simple matter of stopping the function and returning \(S\) once a certain limit is reached.
 
 Notes:
    * In the implementation, the old and new maps are actually one map with function symbols pointing to pairs of sets of type arguments
    * In the implementation, instead of tuples we have lists of types
 
-   * In order to later have an easier time we store susbtitutions in a map that gathers them by which type variable they instantiate.
+   * In order to later have an easier time we store substitutions in a map that gathers them by which type variable they instantiate.
 
-   * We assume the existence of "primitives" that compose substitutions, apply them to formulae ...
+   * We assume the existence of "primitives" that
+   \begin{itemize}
+      \item compose substitutions
+      \item apply substitutions to formula
+      \item match types to generate substitutions
+      \item test the compatibility of two substitutions
+      \item extract the type variables from a type tuple
+      \item return the type variables that are instantiated by a substitution
+      \item functions to compute the initial type argument maps
+   \end{itemize}
 
 \begin{quote}
 \begin{algorithm}[H]
-   \caption{Clause Monomorphisation Step}
+   \caption{Formula Monomorphisation Step}
    
    \LinesNumbered
 
@@ -352,20 +363,20 @@ Notes:
    \Output{\,monomorphic type argument map, non-monomorphic type argument map, set of substitutions}
    \BlankLine
 
-   \Subst \(\leftarrow\) \SubstGen{\(M\), \(P(\varphi)\)}\;
+   \Subst \(\leftarrow\) \SubstGen{\(M'\), \(P'(\varphi)\)}\;
    \Subst \(\leftarrow\) \Subst \(\cup\) \SubstGen{\(M'\), \(P(\varphi)\)}\;
    \Subst \(\leftarrow\) \Subst \(\cup\) \SubstGen{\(M\), \(P'(\varphi)\)}\;
    \BlankLine
 
    \TypeVars \(\leftarrow\) \TyVars{\(\varphi\)}\;
 
-   \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M| \times\)\MonoMult}, \MonoCap}\;
-   \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P(\varphi)| \times\)\PolyMult}, \PolyCap}\;
+   \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M\cup M'| \times\)\MonoMult}, \MonoCap}\;
+   \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P(\varphi)\cup P'(\varphi)| \times\)\PolyMult}, \PolyCap}\;
    \BlankLine
 
    \UsedSubst \(\leftarrow\emptyset\)\;
    \ForEach{\(\sigma\in \Subst\)}{
-      \ForEach{\(f\) occuring in \(\varphi\) }{
+      \ForEach{\(f\) occurring in \(\varphi\) }{
          \ForEach{\((\tau_1, \dots, \tau_n)\in P(\varphi)(f)\)}{
             \If{\TyVars{\((\tau_1, \dots, \tau_n)\)} \(\subseteq\) \Domain{\(\sigma\)}}{
                \If{\(|M''| < \MaxMono\) \label{algo:relative_bound}}{
@@ -385,106 +396,107 @@ Notes:
 
    \Return \((M'', P''(\varphi), \UsedSubst)\)
 
+\end{algorithm}
+\end{quote}
+
+This function computes new type arguments for a single formula. The separation of the type arguments into "old" and "new" maps is put to use here. Substitutions are generated only if one of the type arguments tuples used in the matching is new, this avoids computing matchings that have already been made in previous iterations.
+
+At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), if we add conditions dependent on the size of \(M''(f)\) (respectively \(P''(\varphi)(f)\)), it is possible to create more fine grained bounds. This may be useful if some function symbols have many type arguments relative to the overall bound thus preventing new type arguments of other function symbols from being generated. Then, adding a cap on the number of new type arguments per function symbol may help in smoothing out the distribution of new type arguments over function symbols.
+
+
+\begin{quote}
+\begin{algorithm}
+   \caption{Monomorphising Substitutions}
+
+   \SetKwFunction{MonoSubst}{monomorphising\_substs}
+   \SetKwFunction{Domain}{domain}
+   \SetKwData{Limit}{subst\_limit}
+   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
+   \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+
+   \Input{\,set of substitutions \(U, S\), substitution \(\sigma\), set of type variables \(V\)}
+   \Output{\,set of substitutions}
+   \BlankLine
+
+   \If{\(V = \emptyset\) \And \(|S| < \Limit\)}{
+      \Return \(S\cup\{\sigma\}\)\;
+   }
+   \Else{
+      \(\exists\alpha\in V\)\;
+      \ForEach{\(\sigma'\in U\) such that \(\sigma'\) instantiates \(\alpha\) \And \(\sigma\) compatible with \(\sigma'\)}{
+         \If{\(|S|<\Limit\)}{
+            \(S\leftarrow \MonoSubst{U, S, \(\sigma'\circ\sigma\), \(V\setminus\Domain{\(\sigma'\)}\)}\)\;
+         }
+         \lElse{\Return \(S\)}
+      }
+      \Return \(S\)\;
+   }
 
 
 \end{algorithm}
 \end{quote}
 
-At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), if we add conditions dependent on the size of \(M''(f)\) (respectively \(P''(\varphi)(f)\)), it is possible to create more fine grained bounds. This may be useful if some function symbols have many type arguments relative to the overall bound thus preventing new type arguments of other function symbols from being generated. Then, adding a cap on the number of new type arguments per function symbol may help in smoothing out the distribution of new type arguments.
-%\begin{algorithm}[]
-%\begin{algorithmic}[1]
-%\Function{Substitution Generation}{Input: \(\varphi\), M, P}
-%   \State new\_substitutions = \(\emptyset\)
-%   \ForAll {\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P(\varphi)\)}
-%      \ForAll {\( (\tau_1, \dots,\tau_n) \in M(f) \)}
-%         \State \(\sigma\) = \{\}
-%         \State continue = true
-%         \While {\(i\leq n\) and continue}
-%            \State subtitution\_result = match(\(\upsilon_i\), \(\tau_i\))
-%            \If {substitution\_result = Success(\(\sigma_i\)) and compatible(\(\sigma_i\), \(\sigma\))}
-%               \State \(\sigma = \sigma \circ \sigma_i\)
-%            \Else
-%               \State continue = false
-%            \EndIf
-%
-%         \EndWhile
-%
-%      \EndFor
-%   \EndFor
-%
-%   \State \Return (I, U, S)
-%
-%\EndFunction
-%\end{algorithmic}
-%\end{algorithm}
+
+\begin{quote}
+\begin{algorithm}
+   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
+
+   \SetKwData{Loop}{loop\_nb}\SetKwData{NewFormulae}{new\_formulae}
+   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{used\_substitution}
+
+   \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step}
+   \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{monomorphising\_substs}
+
+
+   \caption{Iterative Monomorphisation}
+
+   \((M, P) \leftarrow\) [empty maps]\;
+   \((M', P') \leftarrow \Init{\Problem}\)\;
+
+   \AllSubst\(\leftarrow \emptyset\)\;
+
+
+   \For{\(1\leq i\leq\Loop\) }{
+      \(M''\leftarrow\emptyset\)\;
+      \(P''\leftarrow\emptyset\)\;
+      \ForEach{\(\varphi \in \Problem\)} {
+         \((M^*, P^*(\varphi), S)\leftarrow \FStep(M, P(\varphi), M', P'(\varphi))\) \;
+         \(\AllSubst\leftarrow\AllSubst\cup S\)\;
+         \(M''\leftarrow M''\cup M^*\)\;
+         \(P''(\varphi)\leftarrow P''(\varphi)\cup P^*(\varphi)\)\;
+      }
+
+      \((M, M')\leftarrow (M\cup M', M'')\)\;
+      \((P, P')\leftarrow (P\cup P', P'')\)\;
+
+   }
+
+   \NewFormulae \(\leftarrow\emptyset\)\;
+   \For{\(\varphi\in\Phi\)}{
+      \(V\leftarrow \TyVars{\(\varphi\)}\)\;
+      \(S\leftarrow\MonoSubst{\AllSubst, \(\emptyset\), \(\{\}\), \(V\)}\)\;
+      \ForEach{}{
+         \(\NewFormulae\leftarrow\NewFormulae\cup\)
+      }
+
+   }
+
+\end{algorithm}
+\end{quote}
+
+The first loops apply the monomorphisation steps for each formula and perform a previously set number of iterations. At the end of a single iteration, the old and new maps are updated, this could in theory be done during a single iteration but would result in an uneven treatment of clauses. Formulae processed later would benefit from the additional monomorphic type arguments, generated when processing earlier formulae. Another undesirable effect of this approach would be making the algorithm dependent on the order of formulae in the problem.
+
 %In the Zipperposition implemntation this iteration procedure is limited by several bounds. The number of new type arguments that can be generated for each symbol is limited by user-defined bounds. These bounds can be defined proportionally. Additionally, the number of new type arguments can be limited at the clause level. In both cases, the bounds for the new ground type arguments and non-ground type arguments can be set independently.
 %
 %A consequences of these bounds is that in order to avoid unecessary computations, the program will iteratively apply substitutions until either the ground or non-ground bound is reached. Then substitutions can be discarded depending on whether they instantiate a given set of type arguments or not.
 %
 %Additionally, there are bounds for the number of substitutions that are generated.
 %
-%\begin{algorithm}[tbh]
-%\begin{algorithmic}[1]
-%\Function{Instantiate clause}{Clause: C, Substitutions S}
-%
-%   \If{\(C\) is ground}
-%
-%      \State \Return \(\{C\}\)
-%
-%   \Else
-%
-%      \State let \(v\) be a type variable in \(C\)
-%      \State let new\_clauses be an empty set of clauses
-%
-%      \ForAll{subst \(\in S(C)\)}
-%
-%         \If{subst instantiates \(v\)}
-%
-%            \State \(C' = apply(subst, C)\)
-%
-%            \State let v\_clauses = Instantiate clause(C', S)
-%
-%         \EndIf
-%
-%         \State \( new\_clauses = new\_clauses \cup v\_clauses\)
-%
-%      \EndFor
-%
-%      \State \Return new\_clauses
-%   \EndIf
-%
-%\EndFunction
-%\end{algorithmic}
-%\end{algorithm}
 %This function differs from the implementation in a significant way, indeed, through experimentation it was found that the generated clauses were far more likely to be solved by E if the substitutions that are combined to instantiate the clause were derived from the same iteration. In practice, we therefore store the iteration at which each substition is generated and at the instantiation phase only apply substitutions from the same iteration.
 %
 %
 %What the previous function does is essentially going through the tree of possible substitutions that instantiate the clause and collecting all possible instantiations. This is extremely explosive, and a hard cap on the number of clauses we want to generate is almost indispensable for any implementation.
 %
-%\begin{algorithm}[tbh]
-%\begin{algorithmic}[1]
-%\Function{Generate clauses}{Problem: P, Substitutions: S}
-%
-%\ForAll {clause \(C \in P\)}
-%   \State let new\_clauses = Instantiate clause(C, S)
-%   \State \(P = P \cup new\_clauses\)
-%\EndFor
-%
-%\State \(P' = \emptyset \)
-%
-%\ForAll {clause \(C \in P\)}
-%   \If{\(C\) is ground}
-%      \State \(P' = P' \cup \{mangle(C)\}\)
-%   \EndIf
-%\EndFor
-%
-%\State \Return \(P'\)
-%
-%\EndFunction
-%\end{algorithmic}
-%\end{algorithm}
-%
-%Implementation in Zipperposition.
 
 % target page number: 2-4
 \section{Evaluation}
