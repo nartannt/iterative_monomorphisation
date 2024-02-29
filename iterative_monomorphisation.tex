@@ -443,6 +443,7 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), if w
 
    \SetKwData{Loop}{loop\_nb}\SetKwData{NewFormulae}{new\_formulae}
    \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{used\_substitution}
+   \SetKwData{Limit}{total\_new\_formulae}
 
    \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step}
    \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{monomorphising\_substs}
@@ -475,11 +476,14 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), if w
    \For{\(\varphi\in\Phi\)}{
       \(V\leftarrow \TyVars{\(\varphi\)}\)\;
       \(S\leftarrow\MonoSubst{\AllSubst, \(\emptyset\), \(\{\}\), \(V\)}\)\;
-      \ForEach{}{
-         \(\NewFormulae\leftarrow\NewFormulae\cup\)
+      \ForEach{\(\sigma\in S\)}{
+         \If{\(|\NewFormulae|<\Limit\)}{
+            \(\NewFormulae\leftarrow\NewFormulae\cup \sigma(\varphi)\)\;
+         }
+         \lElse{\Return \NewFormulae}
       }
-
    }
+   \Return \NewFormulae\;
 
 \end{algorithm}
 \end{quote}
