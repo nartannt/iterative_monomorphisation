@@ -346,7 +346,7 @@ Adding a limit to the number of substitutions generated may be necessary if subs
    \SetKwData{Subst}{substitutions}\SetKwData{TypeVars}{type\_variables}
    \SetKwData{MaxMono}{max\_mono\_args}
    \SetKwData{MaxPoly}{max\_poly\_args}
-   \SetKwData{UsedSubst}{used\_subst}
+   \SetKwData{UsedSubst}{\(U\)}
 
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
 
@@ -367,8 +367,8 @@ Adding a limit to the number of substitutions generated may be necessary if subs
    \TypeVars \(\leftarrow\) \TyVars{\(\varphi\)}\;
 
    \textcolor{ourblueviolet}{
-   \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M\cup M'| \times\)\MonoMult}, \MonoCap}\;
-   \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P(\varphi)\cup P'(\varphi)| \times\)\PolyMult}, \PolyCap}\;
+   \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M\cup M'| \cdot \)\MonoMult}, \MonoCap}\;
+   \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P(\varphi)\cup P'(\varphi)| \cdot \)\PolyMult}, \PolyCap}\;
    }
 
    \BlankLine
@@ -377,26 +377,27 @@ Adding a limit to the number of substitutions generated may be necessary if subs
    \ForEach{\(\sigma\in \Subst\)}{
       \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P(\varphi)\)}{
          {
-            \If{\TyVars{\((\upsilon_1, \dots, \upsilon_n)\)} \(\subseteq\) \Domain{\(\sigma\)}}{
+            \uIf{\TyVars{\((\upsilon_1, \dots, \upsilon_n)\)} \(\subseteq\) \Domain{\(\sigma\)}}{
                \textcolor{ourblueviolet}{
-               \If{\(|M''| < \MaxMono\) \label{algo:relative_bound}}{
+               \uIf{\(|M''| < \MaxMono\) \label{algo:relative_bound}}{
                   \textcolor{black}{
                   \(M''(f)\leftarrow M''(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
                   \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;}
                }
-               \ElseIf{\(|P''(\varphi)| \geq \MaxPoly\)}{
+               \uElseIf{\(|P''(\varphi)| \geq \MaxPoly\)}{
                   \Return \((M'', P''(\varphi), \UsedSubst)\)\;
                }}
             }
-            \textcolor{ourblueviolet}{
-            \ElseIf{\(|P''(\varphi)| < \MaxPoly\)\label{algo:ref_2}} {
+            \uElse{
+               \textcolor{ourblueviolet}{
+               \If{\(|P''(\varphi)| < \MaxPoly\)\label{algo:ref_2}} {
                \textcolor{black}{
                \(P''(\varphi)(f)\leftarrow P''(\varphi)(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
                \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;
-               }
             }}
+            }
 
-         }
+         }}
       }
    }
    \BlankLine
@@ -432,7 +433,7 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), addi
    \Output{\,set of substitutions}
    \BlankLine
 
-   \If{\(V = \emptyset\)}{
+   \eIf{\(V = \emptyset\)}{
     %  \textcolor{ourblueviolet}{
     %  \If{\(|S|<\Limit\) }{
     %     \textcolor{black}{
@@ -440,15 +441,15 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), addi
     %  }
     %  \lElse{\Return \(S\)}}
    }
-   \Else{
+   {
       \(\exists\alpha\in V\)\;
       \ForEach{\(\sigma'\in U\) such that, \(\alpha\in\Domain{\(\sigma'\)}\) \And \(\sigma\) compatible with \(\sigma'\)}{
          \textcolor{ourblueviolet}{
-         \If{\(|S|<\Limit\)}{
+         \eIf{\(|S|<\Limit\)}{
             \textcolor{black}{
             \(S\leftarrow \MonoSubst{U, S, \(\sigma'\circ\sigma\), \(V\setminus\Domain{\(\sigma'\)}\)}\)\;}
          }
-         \lElse{\Return \(S\)}}
+         {\Return \(S\)}}
       }
       \Return \(S\)\;
    }
@@ -468,7 +469,7 @@ Because this function often hits the substitution limit, the order of substituti
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
 
    \SetKwData{Loop}{loop\_nb}\SetKwData{NewFormulae}{\(\Psi\)}
-   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{used\_substs}
+   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(U\)}
    \SetKwData{Limit}{total\_new\_formulae}
 
    \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step}
@@ -504,11 +505,11 @@ Because this function often hits the substitution limit, the order of substituti
       \(S\leftarrow\MonoSubst{\AllSubst, \(\emptyset\), \(\{\}\), \(V\)}\)\;
       \ForEach{\(\sigma\in S\)}{
          \textcolor{ourblueviolet}{
-         \If{\(|\NewFormulae|<\Limit\)}{
+         \eIf{\(|\NewFormulae|<\Limit\)}{
             \textcolor{black}{
             \(\NewFormulae\leftarrow\NewFormulae\cup \{\sigma(\varphi)\}\)\;}
          }
-         \lElse{\Return \NewFormulae}
+         {\Return \NewFormulae}
       }}
    }
    \Return \NewFormulae\;
@@ -535,7 +536,7 @@ Considering the total number of parameters, it would be impractical to exhaustiv
 The first two groups of options are natural as they affect how many new monomorphic and polymorphic type arguments are generated respectively for each symbol at each iteration. These options are closely linked and must be set together if they are to be relevant.
 
 During an iteration, for each symbol (for each clause in the polymorphic case), the number of newly generated type arguments is determined by this formula:
-\( \min(\text{cap}, \max(\text{floor}, \text{multiplier} \times \text{number of type arguments})) \)
+\( \min(\text{cap}, \max(\text{floor}, \text{multiplier} \cdot \text{number of type arguments})) \)
 
 The multiplier allows for a controlled increase of the number of type arguments, relative to the size of the problem whilst the floor prevents some symbols seeing no new type arguments if the multiplier is too low.
 The cap acts as a final limit in the case the explosion is too fast despite the multiplier bound.
