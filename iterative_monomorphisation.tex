@@ -30,7 +30,7 @@
 \newdefinition{definition}{Definition}
 \newdefinition{example}[definition]{Example}
 
-
+\definecolor{ourblueviolet}{HTML}{0071BC}
 \definecolor{grey}{rgb}{0.8,0.8,0.8}
 \definecolor{algoColorKeyword}{named}{grey}
 \makeatletter
@@ -282,46 +282,43 @@ These algorithms rely on the existence of what will be considered ``primitives''
    \item[\labelitemi] computing the initial type argument maps
 \end{enumerate}
 
+\begin{figure}
 \begin{quote}
 \begin{algorithm}[H]
-   \caption{Substitution Generation}
+%   \caption{Substitution Generation()}
 %   \SetAlgoNoLine
 %   \LinesNumbered
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
-   \SetKwData{Continue}{continue}\SetKwData{SubstRes}{substitution\_result}
    \SetKwData{SubstLimit}{substitution\_limit}
    \SetKwFunction{Success}{Success}\SetKwFunction{Compatible}{compatible}
    \SetKwFunction{Match}{match}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+   \SetKw{Break}{break}
 
    \Input{\,monomorphic type argument map \(M\), non-monomorphic type argument map \(P(\varphi)\)}
-   \Output{\,set of substitutions \(S\)}
+   \Output{\,set of substitutions}
    \BlankLine
 
    \(S\leftarrow \emptyset\)\;
    \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P(\varphi)\)}{
       \ForEach{\( (\tau_1, \dots,\tau_n) \in M(f) \)}{
          \(\sigma\leftarrow \{\}\)\;
-         \Continue \(\leftarrow\) \True\;
          \(i \leftarrow 1\)\;
-         \While{\(i \leq n\) \And \Continue}{
-            \SubstRes \(\leftarrow\) \Match{\(\upsilon_i\), \(\tau_i\)}\;
-            \Case{\SubstRes = \Success{\(\sigma_i\)}}{
-               \lIf{\Compatible{\(\sigma\), \(\sigma_i\)}}{
-                  \(\sigma\leftarrow\sigma_i\circ\sigma\)}
-               \lElse{\Continue\(\leftarrow\)\False}
+         \While{\(i \leq n\)}{
+            \eIf{\(\Match{\(\upsilon_i\), \(\tau_i\)}\) has the form \Success{\(\sigma_i\)} \And \Compatible{\(\sigma\), \(\sigma_i\)}}{
+               \(\sigma\leftarrow\sigma_i\circ\sigma\)
             }
-            \lOther{\Continue\(\leftarrow\)\False}
+            {\Break}
 
             \(i\leftarrow i+1\)\;
          }
          
-         \If{\Continue}{
-            \textcolor{BrickRed}{
-               \If{\(|S| < \SubstLimit\)}{
+         \If{\(i > n\)}{
+            \textcolor{ourblueviolet}{
+               \eIf{\(|S| < \SubstLimit\)}{
                   \textcolor{black}{\(S\leftarrow S\cup \{\sigma\}\)\;}
                }
-               \lElse{\Return \(S\)}
+               {\Return \(S\)}
             }
          }
       }
@@ -330,6 +327,8 @@ These algorithms rely on the existence of what will be considered ``primitives''
    \Return \(S\)\;
 \end{algorithm}
 \end{quote}
+\caption{Pseudocode for substitution generation}
+\end{figure}
 
 This function computes all possible matchings between the type arguments of the given type argument maps and returns the resulting substitutions. For each pair of type argument tuples, the non-monomrophic types are matched against their monomorphic counterparts and the resulting substitutions are composed if they are compatible. If the substitutions are incompatible, the matchings are discarded. [Note that the composition of two compatible substitutions is commutative].
 
@@ -367,7 +366,7 @@ Adding a limit to the number of substitutions generated may be necessary if subs
 
    \TypeVars \(\leftarrow\) \TyVars{\(\varphi\)}\;
 
-   \textcolor{BrickRed}{
+   \textcolor{ourblueviolet}{
    \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M\cup M'| \times\)\MonoMult}, \MonoCap}\;
    \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P(\varphi)\cup P'(\varphi)| \times\)\PolyMult}, \PolyCap}\;
    }
@@ -376,23 +375,23 @@ Adding a limit to the number of substitutions generated may be necessary if subs
 
    \UsedSubst \(\leftarrow\emptyset\)\;
    \ForEach{\(\sigma\in \Subst\)}{
-      \ForEach{\(f\) occurring in \(\varphi\) }{
-         \ForEach{\((\tau_1, \dots, \tau_n)\in P(\varphi)(f)\)}{
-            \If{\TyVars{\((\tau_1, \dots, \tau_n)\)} \(\subseteq\) \Domain{\(\sigma\)}}{
-               \textcolor{BrickRed}{
+      \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P(\varphi)\)}{
+         {
+            \If{\TyVars{\((\upsilon_1, \dots, \upsilon_n)\)} \(\subseteq\) \Domain{\(\sigma\)}}{
+               \textcolor{ourblueviolet}{
                \If{\(|M''| < \MaxMono\) \label{algo:relative_bound}}{
                   \textcolor{black}{
-                  \(M''(f)\leftarrow M''(f)\cup\{(\sigma(\tau_1),\dots,\sigma(\tau_n))\}\)\;
+                  \(M''(f)\leftarrow M''(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
                   \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;}
                }
                \ElseIf{\(|P''(\varphi)| \geq \MaxPoly\)}{
                   \Return \((M'', P''(\varphi), \UsedSubst)\)\;
                }}
             }
-            \textcolor{BrickRed}{
+            \textcolor{ourblueviolet}{
             \ElseIf{\(|P''(\varphi)| < \MaxPoly\)\label{algo:ref_2}} {
                \textcolor{black}{
-               \(P''(\varphi)(f)\leftarrow P''(\varphi)(f)\cup\{(\sigma(\tau_1),\dots,\sigma(\tau_n))\}\)\;
+               \(P''(\varphi)(f)\leftarrow P''(\varphi)(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
                \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;
                }
             }}
@@ -434,7 +433,7 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), addi
    \BlankLine
 
    \If{\(V = \emptyset\)}{
-    %  \textcolor{BrickRed}{
+    %  \textcolor{ourblueviolet}{
     %  \If{\(|S|<\Limit\) }{
     %     \textcolor{black}{
     \Return \(S\cup\{\sigma\}\)\;%}
@@ -444,7 +443,7 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), addi
    \Else{
       \(\exists\alpha\in V\)\;
       \ForEach{\(\sigma'\in U\) such that, \(\alpha\in\Domain{\(\sigma'\)}\) \And \(\sigma\) compatible with \(\sigma'\)}{
-         \textcolor{BrickRed}{
+         \textcolor{ourblueviolet}{
          \If{\(|S|<\Limit\)}{
             \textcolor{black}{
             \(S\leftarrow \MonoSubst{U, S, \(\sigma'\circ\sigma\), \(V\setminus\Domain{\(\sigma'\)}\)}\)\;}
@@ -468,8 +467,8 @@ Because this function often hits the substitution limit, the order of substituti
 \begin{algorithm}
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
 
-   \SetKwData{Loop}{loop\_nb}\SetKwData{NewFormulae}{new\_formulae}
-   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{used\_substitution}
+   \SetKwData{Loop}{loop\_nb}\SetKwData{NewFormulae}{\(\Psi\)}
+   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{used\_substs}
    \SetKwData{Limit}{total\_new\_formulae}
 
    \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step}
@@ -478,17 +477,17 @@ Because this function often hits the substitution limit, the order of substituti
 
    \caption{Iterative Monomorphisation}
 
-   \((M, P) \leftarrow\) [empty maps]\;
+   \((M, P) \leftarrow (\emptyset, \emptyset)\)\;
    \((M', P') \leftarrow \Init{\Problem}\)\;
 
    \AllSubst\(\leftarrow \emptyset\)\;
 
 
-   \For{\(1\leq i\leq \textcolor{BrickRed}{\Loop}\) }{
+   \For{\(1\leq i\leq \textcolor{ourblueviolet}{\Loop}\) }{
       \(M''\leftarrow\emptyset\)\;
       \(P''\leftarrow\emptyset\)\;
       \ForEach{\(\varphi \in \Problem\)} {
-         \((M^*, P^*(\varphi), S)\leftarrow \FStep(M, P(\varphi), M', P'(\varphi))\) \;
+         \((M^*, P^*(\varphi), S)\leftarrow \FStep(M, P(\varphi), M', P'(\varphi))\)\;
          \(\AllSubst\leftarrow\AllSubst\cup S\)\;
          \(M''\leftarrow M''\cup M^*\)\;
          \(P''(\varphi)\leftarrow P''(\varphi)\cup P^*(\varphi)\)\;
@@ -504,10 +503,10 @@ Because this function often hits the substitution limit, the order of substituti
       \(V\leftarrow \TyVars{\(\varphi\)}\)\;
       \(S\leftarrow\MonoSubst{\AllSubst, \(\emptyset\), \(\{\}\), \(V\)}\)\;
       \ForEach{\(\sigma\in S\)}{
-         \textcolor{BrickRed}{
+         \textcolor{ourblueviolet}{
          \If{\(|\NewFormulae|<\Limit\)}{
             \textcolor{black}{
-            \(\NewFormulae\leftarrow\NewFormulae\cup \sigma(\varphi)\)\;}
+            \(\NewFormulae\leftarrow\NewFormulae\cup \{\sigma(\varphi)\}\)\;}
          }
          \lElse{\Return \NewFormulae}
       }}
