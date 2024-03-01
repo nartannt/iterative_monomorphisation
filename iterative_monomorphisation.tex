@@ -1,17 +1,18 @@
 \documentclass[]{ceurart}
 
 \usepackage{soul}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{caption}
 \usepackage{booktabs}
 \usepackage{listings}
 \usepackage{array}
 \usepackage{multirow}
-%\usepackage{algorithm}
-%\usepackage{algpseudocode}
 \usepackage%[]
    {algorithm2e}
 \usepackage{amsmath}
 
+
+\SetNlSty{bfseries}{\color{black}}{}
 
 \lstset{breaklines=true}
 
@@ -258,23 +259,28 @@ This example illustrates how an infinite number of new formulae can be generated
 \section{Low level algorithm}
 \label{sec:low-level-algorithm}
 
-The algorithm presented in the previous section is simple but too naive for an implementation. In this section, we present a more low level algorithm with the following features.
+The algorithm presented in the previous section is simple but too naive for an implementation. In this section, we present a lower level algorithm with the following features.
 \begin{enumerate}
-    \item[\labelitemi] Bounds are used at several stages of the algorithm to curb the highly explosive enumerations.
+    \item[\labelitemi] Bounds are presented at several stages of the algorithm to curb potentially explosive enumerations.
 
     \item[\labelitemi] Type arguments are separated into old and new sets to avoid re-computing some of the same matchings in successive iterations.
 
-    \item[\labelitemi] Substitutions are directly applied to the type arguments in $M$ and $P$ instead of the formulae. This dispenses from having to extract the type arguments from the formulae at each iteration. New formulae are generated only once all iterations are complete, in a separate, penultimate step.
+    \item[\labelitemi] Substitutions are directly applied to the type arguments in $M$ and $P$ instead of the formulae. This dispenses from having to re-extract the type arguments from the formulae at each iteration. New formulae are only generated once all iterations are complete, in a separate, penultimate step.
 
     \item[\labelitemi] Once the new formulae are generated, their monomorphic types are mangled before the end result is output.
 \end{enumerate}
 
-TODO:
-\begin{itemize}
-   \item substitution generation
-   \item clause generation
-   \item fitting everything together
-\end{itemize}
+
+These algorithms rely on the existence of what will be considered ``primitives'' whose implementation depends on the specifics of the logic used and will therefore not be expanded upon. Any implementation of these algorithms will require the following functions:
+\begin{enumerate}
+   \item[\labelitemi] substitution composition
+   \item[\labelitemi] substitution application to formulae
+   \item[\labelitemi] type matching
+   \item[\labelitemi] testing the compatibility of two substitutions
+   \item[\labelitemi] extracting type variables from a type tuple
+   \item[\labelitemi] returning the type variables instantiated by a substitution
+   \item[\labelitemi] computing the initial type argument maps
+\end{enumerate}
 
 \begin{quote}
 \begin{algorithm}[H]
@@ -283,12 +289,13 @@ TODO:
 %   \LinesNumbered
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
    \SetKwData{Continue}{continue}\SetKwData{SubstRes}{substitution\_result}
+   \SetKwData{SubstLimit}{substitution\_limit}
    \SetKwFunction{Success}{Success}\SetKwFunction{Compatible}{compatible}
    \SetKwFunction{Match}{match}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
 
    \Input{\,monomorphic type argument map \(M\), non-monomorphic type argument map \(P(\varphi)\)}
-   \Output{\,set of substitutions}
+   \Output{\,set of substitutions \(S\)}
    \BlankLine
 
    \(S\leftarrow \emptyset\)\;
@@ -310,7 +317,12 @@ TODO:
          }
          
          \If{\Continue}{
-            \(S\leftarrow S\cup \{\sigma\}\)\;
+            \textcolor{BrickRed}{
+               \If{\(|S| < \SubstLimit\)}{
+                  \textcolor{black}{\(S\leftarrow S\cup \{\sigma\}\)\;}
+               }
+               \lElse{\Return \(S\)}
+            }
          }
       }
 
@@ -319,25 +331,12 @@ TODO:
 \end{algorithm}
 \end{quote}
 
-This function computes all possible matchings between the given type argument maps and returns the resulting substitutions. A single symbol may take multiple type arguments, they are treated as a unit. The matching of individual types from two type argument tuples must yield compatible substitutions, otherwise, they are discarded. This approach has the advantage of having the same behaviour whether a symbol has multiple type arguments, or a single type argument which encodes multiple type arguments. Adding a limit to the number of substitutions generated may be necessary if substitution generation becomes a bottleneck. In this case, it is a simple matter of stopping the function and returning \(S\) once a certain limit is reached.
+This function computes all possible matchings between the type arguments of the given type argument maps and returns the resulting substitutions. For each pair of type argument tuples, the non-monomrophic types are matched against their monomorphic counterparts and the resulting substitutions are composed if they are compatible. If the substitutions are incompatible, the matchings are discarded. [Note that the composition of two compatible substitutions is commutative].
 
-Notes:
-   * In the implementation, the old and new maps are actually one map with function symbols pointing to pairs of sets of type arguments
-   * In the implementation, instead of tuples we have lists of types
+Adding a limit to the number of substitutions generated may be necessary if substitution generation becomes a bottleneck. In this case, it is a simple matter of stopping the function and returning \(S\) once a certain limit is reached.
 
-   * In order to later have an easier time we store substitutions in a map that gathers them by which type variable they instantiate.
-
-   * We assume the existence of "primitives" that
-   \begin{itemize}
-      \item compose substitutions
-      \item apply substitutions to formula
-      \item match types to generate substitutions
-      \item test the compatibility of two substitutions
-      \item extract the type variables from a type tuple
-      \item return the type variables that are instantiated by a substitution
-      \item functions to compute the initial type argument maps
-   \end{itemize}
-
+\SetKwData{MonoCap}{mono\_cap}\SetKwData{MonoMult}{mono\_mult}\SetKwData{MonoFloor}{mono\_floor}
+\SetKwData{PolyCap}{poly\_cap}\SetKwData{PolyMult}{poly\_mult}\SetKwData{PolyFloor}{poly\_floor}
 \begin{quote}
 \begin{algorithm}[H]
    \caption{Formula Monomorphisation Step}
@@ -348,8 +347,6 @@ Notes:
    \SetKwData{Subst}{substitutions}\SetKwData{TypeVars}{type\_variables}
    \SetKwData{MaxMono}{max\_mono\_args}
    \SetKwData{MaxPoly}{max\_poly\_args}
-   \SetKwData{MonoCap}{mono\_cap}\SetKwData{MonoMult}{mono\_mult}\SetKwData{MonoFloor}{mono\_floor}
-   \SetKwData{PolyCap}{poly\_cap}\SetKwData{PolyMult}{poly\_mult}\SetKwData{PolyFloor}{poly\_floor}
    \SetKwData{UsedSubst}{used\_subst}
 
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
@@ -359,8 +356,8 @@ Notes:
    \SetKwFunction{Domain}{subst\_domain}\SetKwFunction{Len}{len}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
 
-   \Input{\,monomorphic type argument map \(M, M'\), new non-monomorphic type argument map \(P(\varphi), P'(\varphi)\)}
-   \Output{\,monomorphic type argument map, non-monomorphic type argument map, set of substitutions}
+   \Input{\,old and new monomorphic type argument maps \(M, M'\), old and new non-monomorphic type argument maps \(P(\varphi), P'(\varphi)\)}
+   \Output{\,monomorphic type argument map \(M''\), non-monomorphic type argument map \(P''(\varphi)\), set of substitutions \(S\)}
    \BlankLine
 
    \Subst \(\leftarrow\) \SubstGen{\(M'\), \(P'(\varphi)\)}\;
@@ -370,8 +367,11 @@ Notes:
 
    \TypeVars \(\leftarrow\) \TyVars{\(\varphi\)}\;
 
+   \textcolor{BrickRed}{
    \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M\cup M'| \times\)\MonoMult}, \MonoCap}\;
    \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P(\varphi)\cup P'(\varphi)| \times\)\PolyMult}, \PolyCap}\;
+   }
+
    \BlankLine
 
    \UsedSubst \(\leftarrow\emptyset\)\;
@@ -379,15 +379,23 @@ Notes:
       \ForEach{\(f\) occurring in \(\varphi\) }{
          \ForEach{\((\tau_1, \dots, \tau_n)\in P(\varphi)(f)\)}{
             \If{\TyVars{\((\tau_1, \dots, \tau_n)\)} \(\subseteq\) \Domain{\(\sigma\)}}{
+               \textcolor{BrickRed}{
                \If{\(|M''| < \MaxMono\) \label{algo:relative_bound}}{
+                  \textcolor{black}{
                   \(M''(f)\leftarrow M''(f)\cup\{(\sigma(\tau_1),\dots,\sigma(\tau_n))\}\)\;
-                  \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;
+                  \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;}
                }
+               \ElseIf{\(|P''(\varphi)| \geq \MaxPoly\)}{
+                  \Return \((M'', P''(\varphi), \UsedSubst)\)\;
+               }}
             }
+            \textcolor{BrickRed}{
             \ElseIf{\(|P''(\varphi)| < \MaxPoly\)\label{algo:ref_2}} {
+               \textcolor{black}{
                \(P''(\varphi)(f)\leftarrow P''(\varphi)(f)\cup\{(\sigma(\tau_1),\dots,\sigma(\tau_n))\}\)\;
                \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;
-            }
+               }
+            }}
 
          }
       }
@@ -399,9 +407,16 @@ Notes:
 \end{algorithm}
 \end{quote}
 
-This function computes new type arguments for a single formula. The separation of the type arguments into "old" and "new" maps is put to use here. Substitutions are generated only if one of the type arguments tuples used in the matching is new, this avoids computing matchings that have already been made in previous iterations.
+This function computes new type arguments for a single formula. The separation of the type arguments into ``old'' and ``new'' maps is put to use here. Pairs of type argument tuples must contain at least one new type argument in order to be matched and generate a substitution. This avoids computing matchings that have already been made in previous iterations.
 
-At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), if we add conditions dependent on the size of \(M''(f)\) (respectively \(P''(\varphi)(f)\)), it is possible to create more fine grained bounds. This may be useful if some function symbols have many type arguments relative to the overall bound thus preventing new type arguments of other function symbols from being generated. Then, adding a cap on the number of new type arguments per function symbol may help in smoothing out the distribution of new type arguments over function symbols.
+The limits on the number of new type monomorphic arguments has three components (similar bounds are used for the non-monomorphic):
+\begin{enumerate}
+   \item \MonoCap is an absolute limit on the total number of new type arguments
+   \item \MonoMult is used to allow the total number of type arguments to increase by a certain proportion
+   \item \MonoFloor balances out \MonoMult when the number of type arguments is too low, and guarantees that a minimum number of new type arguments
+\end{enumerate}
+
+At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), adding conditions dependent on the size of \(M''(f)\) (respectively \(P''(\varphi)(f)\)), would create finer grained bounds. This may be useful if some function symbols have too many type arguments and prevent new type arguments of other function symbols from being generated. Adding a cap on the number of new type arguments per function symbol may help in smoothing out the distribution of new type arguments over function symbols.
 
 
 \begin{quote}
@@ -418,16 +433,23 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), if w
    \Output{\,set of substitutions}
    \BlankLine
 
-   \If{\(V = \emptyset\) \And \(|S| < \Limit\)}{
-      \Return \(S\cup\{\sigma\}\)\;
+   \If{\(V = \emptyset\)}{
+    %  \textcolor{BrickRed}{
+    %  \If{\(|S|<\Limit\) }{
+    %     \textcolor{black}{
+    \Return \(S\cup\{\sigma\}\)\;%}
+    %  }
+    %  \lElse{\Return \(S\)}}
    }
    \Else{
       \(\exists\alpha\in V\)\;
-      \ForEach{\(\sigma'\in U\) such that \(\sigma'\) instantiates \(\alpha\) \And \(\sigma\) compatible with \(\sigma'\)}{
+      \ForEach{\(\sigma'\in U\) such that, \(\alpha\in\Domain{\(\sigma'\)}\) \And \(\sigma\) compatible with \(\sigma'\)}{
+         \textcolor{BrickRed}{
          \If{\(|S|<\Limit\)}{
-            \(S\leftarrow \MonoSubst{U, S, \(\sigma'\circ\sigma\), \(V\setminus\Domain{\(\sigma'\)}\)}\)\;
+            \textcolor{black}{
+            \(S\leftarrow \MonoSubst{U, S, \(\sigma'\circ\sigma\), \(V\setminus\Domain{\(\sigma'\)}\)}\)\;}
          }
-         \lElse{\Return \(S\)}
+         \lElse{\Return \(S\)}}
       }
       \Return \(S\)\;
    }
@@ -436,6 +458,11 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), if w
 \end{algorithm}
 \end{quote}
 
+This recursive function computes all substitutions that can instantiate a set of type variables. The substitutions are obtained by composition of compatible substitutions from a given set. The returned substitutions are said to be ``monomorphising'' with regards to the set of input type variables \(V\) because they instantiate all type variables in \(V\). In the Zipperposition implementation this limit was one of the most important bounds because the total number of possible monomorphising substitutions is very high but very few are necessary in practice.
+
+In the Zipperposition implementation, due the substitutions in \(U\) being selected on the basis on which type variable they instantiate, all substitutions are kept in a map which makes this selection faster.
+
+Because this function often hits the substitution limit, the order of substitutions in \(U\) (or the map in Zipperposition) can have a significant impact on the resulting monomorphising substitutions. This may be a relevant heuristic to tweak depending on the input problem.
 
 \begin{quote}
 \begin{algorithm}
@@ -457,7 +484,7 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), if w
    \AllSubst\(\leftarrow \emptyset\)\;
 
 
-   \For{\(1\leq i\leq\Loop\) }{
+   \For{\(1\leq i\leq \textcolor{BrickRed}{\Loop}\) }{
       \(M''\leftarrow\emptyset\)\;
       \(P''\leftarrow\emptyset\)\;
       \ForEach{\(\varphi \in \Problem\)} {
@@ -477,30 +504,23 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), if w
       \(V\leftarrow \TyVars{\(\varphi\)}\)\;
       \(S\leftarrow\MonoSubst{\AllSubst, \(\emptyset\), \(\{\}\), \(V\)}\)\;
       \ForEach{\(\sigma\in S\)}{
+         \textcolor{BrickRed}{
          \If{\(|\NewFormulae|<\Limit\)}{
-            \(\NewFormulae\leftarrow\NewFormulae\cup \sigma(\varphi)\)\;
+            \textcolor{black}{
+            \(\NewFormulae\leftarrow\NewFormulae\cup \sigma(\varphi)\)\;}
          }
          \lElse{\Return \NewFormulae}
-      }
+      }}
    }
    \Return \NewFormulae\;
 
 \end{algorithm}
 \end{quote}
 
-The first loops apply the monomorphisation steps for each formula and perform a previously set number of iterations. At the end of a single iteration, the old and new maps are updated, this could in theory be done during a single iteration but would result in an uneven treatment of clauses. Formulae processed later would benefit from the additional monomorphic type arguments, generated when processing earlier formulae. Another undesirable effect of this approach would be making the algorithm dependent on the order of formulae in the problem.
+The first loops apply the monomorphisation steps for each formula and perform a previously set number of iterations. At the end of a single iteration, the old and new maps are updated. This could in theory be done during a single iteration but would result in an uneven treatment of clauses. Formulae processed later would benefit from the additional monomorphic type arguments, generated when processing earlier formulae. Another undesirable effect of this approach would be making the algorithm dependent on the order of formulae in the problem.
 
-%In the Zipperposition implemntation this iteration procedure is limited by several bounds. The number of new type arguments that can be generated for each symbol is limited by user-defined bounds. These bounds can be defined proportionally. Additionally, the number of new type arguments can be limited at the clause level. In both cases, the bounds for the new ground type arguments and non-ground type arguments can be set independently.
-%
-%A consequences of these bounds is that in order to avoid unecessary computations, the program will iteratively apply substitutions until either the ground or non-ground bound is reached. Then substitutions can be discarded depending on whether they instantiate a given set of type arguments or not.
-%
-%Additionally, there are bounds for the number of substitutions that are generated.
-%
-%This function differs from the implementation in a significant way, indeed, through experimentation it was found that the generated clauses were far more likely to be solved by E if the substitutions that are combined to instantiate the clause were derived from the same iteration. In practice, we therefore store the iteration at which each substition is generated and at the instantiation phase only apply substitutions from the same iteration.
-%
-%
-%What the previous function does is essentially going through the tree of possible substitutions that instantiate the clause and collecting all possible instantiations. This is extremely explosive, and a hard cap on the number of clauses we want to generate is almost indispensable for any implementation.
-%
+Once all type arguments have been generated, the substitutions used to create those new type arguments are then combined in order to form monomorphising substitutions that are then applied to the polymorphic clauses. There can be a high number of possible monomorphic clauses resulting from this process. This can be limited both using a fixed number of 
+
 
 % target page number: 2-4
 \section{Evaluation}
