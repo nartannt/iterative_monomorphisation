@@ -27,15 +27,17 @@
 \newcommand\Medrightarrow{\mathrel{{{\color{black}\Relbar}\kern-0.9ex\rlap{\color{white}\ensuremath{\blacksquare}}\kern-0.9ex}\joinrel{\color{black}\Rightarrow}}}
 \newcommand\Medleftrightarrow{\mathrel{\Leftarrow\kern-1.685ex\Rightarrow}}
 
+
+
 \newdefinition{definition}{Definition}
 \newdefinition{example}[definition]{Example}
 
 
 % algo2e package
-\SetFuncSty{textsf}
-\SetFuncArgSty{textit}
+\SetFuncSty{textit}
+\SetFuncArgSty{text}
 \SetArgSty{text}
-\SetDataSty{textit}
+\SetDataSty{text}
 
 \DontPrintSemicolon
 
@@ -283,15 +285,15 @@ The algorithm presented in the previous section is simple but too naive for an i
 \end{enumerate}
 
 
-These algorithms rely on the existence of what will be considered ``primitives'' whose implementation depends on the specifics of the logic used and will therefore not be expanded upon. Any implementation of these algorithms will require the following functions:
+These algorithms rely on ``primitives'' whose implementation depends on the specifics of the grammar and logic used. They will therefore not be expanded upon. The functions computing the following are assumed to exist:
 \begin{enumerate}
-   \item[\labelitemi] substitution composition
-   \item[\labelitemi] substitution application to formulae
-   \item[\labelitemi] type matching
-   \item[\labelitemi] testing the compatibility of two substitutions
-   \item[\labelitemi] extracting type variables from a type tuple
-   \item[\labelitemi] returning the type variables instantiated by a substitution
    \item[\labelitemi] computing the initial type argument maps
+   \item[\labelitemi] extracting type variables from a type tuple
+   \item[\labelitemi] type matching
+   \item[\labelitemi] substitution composition
+   \item[\labelitemi] testing the compatibility of two substitutions
+   \item[\labelitemi] returning the type variables instantiated by a substitution
+   \item[\labelitemi] substitution application to formulae
 \end{enumerate}
 
 \SetKwFunction{IterMono}{iterative\_monomorphisation}
@@ -299,43 +301,43 @@ These algorithms rely on the existence of what will be considered ``primitives''
 \begin{quote}
 \begin{algorithm}[H]
 \Fn(){\IterMono{\(\Phi\)}}{
-   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
+   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{To}{to}
 
    \SetKwData{Loop}{loop\_nb}\SetKwData{NewFormulae}{\(\Psi\)}
-   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(U\)}
+   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(S^{\text{used}}\)}
    \SetKwData{Limit}{total\_new\_formulae}
 
    \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step}
-   \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{monomorphising\_substs}
+   \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{mono\_substs}
 
-   \KwData{set of formulae \(\varphi\)}
+   \KwData{set of formulae \(\Phi\)}
    \KwResult{set of monomorphic formulae}
 
-   \((M, P) \leftarrow (\emptyset, \emptyset)\)\;
+   \((M^{\text{old}}, P^{\text{old}}) \leftarrow (\emptyset, \emptyset)\)\;
    \((M^{\text{new}}, P^{\text{new}}) \leftarrow \Init{\Problem}\)\;
 
    \AllSubst\(\leftarrow \emptyset\)\;
 
 
-   \For{\(1\leq i\leq \textcolor{ourblueviolet}{\Loop}\) }{
+   \For{\(i = 1\) \To \textcolor{ourblueviolet}{\Loop}}{
       \((M^{\text{next}}, P^{\text{next}})\leftarrow(\emptyset,\emptyset)\)\;
       \ForEach{\(\varphi \in \Problem\)} {
-         \((M^*, P^*(\varphi), S)\leftarrow \FStep(M, P(\varphi), M^{\text{new}}, P^{\text{new}}(\varphi))\)\;
-         \(\AllSubst\leftarrow\AllSubst\cup S\)\;
-         \(M^{\text{next}}\leftarrow M^{\text{next}}\cup M^*\)\;
-         \(P^{\text{next}}(\varphi)\leftarrow P^{\text{next}}(\varphi)\cup P^*(\varphi)\)\;
+         \((M^{\Delta}, P^{\Delta}(\varphi), S^\Delta)\leftarrow \FStep(M^{\text{old}}, P^{\text{old}}(\varphi), M^{\text{new}}, P^{\text{new}}(\varphi))\)\;
+         \(\AllSubst\leftarrow\AllSubst\cup S^\Delta\)\;
+         \(M^{\text{next}}\leftarrow M^{\text{next}}\cup M^{\Delta}\)\;
+         \(P^{\text{next}}(\varphi)\leftarrow P^{\text{next}}(\varphi)\cup P^{\Delta}(\varphi)\)\;
       }
 
-      \((M, M^{\text{new}})\leftarrow (M\cup M^{\text{new}}, M^{\text{next}})\)\;
-      \((P, P^{\text{new}})\leftarrow (P\cup P^{\text{new}}, P^{\text{next}})\)\;
+      \((M^{\text{old}}, M^{\text{new}})\leftarrow (M^{\text{old}}\cup M^{\text{new}}, M^{\text{next}})\)\;
+      \((P^{\text{old}}, P^{\text{new}})\leftarrow (P^{\text{old}}\cup P^{\text{new}}, P^{\text{next}})\)\;
 
    }
 
    \NewFormulae \(\leftarrow\emptyset\)\;
-   \For{\(\varphi\in\Phi\)}{
+   \ForEach{\(\varphi\in\Phi\) polymorphic}{
       \(V\leftarrow \TyVars{\(\varphi\)}\)\;
-      \(S\leftarrow\MonoSubst{\AllSubst, \(\emptyset\), \(\{\}\), \(V\)}\)\;
-      \ForEach{\(\sigma\in S\)}{
+      \(S^{\text{mono}}\leftarrow\MonoSubst{\AllSubst, \(\emptyset\), \(\{\}\), \(V\)}\)\;
+      \ForEach{\(\sigma\in S^{\text{mono}}\)}{
          \textcolor{ourblueviolet}{
          \eIf{\(|\NewFormulae|<\Limit\)}{
             \textcolor{black}{
@@ -350,11 +352,120 @@ These algorithms rely on the existence of what will be considered ``primitives''
 \end{algorithm}
 \end{quote}
 \caption{Pseudocode for iterative monomorphisation}
+\label{iter_mono}
 \end{figure}
 
-The first loops apply the monomorphisation steps for each formula and perform a previously set number of iterations. At the end of a single iteration, the old and new maps are updated. This could in theory be done during a single iteration but would result in an uneven treatment of clauses. Formulae processed later would benefit from the additional monomorphic type arguments, generated when processing earlier formulae. Another undesirable effect of this approach would be making the algorithm dependent on the order of formulae in the problem.
+The iterative monomorphisation algorithm, as implemented in Zipperposition, is described in \ref{iter_mono}. There are two main phases each consisting of a separate loop. The first loop applies a monomorphisation step to each formula for each iteration of the overall for loop until the user-set limit it reached. This bound is the only limit which is necessary for the algorithm to terminate. At the end of each iteration, the old and new maps are updated.
+%Updating the maps progressively over the course of an iteration would be feasible but would result in an uneven treatment of formulae. Type arguments in a formula processed later could be matched against monomorphic type arguments generated at an earlier time in the same iteration. As a result, the later a formula is processed the more new type arguments it could generate.
 
-Once all type arguments have been generated, the substitutions used to create those new type arguments are then combined in order to form monomorphising substitutions that are then applied to the polymorphic clauses. There can be a high number of possible monomorphic clauses resulting from this process. This can be limited both using a fixed number of 
+Once all type arguments have been generated, the substitutions used to create those new type arguments are then combined in order to form monomorphising substitutions which are subsequently applied to the polymorphic formulae. There can be a high number of possible monomorphic formulae resulting from this process. This can be limited by setting a maximal number of new monomorphic formulae. In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected when it is given too many clauses.
+
+
+\SetKwData{MonoCap}{mono\_cap}\SetKwData{MonoMult}{mono\_mult}\SetKwData{MonoFloor}{mono\_floor}
+\SetKwData{PolyCap}{poly\_cap}\SetKwData{PolyMult}{poly\_mult}\SetKwData{PolyFloor}{poly\_floor}
+\begin{figure}
+\begin{quote}
+\begin{algorithm}[H]
+   
+   %\LinesNumbered
+   \SetKwFunction{SubstGen}{subst\_generation}\SetKwFunction{TyVars}{type\_variables}
+   \SetKwFunction{FMonoStep}{formula\_mono\_step}
+
+   \Fn(){\FMonoStep{\(M^{\text{old}}, M^{\text{new}}, P^{\text{old}}(\varphi), P^{\text{new}}(\varphi)\)}}{
+   \SetKwData{Subst}{substs}\SetKwData{TypeVars}{type\_variables}
+   \SetKwData{MaxMono}{max\_mono\_args}
+   \SetKwData{MaxPoly}{max\_poly\_args}
+   \SetKwData{UsedSubst}{\(S^{\text{used}}\)}
+
+   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
+
+   \SetKwFunction{Max}{max}\SetKwFunction{Min}{min}
+   \SetKwFunction{Domain}{subst\_domain}\SetKwFunction{Len}{len}
+
+   \KwData{
+      \hspace{-2.7em}\begin{minipage}[t]{.8\textwidth}
+      \begin{enumerate}
+         \item[] old and new monomorphic type argument maps \(M^{\text{old}}, M^{\text{new}}\)
+         \item[] old and new non-monomorphic type argument maps \(P^{\text{old}}(\varphi), P^{\text{new}}(\varphi)\)
+      \end{enumerate}
+      \end{minipage}
+   }
+   \KwResult{
+      \hspace{-2.7em}\begin{minipage}[t]{.8\textwidth}
+      \begin{enumerate}
+         \item[] monomorphic type argument map
+         \item[] non-monomorphic type argument map
+         \item[] set of substitutions
+      \end{enumerate}
+      \end{minipage}
+   }
+   \BlankLine
+
+   \Subst \(\leftarrow\) \SubstGen{\(M^{\text{new}}\), \(P^{\text{new}}(\varphi)\)}\;
+   \Subst \(\leftarrow\) \Subst \(\cup\) \SubstGen{\(M^{\text{new}}\), \(P(\varphi)\)}\;
+   \Subst \(\leftarrow\) \Subst \(\cup\) \SubstGen{\(M\), \(P^{\text{new}}(\varphi)\)}\;
+   \BlankLine
+
+   \TypeVars \(\leftarrow\) \TyVars{\(\varphi\)}\;
+
+   \textcolor{ourblueviolet}{
+   \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M\cup M^{\text{new}}| \cdot \)\MonoMult}, \MonoCap}\;
+   \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P(\varphi)\cup P^{\text{new}}(\varphi)| \cdot \)\PolyMult}, \PolyCap}\;
+   }
+
+   \BlankLine
+
+   \UsedSubst \(\leftarrow\emptyset\)\;
+   \ForEach{\(\sigma\in \Subst\)}{
+      \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P(\varphi)\)}{
+            \eIf{\TyVars{\((\upsilon_1, \dots, \upsilon_n)\)} \(\subseteq\) \Domain{\(\sigma\)}}{
+               \textcolor{ourblueviolet}{
+               \uIf{\(|M^{\text{next}}| < \MaxMono\) \label{algo:relative_bound}}{
+                  \textcolor{black}{
+                  \(M^{\text{next}}(f)\leftarrow M^{\text{next}}(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
+                  \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;}
+               }
+               \uElseIf{\(|P^{\text{next}}(\varphi)| \geq \MaxPoly\) }{
+                  blablabliblou\;
+                  \(M^\text{next} \leftarrow M^{\text{next}}\setminus (M^\text{old} \cup M^\text{new})\)\;
+                  \(P^\text{next}(\varphi)\leftarrow P^{\text{next}}(\varphi)\setminus (P^\text{old}(\varphi)\cup P^\text{new}(\varphi))\)\;
+                  \Return \((M^\text{next}, P^\text{next}(\varphi), \UsedSubst)\)
+               }}
+            }
+            {
+               \textcolor{ourblueviolet}{
+               \If{\(|P^{\text{next}}(\varphi)| < \MaxPoly\)\label{algo:ref_2}} {
+               \textcolor{black}{
+               \(P^{\text{next}}(\varphi)(f)\leftarrow P^{\text{next}}(\varphi)(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
+               \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;
+            }}
+            }
+
+         }
+      }
+   }
+   \BlankLine
+
+   \Return \((M^{\text{next}}\setminus (M^\text{old} \cup M^\text{new}), P^{\text{next}}(\varphi)\setminus (P^\text{old}(\varphi)\cup P^\text{new}(\varphi)), \UsedSubst)\)
+}
+
+\end{algorithm}
+\end{quote}
+\caption{Formula Monomorphisation Step}
+\label{mono_step}
+\end{figure}
+
+Function \ref{mono_step} computes new type arguments for a single formula. The separation of the type arguments into ``old'' and ``new'' maps is exploited here. Pairs of type argument tuples must contain at least one new type argument in order to be matched and generate a substitution. This avoids computing matchings that have already been made in previous iterations. Unfortunately, not all such redundant computations can be avoided because different matchings with entirely different types can yield the same substitution. Furthermore, 
+
+The limits on the number of new type monomorphic arguments has three components (similar bounds are used for the non-monomorphic):
+\begin{enumerate}
+   \item \MonoCap is an absolute limit on the total number of new type arguments
+   \item \MonoMult is used to allow the total number of type arguments to increase by a certain proportion
+   \item \MonoFloor balances out \MonoMult when the number of type arguments is too low, and guarantees that a minimum number of new type arguments
+\end{enumerate}
+
+At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), adding conditions dependent on the size of \(M^{\text{next}}(f)\) (respectively \(P^{\text{next}}(\varphi)(f)\)), would create finer grained bounds. This may be useful if some function symbols have too many type arguments and prevent new type arguments of other function symbols from being generated. Adding a cap on the number of new type arguments per function symbol may help in smoothing out the distribution of new type arguments over function symbols.
+
 
 \begin{figure}
 \begin{quote}
@@ -371,7 +482,14 @@ Once all type arguments have been generated, the substitutions used to create th
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
    \SetKw{Break}{break}
 
-   \KwData{monomorphic type argument map \(M\), non-monomorphic type argument map \(P(\varphi)\)}
+   \KwData{%
+      \hspace{-2.7em}\begin{minipage}[t]{.8\textwidth}
+      \begin{enumerate}
+         \item[] monomorphic type argument map \(M\)
+         \item[] non-monomorphic type argument map \(P(\varphi)\)
+      \end{enumerate}
+      \end{minipage}
+   }
    \KwResult{set of substitutions}
    \BlankLine
 
@@ -411,122 +529,48 @@ Once all type arguments have been generated, the substitutions used to create th
 This function computes all possible matchings between the type arguments of the given type argument maps and returns the resulting substitutions. For each pair of type argument tuples, the non-monomrophic types are matched against their monomorphic counterparts and the resulting substitutions are composed if they are compatible. If the substitutions are incompatible, the matchings are discarded. [Note that the composition of two compatible substitutions is commutative].
 
 Adding a limit to the number of substitutions generated may be necessary if substitution generation becomes a bottleneck. In this case, it is a simple matter of stopping the function and returning \(S\) once a certain limit is reached.
-
-\SetKwData{MonoCap}{mono\_cap}\SetKwData{MonoMult}{mono\_mult}\SetKwData{MonoFloor}{mono\_floor}
-\SetKwData{PolyCap}{poly\_cap}\SetKwData{PolyMult}{poly\_mult}\SetKwData{PolyFloor}{poly\_floor}
-\begin{figure}
-\begin{quote}
-\begin{algorithm}[H]
-   
-   \LinesNumbered
-
-
-   \SetKwData{Subst}{substitutions}\SetKwData{TypeVars}{type\_variables}
-   \SetKwData{MaxMono}{max\_mono\_args}
-   \SetKwData{MaxPoly}{max\_poly\_args}
-   \SetKwData{UsedSubst}{\(U\)}
-
-   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
-
-   \SetKwFunction{SubstGen}{substitution\_generation}\SetKwFunction{TyVars}{type\_variables}
-   \SetKwFunction{Max}{max}\SetKwFunction{Min}{min}
-   \SetKwFunction{Domain}{subst\_domain}\SetKwFunction{Len}{len}
-
-   \KwData{old and new monomorphic type argument maps \(M, M^{\text{new}}\), old and new non-monomorphic type argument maps \(P(\varphi), P^{\text{new}}(\varphi)\)}
-   \KwResult{monomorphic type argument map \(M^{\text{next}}\), non-monomorphic type argument map \(P^{\text{next}}(\varphi)\), set of substitutions \(S\)}
-   \BlankLine
-
-   \Subst \(\leftarrow\) \SubstGen{\(M^{\text{new}}\), \(P^{\text{new}}(\varphi)\)}\;
-   \Subst \(\leftarrow\) \Subst \(\cup\) \SubstGen{\(M^{\text{new}}\), \(P(\varphi)\)}\;
-   \Subst \(\leftarrow\) \Subst \(\cup\) \SubstGen{\(M\), \(P^{\text{new}}(\varphi)\)}\;
-   \BlankLine
-
-   \TypeVars \(\leftarrow\) \TyVars{\(\varphi\)}\;
-
-   \textcolor{ourblueviolet}{
-   \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M\cup M^{\text{new}}| \cdot \)\MonoMult}, \MonoCap}\;
-   \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P(\varphi)\cup P^{\text{new}}(\varphi)| \cdot \)\PolyMult}, \PolyCap}\;
-   }
-
-   \BlankLine
-
-   \UsedSubst \(\leftarrow\emptyset\)\;
-   \ForEach{\(\sigma\in \Subst\)}{
-      \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P(\varphi)\)}{
-            \eIf{\TyVars{\((\upsilon_1, \dots, \upsilon_n)\)} \(\subseteq\) \Domain{\(\sigma\)}}{
-               \textcolor{ourblueviolet}{
-               \uIf{\(|M^{\text{next}}| < \MaxMono\) \label{algo:relative_bound}}{
-                  \textcolor{black}{
-                  \(M^{\text{next}}(f)\leftarrow M^{\text{next}}(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
-                  \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;}
-               }
-               \uElseIf{\(|P^{\text{next}}(\varphi)| \geq \MaxPoly\) }{
-                  blablabliblou\;
-                  \Return \((M^{\text{next}}, P^{\text{next}}(\varphi), \UsedSubst)\)\;
-               }}
-            }
-            {
-               \textcolor{ourblueviolet}{
-               \If{\(|P^{\text{next}}(\varphi)| < \MaxPoly\)\label{algo:ref_2}} {
-               \textcolor{black}{
-               \(P^{\text{next}}(\varphi)(f)\leftarrow P^{\text{next}}(\varphi)(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
-               \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;
-            }}
-            }
-
-         }
-      }
-   }
-   \BlankLine
-
-   \Return \((M^{\text{next}}, P^{\text{next}}(\varphi), \UsedSubst)\)
-
-\end{algorithm}
-\end{quote}
-\caption{Formula Monomorphisation Step}
-\end{figure}
-
-This function computes new type arguments for a single formula. The separation of the type arguments into ``old'' and ``new'' maps is put to use here. Pairs of type argument tuples must contain at least one new type argument in order to be matched and generate a substitution. This avoids computing matchings that have already been made in previous iterations.
-
-The limits on the number of new type monomorphic arguments has three components (similar bounds are used for the non-monomorphic):
-\begin{enumerate}
-   \item \MonoCap is an absolute limit on the total number of new type arguments
-   \item \MonoMult is used to allow the total number of type arguments to increase by a certain proportion
-   \item \MonoFloor balances out \MonoMult when the number of type arguments is too low, and guarantees that a minimum number of new type arguments
-\end{enumerate}
-
-At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), adding conditions dependent on the size of \(M^{\text{next}}(f)\) (respectively \(P^{\text{next}}(\varphi)(f)\)), would create finer grained bounds. This may be useful if some function symbols have too many type arguments and prevent new type arguments of other function symbols from being generated. Adding a cap on the number of new type arguments per function symbol may help in smoothing out the distribution of new type arguments over function symbols.
-
-
 \begin{figure}
 \begin{quote}
    \begin{algorithm}[H]
 
-   \SetKwFunction{MonoSubst}{monomorphising\_substs}
+   
+   \SetKwFunction{MonoSubst}{mono\_substs}
    \SetKwFunction{Domain}{domain}
    \SetKwData{Limit}{subst\_limit}
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
    \SetKw{Let}{let}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
 
-   \KwData{set of substitutions \(U\) and \(S\), single substitution \(\sigma\), set of type variables \(V\)}
+   \Fn(){\MonoSubst{\(S^{\text{used}}, S^\text{acc}, \sigma^\text{acc}, V\)}}{
+
+   \KwData{%
+      \hspace{-2.7em}\begin{minipage}[t]{.8\textwidth}
+      \begin{enumerate}
+         \item[] set of substitutions \(S^{\text{used}}\) and \(S^\text{acc}\)
+         \item[] single substitution \(\sigma^\text{acc}\)
+         \item[] set of type variables \(V\)
+      \end{enumerate}
+      \end{minipage}
+   }
+
    \KwResult{set of substitutions}
    \BlankLine
 
    \eIf{\(V = \emptyset\)}{
-    \Return \(S\cup\{\sigma\}\)\;%}
+    \Return \(S^\text{acc}\cup\{\sigma^\text{acc}\}\)\;%}
    }
    {
       \Let \(\alpha \) such that \(\alpha\in V\)\;
-      \ForEach{\(\sigma'\in U\) such that, \(\alpha\in\Domain{\(\sigma'\)}\) \And \(\sigma\) compatible with \(\sigma'\)}{
+      \ForEach{\(\sigma^\text{next}\in S^{\text{used}}\) such that, \(\alpha\in\Domain{\(\sigma^\text{next}\)}\) \And \(\sigma^\text{acc}\) compatible with \(\sigma^\text{next}\)}{
          \textcolor{ourblueviolet}{
-         \eIf{\(|S|<\Limit\)}{
+         \eIf{\(|S^\text{acc}|<\Limit\)}{
             \textcolor{black}{
-            \(S\leftarrow \MonoSubst{U, S, \(\sigma'\circ\sigma\), \(V\setminus\Domain{\(\sigma'\)}\)}\)\;}
+            \(S^\text{acc}\leftarrow \MonoSubst{\(S^{\text{used}}, S^\text{acc}, \sigma^\text{next}\circ\sigma^\text{acc}, V\setminus\Domain{\(\sigma^\text{next}\)}\)}\)\;}
          }
-         {\Return \(S\)}}
+         {\Return \(S^\text{acc}\)}}
       }
-      \Return \(S\)\;
+      \Return \(S^\text{acc}\)\;
+   }
    }
 
 
