@@ -143,7 +143,7 @@ Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(
 
 To keep the number of generated formulae finite, we limit the number of iterations. After the iterations are completed, the new monomorphic symbol instances are used to instantiate the polymorphic symbols in the problem's formulae, generating new monomorphic formulae. Finally, because monomorphic provers generally do not support $n$-ary type constructors, types must be `mangled'; for example, the compound type $\ty{list}(\ty{int})$ could be mangled to the constant $\ty{list\_int}$.
 
-We implemented iterative monormorphisation in Zipperpostion \cite{zipp}, a higher order prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E \cite{e} as a backend. This means that E can now be used with polymorphic problems. Moreover, our implementation of the algorithm in Zipperposition can be used as a preprocessor to interface with other stand-alone provers.
+We implemented iterative monomorphisation in Zipperposition \cite{zipp}, a higher order prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E \cite{e} as a backend. This means that E can now be used with polymorphic problems. Moreover, our implementation of the algorithm in Zipperposition can be used as a preprocessor to interface with other stand-alone provers.
 
 Our empirical evaluation on TPTP \cite{tptp} problems attempts to answer three questions (Section~\ref{sec:evaluation}):
 \begin{enumerate}
@@ -226,7 +226,7 @@ Once the maps \(M\) and \(P\) are initialised, each iteration performs the follo
 
    \item Create an empty set of formulae \(\Phi'\).
 
-   \item For each formula \(\varphi \in \Phi\) and for each symbol \(f\) occuring in \(\varphi\):
+   \item For each formula \(\varphi \in \Phi\) and for each symbol \(f\) occurring in \(\varphi\):
    \begin{enumerate}
     \item[2.1.] For each tuple \((\tau_1, \dots, \tau_n) \in  M(f)\)        and each tuple \((\upsilon_1, \dots, \upsilon_n) \in P(\varphi, f)\),
      for each \(i\), match \(\upsilon_i\) against \(\tau_i\), yielding the substitution \(\sigma_i\) in case of success.
@@ -358,7 +358,7 @@ These algorithms rely on ``primitives'' whose implementation depends on the spec
 The iterative monomorphisation algorithm, as implemented in Zipperposition, is described in \ref{iter_mono}. There are two main phases each consisting of a separate loop. The first loop applies a monomorphisation step to each formula for each iteration of the overall for loop until the user-set limit it reached. This bound is the only limit which is necessary for the algorithm to terminate. At the end of each iteration, the old and new maps are updated.
 %Updating the maps progressively over the course of an iteration would be feasible but would result in an uneven treatment of formulae. Type arguments in a formula processed later could be matched against monomorphic type arguments generated at an earlier time in the same iteration. As a result, the later a formula is processed the more new type arguments it could generate.
 
-Once all type arguments have been generated, the substitutions used to create those new type arguments are then combined in order to form monomorphising substitutions which are subsequently applied to the polymorphic formulae. There can be a high number of possible monomorphic formulae resulting from this process. This can be limited by setting a maximal number of new monomorphic formulae. In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected when it is given too many clauses.
+Once all type arguments have been generated, the substitutions used to create these new type arguments are then combined in order to form monomorphising substitutions. These substitutions are subsequently applied to the input problem's polymorphic formulae. The possible number of new (monomorphic) formulae resulting from this process is very high but can be limited by setting a maximal number of new formulae. In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected when it is given too many clauses.
 
 
 \SetKwData{MonoCap}{mono\_cap}\SetKwData{MonoMult}{mono\_mult}\SetKwData{MonoFloor}{mono\_floor}
@@ -455,24 +455,26 @@ Once all type arguments have been generated, the substitutions used to create th
 \label{mono_step}
 \end{figure}
 
-Function \ref{mono_step} computes new type arguments for a single formula. The separation of the type arguments into ``old'' and ``new'' maps is exploited here. Pairs of type argument tuples must contain at least one new type argument in order to be matched and generate a substitution. This avoids computing matchings that have already been made in previous iterations. Unfortunately, not all such redundant computations can be avoided because different matchings with entirely different types can yield the same substitution. Furthermore, 
+Function \ref{mono_step} computes new type arguments for a single formula. The first step in this process generates substitutions (detailed in \ref{subst_gen}) by matching non-monomorphic type arguments against monomorphic ones. The separation of the type arguments into ``old'' and ``new'' maps is exploited here. Pairs of type argument tuples must contain at least one new type argument in order to be matched and possibly generate a substitution. This avoids computing matchings having already been made in previous iterations. Not all such redundant computations can be avoided because the same substitution can be obtained from matchings between entirely different pairs of types.
 
-The limits on the number of new type monomorphic arguments has three components (similar bounds are used for the non-monomorphic):
+The main loop of this function, iterates over each substitution generated this way and applied them to all polymorphic type arguments. The total number of type arguments can increase (doubly) exponentially in the number of iterations.
+
+[If we assume there are after \(k\) iterations \(N_k\) total type arguments split evenly between monomorphic and polymorphic type arguments, all in a single formula. There can be up to \((\frac{N_k}{2})^2\) successful matches yielding as many substitutions. Each substitution is then applied to each polymorphic type argument for a total of \((\frac{N_k}{2})^3\) new type arguments. If half of these new type arguments are monomorphic and the other half is polymorphic, then the next iteration will begin with \(N_{k+1} = (\frac{N_k}{2})^{3}\) evenly split type arguments. Meaning that the total number of type arguments on the \(k^\text{th}\) iteration can reach \(N_k = (\frac{N_0}{2})^{3^k}\). This paragraph is wrong on several points, it can be fixed but it would be annoying, the main idea is that it can be shown relatively easily in a semi-formal way that the total number of type arguments is doubly exponential in the number of iterations.]
+
+Depending on the shape and size of the input problem, this may problematic and lead to an explosion of the number of type arguments. The limits on the number of new type monomorphic arguments (in \textcolor{ourblueviolet}{blue}) has three components (similar bounds are used for the non-monomorphic type arguments):
 \begin{enumerate}
-   \item \MonoCap is an absolute limit on the total number of new type arguments
-   \item \MonoMult is used to allow the total number of type arguments to increase by a certain proportion
-   \item \MonoFloor balances out \MonoMult when the number of type arguments is too low, and guarantees that a minimum number of new type arguments
+   \item \textcolor{ourblueviolet}{\MonoCap} is an absolute limit on the total number of new type arguments
+   \item \textcolor{ourblueviolet}{\MonoMult} is used to allow the total number of type arguments to increase by a certain proportion
+   \item \textcolor{ourblueviolet}{\MonoFloor} balances out \MonoMult when the number of type arguments is too low, and guarantees that a minimum number of new type arguments
 \end{enumerate}
 
-At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), adding conditions dependent on the size of \(M^{\text{next}}(f)\) (respectively \(P^{\text{next}}(\varphi)(f)\)), would create finer grained bounds. This may be useful if some function symbols have too many type arguments and prevent new type arguments of other function symbols from being generated. Adding a cap on the number of new type arguments per function symbol may help in smoothing out the distribution of new type arguments over function symbols.
-
+Additionally, it is possible to generalise or further refine these type argument bounds. Indeed, the maximum number of newly generated type arguments is fixed per iteration, per formula. This algorithm can easily be modified such that the limit on new type arguments is fixed per iteration, or conversely, be made to limit new type arguments for each function symbol of each formula for each iteration. The coarseness and values of these bounds can be adapted to the kinds of problems to be processed by the monomorphisation algorithm.
 
 \begin{figure}
 \begin{quote}
 \begin{algorithm}[H]
 \SetKwFunction{SubstGen}{substitution\_generation}
 \Fn(){\SubstGen{\(M, P(\varphi)\)}}{
-%   \caption{Substitution Generation()}
 %   \SetAlgoNoLine
 %   \LinesNumbered
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
@@ -524,11 +526,15 @@ At line \ref{algo:relative_bound} (and similarly at line \ref{algo:ref_2}), addi
 \end{algorithm}
 \end{quote}
 \caption{Pseudocode for substitution generation}
+\label{subst_gen}
 \end{figure}
 
-This function computes all possible matchings between the type arguments of the given type argument maps and returns the resulting substitutions. For each pair of type argument tuples, the non-monomrophic types are matched against their monomorphic counterparts and the resulting substitutions are composed if they are compatible. If the substitutions are incompatible, the matchings are discarded. [Note that the composition of two compatible substitutions is commutative].
+Substitution generation (\ref{subst_gen}) consists of computing all possible matchings between the type arguments of the given type argument maps and returns the resulting substitutions. For each pair of type argument tuples, the non-monomorphic types are matched against their monomorphic counterparts and the resulting substitutions are composed if they are compatible. In the pseudocode, this is checked by making sure that the while loop has iterated over all elements of the type argument tuple. If the substitutions are incompatible, the matchings are discarded. [Note that the composition of two compatible substitutions is commutative and that the order of composition is therefore irrelevant]. [The Zipperposition implementation is written in a functional style and may therefore not directly map onto the pseudocode].
 
 Adding a limit to the number of substitutions generated may be necessary if substitution generation becomes a bottleneck. In this case, it is a simple matter of stopping the function and returning \(S\) once a certain limit is reached.
+
+The various bounds presented are, to some extent, redundant. For instance, limiting the number of substitutions generated at this step may be sufficient to curb the number of new type arguments, making these bounds superfluous. Whilst, implementing all the bounds described in this section may not be necessary, all the limits presented may be useful in particular cases. For example, sets of problems which lead to few successful matches but many type arguments may benefit from a limit on the number of new type arguments whilst sets of problems where substitution generation is a bottleneck might consider a limit on the number of generated substitution to be more relevant. Not sure about this paragraph
+
 \begin{figure}
 \begin{quote}
    \begin{algorithm}[H]
