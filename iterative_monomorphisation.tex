@@ -216,7 +216,7 @@ The initial phase of each iteration consists of computing two maps, \(M\) and \(
 \begin{enumerate}
 \item[\labelitemi] Given a symbol \(f\) occurring in \(\Phi\), the set \(M(f)\) consists of all tuples of monomorphic type arguments to which \(f\) is applied in \(\Phi\). For example, if \(\sym{foldl}\langle \ty{nat}, \ty{int}\rangle\) occurs in \(\Phi\), then \((\ty{nat}, \ty{int}) \in M(\sym{foldl}) \).
 
-\item[\labelitemi] Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(P(\varphi, f)\) consists of all tuples of type arguments to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in P(\varphi, \sym{foldl}) \).
+\item[\labelitemi] Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(P(\varphi)(f)\) consists of all tuples of type arguments to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in P(\varphi)(\sym{foldl}) \).
 \end{enumerate}
 
 These definitions depend on the precise form of the input formulae, which has been left undefined. It is important to parametrise \(P\) with \(\varphi\) because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
@@ -229,7 +229,7 @@ Once the maps \(M\) and \(P\) are initialised, each iteration performs the follo
 
    \item For each formula \(\varphi \in \Phi\) and for each symbol \(f\) occurring in \(\varphi\):
    \begin{enumerate}
-    \item[2.1.] For each tuple \((\tau_1, \dots, \tau_n) \in  M(f)\)        and each tuple \((\upsilon_1, \dots, \upsilon_n) \in P(\varphi, f)\),
+    \item[2.1.] For each tuple \((\tau_1, \dots, \tau_n) \in  M(f)\)        and each tuple \((\upsilon_1, \dots, \upsilon_n) \in P(\varphi)(f)\),
      for each \(i\), match \(\upsilon_i\) against \(\tau_i\), yielding the substitution \(\sigma_i\) in case of success.
 
     \item[2.2.] If all \(n\) matchings are successful and the substitutions \(\sigma_i\) are pairwise compatible,
@@ -297,47 +297,85 @@ This algorithm relies on ``primitives'' whose implementation depend on the speci
 \end{enumerate}
 
 \SetKwFunction{IterMono}{iterative\_monomorphisation}
-\begin{figure}
+\begin{figure}[b]
 \begin{quote}
 \begin{algorithm}[H]
-\Fn(){\IterMono{\(\Phi\)}}{
+\Fn(){\(\IterMono(\Phi)\)}{
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{To}{to}
 
-   \SetKwData{Loop}{loop\_nb}\SetKwData{NewFormulae}{\(\Psi\)}
-   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(S^{\text{used}}\)}
+   \SetKwData{Loop}{num\_loops}\SetKwData{NewFormulae}{\(\Psi\)}
+   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(S\)}
    \SetKwData{Limit}{total\_new\_formulae}
 
-   \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step}
+   \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step} 
    \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{mono\_substs}
+   \SetKwFunction{GenFormulae}{generate\_mono\_formulae}
 
-   \KwData{set of formulae \(\Phi\)}
-   \KwResult{set of monomorphic formulae}
+   \KwData{finite set \(\Phi\) of polymorphic formulae}
+   \KwResult{finite set of monomorphic formulae}
 
-   \((M^{\text{old}}, P^{\text{old}}) \leftarrow (\emptyset, \emptyset)\)\;
-   \((M^{\text{new}}, P^{\text{new}}) \leftarrow \Init{\Problem}\)\;
+   \BlankLine
+
+   \((M_{\text{old}}, P_{\text{old}}) \leftarrow (\emptyset, \emptyset)\)\;
+   \((M_{\text{new}}, P_{\text{new}}) \leftarrow \Init(\Problem)\)\;
 
    \AllSubst\(\leftarrow \emptyset\)\;
 
+   \BlankLine
 
    \For{\(i = 1\) \To \textcolor{ourblueviolet}{\Loop}}{
-      \((M^{\text{next}}, P^{\text{next}})\leftarrow(\emptyset,\emptyset)\)\;
+      \((M_{\text{next}}, P_{\text{next}})\leftarrow(\emptyset,\emptyset)\)\;
       \ForEach{\(\varphi \in \Problem\)} {
-         \((M^{\Delta}, P^{\Delta}(\varphi), S^\Delta)\leftarrow \FStep(M^{\text{old}}, P^{\text{old}}(\varphi), M^{\text{new}}, P^{\text{new}}(\varphi))\)\;
-         \(\AllSubst\leftarrow\AllSubst\cup S^\Delta\)\;
-         \(M^{\text{next}}\leftarrow M^{\text{next}}\cup M^{\Delta}\)\;
-         \(P^{\text{next}}(\varphi)\leftarrow P^{\text{next}}(\varphi)\cup P^{\Delta}(\varphi)\)\;
+         \((M_{\Delta}, P_{\Delta}(\varphi), S_{\Delta})\leftarrow \FStep(M_{\text{old}}, P_{\text{old}}(\varphi), M_{\text{new}}, P_{\text{new}}(\varphi))\)\;
+         \(\AllSubst\leftarrow\AllSubst\cup S_{\Delta}\)\;
+         \(M_{\text{next}}\leftarrow M_{\text{next}}\cup M_{\Delta}\)\;
+         \(P_{\text{next}}(\varphi)\leftarrow P_{\text{next}}(\varphi)\cup P_{\Delta}(\varphi)\)\;
       }
 
-      \((M^{\text{old}}, M^{\text{new}})\leftarrow (M^{\text{old}}\cup M^{\text{new}}, M^{\text{next}})\)\;
-      \((P^{\text{old}}, P^{\text{new}})\leftarrow (P^{\text{old}}\cup P^{\text{new}}, P^{\text{next}})\)\;
+      \((M_{\text{old}}, M_{\text{new}})\leftarrow (M_{\text{old}}\cup M_{\text{new}}, M_{\text{next}})\)\;
+      \((P_{\text{old}}, P_{\text{new}})\leftarrow (P_{\text{old}}\cup P_{\text{new}}, P_{\text{next}})\)\;
 
    }
 
+   \BlankLine
+
+   \Return \(\GenFormulae(\Phi, S)\)
+}
+\end{algorithm}
+\end{quote}
+\caption{Pseudocode for iterative monomorphisation}
+\label{iter_mono}
+\end{figure}
+
+\SetKwFunction{GenFormulae}{generate\_mono\_formulae}
+\begin{figure}
+\begin{quote}
+\begin{algorithm}[H]
+\Fn(){\(\GenFormulae(\Phi, S)\)}{
+   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{To}{to}
+
+   \SetKwData{Loop}{num\_loops}\SetKwData{NewFormulae}{\(\Psi\)}
+   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(S\)}
+   \SetKwData{Limit}{total\_new\_formulae}
+
+   \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step} 
+   \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{mono\_substs}
+   \SetKwFunction{GenFormulae}{generate\_formulae}
+
+   \KwData{\begin{minipage}[t]{.8\textwidth}
+     \strut finite set \(\Phi\) of polymorphic formulae \\
+     finite set $S$ of substitutions\strut
+     \end{minipage}}
+   \KwResult{finite set of monomorphic formulae}
+
+   \BlankLine
+
    \NewFormulae \(\leftarrow\emptyset\)\;
-   \ForEach{\(\varphi\in\Phi\) polymorphic}{
-      \(V\leftarrow \TyVars{\(\varphi\)}\)\;
-      \(S^{\text{mono}}\leftarrow\MonoSubst{\AllSubst, \(\emptyset\), \(\{\}\), \(V\)}\)\;
-      \ForEach{\(\sigma\in S^{\text{mono}}\)}{
+
+   \BlankLine
+
+   \ForEach{\(\varphi\in\Phi\) such that $\varphi$ is non-monomorphic}{
+      \ForEach{\(\sigma\in \MonoSubst{\AllSubst, \(\TyVars{\(\varphi\)}\), \(\emptyset\), \(\{\}\)}\)}{
          \textcolor{ourblueviolet}{
          \eIf{\(|\NewFormulae|<\Limit\)}{
             \textcolor{black}{
@@ -346,13 +384,15 @@ This algorithm relies on ``primitives'' whose implementation depend on the speci
          {\Return \NewFormulae}
       }}
    }
-   \Return \NewFormulae\;
 
+   \BlankLine
+
+   \Return \NewFormulae
 }
 \end{algorithm}
 \end{quote}
-\caption{Pseudocode for iterative monomorphisation}
-\label{iter_mono}
+\caption{Pseudocode for monomorphic formula generation}
+\label{genformulae}
 \end{figure}
 
 The iterative monomorphisation algorithm (\ref{iter_mono}), as implemented in Zipperposition, has two main phases each consisting of a separate loop. The first loop applies a \emph{monomorphisation step} to each formula (\ref{mono_step}) for each iteration of the outermost for loop until the user-set limit it reached. This bound is the only limit which is necessary for the algorithm to terminate. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types.
@@ -368,75 +408,68 @@ Once the first phase is completed, the substitutions used to create new type arg
 \begin{algorithm}[H]
    
    %\LinesNumbered
-   \SetKwFunction{SubstGen}{subst\_generation}\SetKwFunction{TyVars}{type\_variables}
+   \SetKwFunction{SubstGen}{matches}\SetKwFunction{TyVars}{type\_variables}
    \SetKwFunction{FMonoStep}{formula\_mono\_step}
 
-   \Fn(){\FMonoStep{\(M^{\text{old}}, M^{\text{new}}, P^{\text{old}}(\varphi), P^{\text{new}}(\varphi)\)}}{
-   \SetKwData{Subst}{substs}\SetKwData{TypeVars}{type\_variables}
+   \Fn(){\FMonoStep{\(M_{\text{old}}, M_{\text{new}}, P_{\text{old}}(\varphi), P_{\text{new}}(\varphi)\)}}{
+   \SetKwData{TypeVars}{type\_variables}
    \SetKwData{MaxMono}{max\_mono\_args}
    \SetKwData{MaxPoly}{max\_poly\_args}
-   \SetKwData{UsedSubst}{\(S^{\text{used}}\)}
+   \SetKwData{UsedSubst}{\(S\)}
 
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
 
    \SetKwFunction{Max}{max}\SetKwFunction{Min}{min}
    \SetKwFunction{Domain}{subst\_domain}\SetKwFunction{Len}{len}
 
-   \KwData{
-      \hspace{-2.7em}\begin{minipage}[t]{.8\textwidth}
-      \begin{enumerate}
-         \item[] old and new monomorphic type argument maps \(M^{\text{old}}, M^{\text{new}}\)
-         \item[] old and new non-monomorphic type argument maps \(P^{\text{old}}(\varphi), P^{\text{new}}(\varphi)\)
-      \end{enumerate}
+   \KwData{\begin{minipage}[t]{.8\textwidth}
+     \strut old and new monomorphic type argument maps \(M_{\text{old}}, M_{\text{new}}\) \\
+     old and new non-monomorphic type argument maps \(P_{\text{old}}(\varphi), P_{\text{new}}(\varphi)\)\strut
       \end{minipage}
    }
-   \KwResult{
-      \hspace{-2.7em}\begin{minipage}[t]{.8\textwidth}
-      \begin{enumerate}
-         \item[] monomorphic type argument map
-         \item[] non-monomorphic type argument map
-         \item[] set of substitutions
-      \end{enumerate}
+   \KwResult{\begin{minipage}[t]{.8\textwidth}
+      \strut monomorphic type argument map \\
+      non-monomorphic type argument map \\
+      set of substitutions\strut
       \end{minipage}
    }
-   \BlankLine
-
-   \Subst \(\leftarrow\) \SubstGen{\(M^{\text{new}}\), \(P^{\text{new}}(\varphi)\)}\;
-   \Subst \(\leftarrow\) \Subst \(\cup\) \SubstGen{\(M^{\text{new}}\), \(P(\varphi)\)}\;
-   \Subst \(\leftarrow\) \Subst \(\cup\) \SubstGen{\(M\), \(P^{\text{new}}(\varphi)\)}\;
    \BlankLine
 
    \TypeVars \(\leftarrow\) \TyVars{\(\varphi\)}\;
 
    \textcolor{ourblueviolet}{
-   \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M\cup M^{\text{new}}| \cdot \)\MonoMult}, \MonoCap}\;
-   \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P(\varphi)\cup P^{\text{new}}(\varphi)| \cdot \)\PolyMult}, \PolyCap}\;
+   \MaxMono \(\leftarrow\) \Max{\Min{\MonoFloor, \(|M_{\text{old}}\cup M_{\text{new}}| \cdot \MonoMult\)}, \MonoCap}\;
+   \MaxPoly \(\leftarrow\) \Max{\Min{\PolyFloor, \(|P_{\text{old}}(\varphi)\cup P_{\text{new}}(\varphi)| \cdot \PolyMult\)}, \PolyCap}\;
    }
 
    \BlankLine
 
    \UsedSubst \(\leftarrow\emptyset\)\;
-   \ForEach{\(\sigma\in \Subst\)}{
-      \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P(\varphi)\)}{
+
+   \BlankLine
+
+   \ForEach{\(\sigma\in {}\)\SubstGen{\(M_{\text{new}}\), \(P_{\text{new}}(\varphi)\)}
+\(\cup\) \SubstGen{\(M_{\text{new}}\), \(P_{\text{old}}(\varphi)\)}
+\(\cup\) \SubstGen{\(M_{\text{old}}\), \(P_{\text{new}}(\varphi)\)}}{
+      \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P_{\text{old}}(\varphi)\)}{
             \eIf{\TyVars{\((\upsilon_1, \dots, \upsilon_n)\)} \(\subseteq\) \Domain{\(\sigma\)}}{
                \textcolor{ourblueviolet}{
-               \uIf{\(|M^{\text{next}}| < \MaxMono\) \label{algo:relative_bound}}{
+               \uIf{\(|M_{\text{next}}| < \MaxMono\) \label{algo:relative_bound}}{
                   \textcolor{black}{
-                  \(M^{\text{next}}(f)\leftarrow M^{\text{next}}(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
+                  \(M_{\text{next}}(f)\leftarrow M_{\text{next}}(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
                   \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;}
                }
-               \uElseIf{\(|P^{\text{next}}(\varphi)| \geq \MaxPoly\) }{
-                  blablabliblou\;
-                  \(M^\text{next} \leftarrow M^{\text{next}}\setminus (M^\text{old} \cup M^\text{new})\)\;
-                  \(P^\text{next}(\varphi)\leftarrow P^{\text{next}}(\varphi)\setminus (P^\text{old}(\varphi)\cup P^\text{new}(\varphi))\)\;
-                  \Return \((M^\text{next}, P^\text{next}(\varphi), \UsedSubst)\)
+               \uElseIf{\(|P_{\text{next}}(\varphi)| \geq \MaxPoly\) }{
+                  \(M_{\text{next}} \leftarrow M_{\text{next}}\setminus (M_{\text{old}} \cup M_{\text{new}})\)\;
+                  \(P_{\text{next}}(\varphi)\leftarrow P_{\text{next}}(\varphi)\setminus (P_{\text{old}}(\varphi)\cup P_{\text{new}}(\varphi))\)\;
+                  \Return \((M_{\text{next}}, P_{\text{next}}(\varphi), \UsedSubst)\)
                }}
             }
             {
                \textcolor{ourblueviolet}{
-               \If{\(|P^{\text{next}}(\varphi)| < \MaxPoly\)\label{algo:ref_2}} {
+               \If{\(|P_{\text{next}}(\varphi)| < \MaxPoly\)\label{algo:ref_2}} {
                \textcolor{black}{
-               \(P^{\text{next}}(\varphi)(f)\leftarrow P^{\text{next}}(\varphi)(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
+               \(P_{\text{next}}(\varphi)(f)\leftarrow P_{\text{next}}(\varphi)(f)\cup\{(\sigma(\upsilon_1),\dots,\sigma(\upsilon_n))\}\)\;
                \UsedSubst \(\leftarrow \UsedSubst \cup\{\sigma\}\)\;
             }}
             }
@@ -446,12 +479,12 @@ Once the first phase is completed, the substitutions used to create new type arg
    }
    \BlankLine
 
-   \Return \((M^{\text{next}}\setminus (M^\text{old} \cup M^\text{new}), P^{\text{next}}(\varphi)\setminus (P^\text{old}(\varphi)\cup P^\text{new}(\varphi)), \UsedSubst)\)
+   \Return \((M_{\text{next}}\setminus (M_{\text{old}} \cup M_{\text{new}}), P_{\text{next}}(\varphi)\setminus (P_{\text{old}}(\varphi)\cup P_{\text{new}}(\varphi)), \UsedSubst)\)
 }
 
 \end{algorithm}
 \end{quote}
-\caption{Formula Monomorphisation Step}
+\caption{Pseudocode for formula monomorphisation step}
 \label{mono_step}
 \end{figure}
 
@@ -473,7 +506,7 @@ Additionally, it is possible to either generalise or further refine these bounds
 \begin{figure}
 \begin{quote}
 \begin{algorithm}[H]
-\SetKwFunction{SubstGen}{substitution\_generation}
+\SetKwFunction{SubstGen}{matches}
 \Fn(){\SubstGen{\(M, P(\varphi)\)}}{
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}
    \SetKwData{SubstLimit}{substitution\_limit}
@@ -482,12 +515,9 @@ Additionally, it is possible to either generalise or further refine these bounds
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
    \SetKw{Break}{break}
 
-   \KwData{%
-      \hspace{-2.7em}\begin{minipage}[t]{.8\textwidth}
-      \begin{enumerate}
-         \item[] monomorphic type argument map \(M\)
-         \item[] non-monomorphic type argument map \(P(\varphi)\)
-      \end{enumerate}
+   \KwData{\begin{minipage}[t]{.8\textwidth}
+      \strut monomorphic type argument map \(M\) \\
+      non-monomorphic type argument map \(P(\varphi)\)\strut
       \end{minipage}
    }
    \KwResult{set of substitutions}
@@ -543,12 +573,12 @@ The various bounds presented here are, to some extent, redundant. For instance, 
    \SetKw{Let}{let}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
 
-   \Fn(){\MonoSubst{\(S^{\text{all}}, S^\text{acc}, \sigma^\text{acc}, V\)}}{
+   \Fn(){\MonoSubst{\(S_{\text{all}}, S^\text{acc}, \sigma^\text{acc}, V\)}}{
 
    \KwData{%
       \hspace{-2.7em}\begin{minipage}[t]{.8\textwidth}
       \begin{enumerate}
-         \item[] set of substitutions \(S^{\text{all}}\) and \(S^\text{acc}\)
+         \item[] set of substitutions \(S_{\text{all}}\) and \(S^\text{acc}\)
          \item[] single substitution \(\sigma^\text{acc}\)
          \item[] set of type variables \(V\)
       \end{enumerate}
@@ -563,11 +593,11 @@ The various bounds presented here are, to some extent, redundant. For instance, 
    }
    {
       \Let \(\alpha \) such that \(\alpha\in V\)\;
-      \ForEach{\(\sigma^\text{next}\in S^{\text{all}}\) such that, \(\alpha\in\Domain{\(\sigma^\text{next}\)}\) \And \(\sigma^\text{acc}\) compatible with \(\sigma^\text{next}\)}{
+      \ForEach{\(\sigma_{\text{next}}\in S_{\text{all}}\) such that, \(\alpha\in\Domain{\(\sigma_{\text{next}}\)}\) \And \(\sigma^\text{acc}\) compatible with \(\sigma_{\text{next}}\)}{
          \textcolor{ourblueviolet}{
          \eIf{\(|S^\text{acc}|<\Limit\)}{
             \textcolor{black}{
-            \(S^\text{acc}\leftarrow \MonoSubst{\(S^{\text{all}}, S^\text{acc}, \sigma^\text{next}\circ\sigma^\text{acc}, V\setminus\Domain{\(\sigma^\text{next}\)}\)}\)\;}
+            \(S^\text{acc}\leftarrow \MonoSubst{\(S_{\text{all}}, S^\text{acc}, \sigma_{\text{next}}\circ\sigma^\text{acc}, V\setminus\Domain{\(\sigma_{\text{next}}\)}\)}\)\;}
          }
          {\Return \(S^\text{acc}\)}}
       }
@@ -578,13 +608,13 @@ The various bounds presented here are, to some extent, redundant. For instance, 
 
 \end{algorithm}
 \end{quote}
-\caption{Monomorphising Substitutions}
+\caption{Pseudocode for monomorphising substitution generation}
 \label{mono_substs}
 \end{figure}
 
 Once all monomorphisation iterations have been completed, we are left with a set of substitutions. The last phase uses these substitutions to instantiate the type variables in the input problem's polymorphic formuale.
 
-To monomorphise a polymorphic formula, we first compute its \emph{monomorphising substitutions} (\ref{mono_substs}). A substitution \(\sigma\) is a monomorphising substitution for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic. \ref{mono_substs} is a recursive function, given a set of type variables \(V\) and a pool of substitutions \(S^\text{all}\), it will select a substitution \(\sigma^\text{next}\) from \(S^\text{all}\) which instantiates at least one of the type variables in \(V\). It is important that \(\sigma^\text{next}\) be compatible with \(\sigma^\text{acc}\) so that they may be composed and the function recursively called to instantiate the remaining type variables.
+To monomorphise a polymorphic formula, we first compute its \emph{monomorphising substitutions} (\ref{mono_substs}). A substitution \(\sigma\) is a monomorphising substitution for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic. \ref{mono_substs} is a recursive function, given a set of type variables \(V\) and a pool of substitutions \(S^\text{all}\), it will select a substitution \(\sigma_{\text{next}}\) from \(S^\text{all}\) which instantiates at least one of the type variables in \(V\). It is important that \(\sigma_{\text{next}}\) be compatible with \(\sigma^\text{acc}\) so that they may be composed and the function recursively called to instantiate the remaining type variables.
 
 The Zipperposition implementation of this function makes use of a map from type variables to substitutions in place of a simple set to filter the relevant substitutions from \(S^\text{all}\) with greater ease. The \textcolor{ourblueviolet}{subst\_limit} exists for two main reasons:
 \begin{enumerate}
