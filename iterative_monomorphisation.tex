@@ -291,13 +291,13 @@ The data structures used in the pseudocode are based on the ones used in the hig
 
 All sets referenced in the pseudocode are assumed to be finite. Additionally, this algorithm relies on ``primitives'' whose implementation depend on the specifics of the grammar and logic used. They will therefore not be expanded upon. Functions computing the following are assumed to be available: 
 \begin{enumerate}
-   \item[\labelitemi] extracting the initial type argument maps from the input problem
-   \item[\labelitemi] gathering type variables from a type tuple
-   \item[\labelitemi] type matching
-   \item[\labelitemi] returning the type variables instantiated by a substitution
-   \item[\labelitemi] testing the compatibility of two substitutions
+   \item[\labelitemi] \emph{initialisation\((\Phi)\)} with \(\Phi\) a set of (polymorphic) formulae extracts the initial type argument maps \(M\) and \(N\) from \(\Phi\)
+   \item[\labelitemi] \emph{type\_variables\(((\tau_1, \dots, \tau_n))\)} with \((\tau_1, \dots,\tau_n)\) a type tuple gathers all the type variables from each of \(\tau_1, \dots, \tau_n\) into a set
+   \item[\labelitemi] \emph{match\((\upsilon, \tau)\)} with \(\upsilon\) and \(\tau\) types will match \(\upsilon\) against \(\tau\) and either fail or return \emph{Success\((\sigma)\)} where \(\sigma\) is the substitution resulting from the matching
+   \item[\labelitemi] \emph{domain\((\sigma)\)} where \(\sigma\) is a substitution returns the set of type variables instantiated by \(\sigma\)
+   \item[\labelitemi] \emph{compatible\((\sigma_1, \sigma_2)\)} where \(\sigma_1\) and \(\sigma_2\) are substitutions tests the compatibility between \(\sigma_1\) and \(\sigma_2\)
    \item[\labelitemi] substitution composition
-   \item[\labelitemi] substitution application to formulae
+   \item[\labelitemi] substitution application to formulae 
 \end{enumerate}
 
 \SetKwFunction{IterMono}{iterative\_monomorphisation}
