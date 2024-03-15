@@ -10,7 +10,7 @@
 \usepackage[noend]
    {algorithm2e}
 \usepackage{amsmath}
-
+\usepackage{enumitem}
 
 \SetNlSty{bfseries}{\color{black}}{}
 
@@ -33,6 +33,8 @@
 \newdefinition{definition}{Definition}
 \newdefinition{example}[definition]{Example}
 
+\setlist[itemize]{topsep=0pt}
+\setlist[enumerate]{topsep=3pt}
 
 % algo2e package
 \SetFuncSty{textit}
@@ -620,17 +622,18 @@ The various bounds presented here are, to some extent, redundant. For instance, 
 
 Once all monomorphisation iterations have been completed, we are left with a set of substitutions. The last phase uses these substitutions to instantiate the type variables in the input problem's polymorphic formuale.
 
-To monomorphise a polymorphic formula, we first compute its \emph{monomorphising substitutions} (\ref{mono_substs}). A substitution \(\sigma\) is a monomorphising substitution for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic. It is a recursive function, given a set of type variables \(V\) and a pool of substitutions \(S^\text{all}\), it will select a substitution \(\sigma_{\negvthinspace\Delta}\) from \(S^\text{all}\) which instantiates at least one of the type variables in \(V\). It is important that \(\sigma_{\negvthinspace\Delta}\) be compatible with \(\sigma\) so that they may be composed and the function recursively called to instantiate the remaining type variables.
+To monomorphise a polymorphic formula, we first compute its \emph{monomorphising substitutions} (\ref{mono_substs}). A substitution \(\sigma\) is a monomorphising substitution for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic. It is a recursive function, given a set of type variables \(V\) and a pool of substitutions \(S\), it will select a substitution \(\sigma_{\negvthinspace\Delta}\) from \(S\) which instantiates at least one of the type variables in \(V\). It is important that \(\sigma_{\negvthinspace\Delta}\) be compatible with \(\sigma\) so that they may be composed and the function recursively called to instantiate the remaining type variables.
 
 The Zipperposition implementation of this function makes use of a map from type variables to substitutions in place of a set to filter the relevant substitutions from \(S^\text{all}\) more efficiently. The \textcolor{ourblueviolet}{max\_substs} exists for two main reasons:
 \begin{enumerate}
    \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic clause per initial polymorphic clause. Generating an excessive number of new clauses can lead to the downstream prover being flooded.
    \item This function is the most explosive part of the algorithm. If \(S\) contains \(n\) substitutions which each instantiate exactly one of \(v\) different type variable, up to \(n^v\) monomorphising substititions may be generated. This should be considered in light of the fact that the total number of type argument tuples, which  re used to generate \(S\), is doubly exponential in the number of loop iterations.
 \end{enumerate}
-
 %[This function can be thought of as exploring the tree of all possible monomorphising substitutions, \(S_{\text{res}}\) would represent the leaves that have already been visited and \(\sigma\) would represent the current node of the tree.]
 
-Once the newly generated monomorphic formulae are output, an extra post-processing step may be required. Indeed, monomorphic provers, such as E, do not necessarily support type constructors. Consequently, transforming the monomorphic formulae into equivalent ones without type constructors may be necessary as it was for the Zipperposition implementation. This transformation is largely syntactic and relatively simple. It is documented in [insert names] 's paper [insert citation, and section because it isn't the main topic].
+Finally, once all monomorphising substitutions have been generated, they are applied to the polymorphic formula of the input problem that they instantiate (\ref{gen_formulae}). The fact that the substitutions are monomorphising relative to the formula they applied to ensures that the resulting formulae are monomorphic. A final bound here is used to control the total number of new formulae. It largely overlaps in use with the bound limiting the number of monomorphising substitutions per clause, but can be useful as a means to set an absolute cap on the size of the final problem.
+
+Once the newly generated monomorphic formulae are output, an extra post-processing step may be required. Indeed, monomorphic provers, such as E, do not necessarily support type constructors. Consequently, transforming the monomorphic formulae into equivalent ones without type constructors may be necessary as was the case for the Zipperposition implementation. This transformation is largely syntactic and relatively simple. It is documented in [insert names] 's paper \cite[Sections 4 and 5]{mono-trans}.
 
 % target page number: 2-4
 \section{Evaluation}
