@@ -758,6 +758,10 @@ This last table attempts to determine which are the best bounds related to the d
 
 \subsection{Monomorphisation as preprocessor}
 
+To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, several competitive higher-order polymorphic provers were run on the set of TPTP test problems. The total number of problems solved the ``Native'' results shown in the table. Evaluation of the monomorphisation approach is done in two steps, first each problem is monomorphised using the [insert configuration] configurations [options?]. Secondly, each prover is ran on the monomorphised problem and the results are tallied in the ``Mono'' column of the table. In addition to the polymorphic provers used in the ``Native'' tests, two monomorphic provers are run on the monomorphised problems. Note that instead of running each prover 30 seconds on the monomorphised problems, the monomorphisation time is subtracted in order to compare fairly against the ``Native'' column which does not have a similar preprocessing phase.
+
+The ``Union'' column, adds up the total number of problems solved by both tests. It serves as an indicator of the usefulness of monomorphisation as a tool in a portfolio configuration.
+
 \begin{table}[ht]
 \caption{Evaluation of native polymorphism vs.\ monomorphisation}
 \centering\begin{tabular}{@{}lccc@{}}
