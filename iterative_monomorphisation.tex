@@ -33,8 +33,8 @@
 \newdefinition{definition}{Definition}
 \newdefinition{example}[definition]{Example}
 
-\setlist[itemize]{topsep=0pt}
-\setlist[enumerate]{topsep=3pt}
+\setlist[itemize]{topsep=3pt, itemsep=3pt}
+\setlist[enumerate]{topsep=3pt, itemsep=3pt}
 
 % algo2e package
 \SetFuncSty{textit}
@@ -214,17 +214,17 @@ In the following sections, we will always match a polymorphic type $\upsilon$ ag
 
 The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step filters out all non-monomorphic formulae returned by the last iteration.
 
-The initial phase of each iteration consists of computing two maps, \(M\) and \(P\), from the input problem~$\Phi$.
+The initial phase of each iteration consists of computing two maps, \(M\) and \(N\), from the input problem~$\Phi$.
 %
 \begin{enumerate}
 \item[\labelitemi] Given a symbol \(f\) occurring in \(\Phi\), the set \(M(f)\) consists of all tuples of monomorphic type arguments to which \(f\) is applied in \(\Phi\). For example, if \(\sym{foldl}\langle \ty{nat}, \ty{int}\rangle\) occurs in \(\Phi\), then \((\ty{nat}, \ty{int}) \in M(\sym{foldl}) \).
 
-\item[\labelitemi] Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(P(\varphi)(f)\) consists of all tuples of type arguments to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in P(\varphi)(\sym{foldl}) \).
+\item[\labelitemi] Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(N(\varphi)(f)\) consists of all tuples of type arguments to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in N(\varphi)(\sym{foldl}) \).
 \end{enumerate}
 
-These definitions depend on the precise form of the input formulae, which has been left undefined. It is important to parametrise \(P\) with \(\varphi\) because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
+These definitions depend on the precise form of the input formulae, which has been left undefined. It is important to parametrise \(N\) with \(\varphi\) because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
 
-Once the maps \(M\) and \(P\) are initialised, each iteration performs the following steps to create new instances of formulae:
+Once the maps \(M\) and \(N\) are initialised, each iteration performs the following steps to create new instances of formulae:
 
 \begin{enumerate}
 
@@ -232,7 +232,7 @@ Once the maps \(M\) and \(P\) are initialised, each iteration performs the follo
 
    \item For each formula \(\varphi \in \Phi\) and for each symbol \(f\) occurring in \(\varphi\):
    \begin{enumerate}
-    \item[2.1.] For each tuple \((\tau_1, \dots, \tau_n) \in  M(f)\)        and each tuple \((\upsilon_1, \dots, \upsilon_n) \in P(\varphi)(f)\),
+    \item[2.1.] For each tuple \((\tau_1, \dots, \tau_n) \in  M(f)\) and each tuple \((\upsilon_1, \dots, \upsilon_n) \in N(\varphi)(f)\),
      for each \(i\), match \(\upsilon_i\) against \(\tau_i\), yielding the substitution \(\sigma_i\) in case of success.
 
     \item[2.2.] If all \(n\) matchings are successful and the substitutions \(\sigma_i\) are pairwise compatible,
@@ -277,11 +277,9 @@ This example illustrates how an infinite number of new formulae can be generated
 \section{Low level algorithm}
 \label{sec:low-level-algorithm}
 
-\textbf{ TODO rename non-monomorphic maps from \(P\) to \(N\) in high-level description section}
-
 The algorithm presented in the previous section is simple but too naive for an implementation. In this section, we present a lower level algorithm with the following features.
 \begin{enumerate}
-    \item[\labelitemi] Bounds are presented at several stages of the algorithm to curb potentially explosive enumerations.
+    \item[\labelitemi] Bounds are presented at several stages to curb potentially explosive enumerations.
 
     \item[\labelitemi] Type arguments are separated into old and new sets to avoid re-computing some of the same matchings in successive iterations.
 
@@ -289,17 +287,16 @@ The algorithm presented in the previous section is simple but too naive for an i
 
 \end{enumerate}
 
-The data structures used in the pseudocode are based on the ones used in the high-level description. Instead of \(M\) a map from symbols to monomorphic type argument tuples, we have \(M_\text{old}\) and \(M_\text{new}\) which play the same role whilst also distinguishing between type arguments having already been matched against and those that have not. Similarly, \(N_\text{old}\) and \(N_\text{new}\) replace \(N\) the map from formulae to symbols to non-monomorphic type argument tuples. Finally, a set \(S\) of the substitutions generated by the matchings is kept track of throughout the iterations, until it is used in the final phase.
+The data structures used in the pseudocode are based on the ones used in the high-level description. Instead of \(M\) a map from symbols to monomorphic type argument tuples, we have \(M_\text{old}\) and \(M_\text{new}\) which play the same role whilst also distinguishing between type arguments having already been matched against and those that have not. Similarly, \(N_\text{old}\) and \(N_\text{new}\) replace \(N\) the map from formulae to symbols to non-monomorphic type argument tuples. Finally, we keep track of a set \(S\) of substitutions generated by the matchings, until it is used to generate new formulae in the final phase.
 
 All sets referenced in the pseudocode are assumed to be finite. Additionally, this algorithm relies on ``primitives'' whose implementation depend on the specifics of the grammar and logic used. They will therefore not be expanded upon. Functions computing the following are assumed to be available: 
 \begin{enumerate}
-   \item[\labelitemi] \emph{initialisation\((\Phi)\)} with \(\Phi\) a set of (polymorphic) formulae extracts the initial type argument maps \(M\) and \(N\) from \(\Phi\)
-   \item[\labelitemi] \emph{type\_variables\(((\tau_1, \dots, \tau_n))\)} with \((\tau_1, \dots,\tau_n)\) a type tuple gathers all the type variables from each of \(\tau_1, \dots, \tau_n\) into a set
-   \item[\labelitemi] \emph{match\((\upsilon, \tau)\)} with \(\upsilon\) and \(\tau\) types will match \(\upsilon\) against \(\tau\) and either fail or return \emph{Success\((\sigma)\)} where \(\sigma\) is the substitution resulting from the matching
-   \item[\labelitemi] \emph{domain\((\sigma)\)} where \(\sigma\) is a substitution returns the set of type variables instantiated by \(\sigma\)
-   \item[\labelitemi] \emph{compatible\((\sigma_1, \sigma_2)\)} where \(\sigma_1\) and \(\sigma_2\) are substitutions tests the compatibility between \(\sigma_1\) and \(\sigma_2\)
-   \item[\labelitemi] substitution composition
-   \item[\labelitemi] substitution application to formulae 
+   \item[\labelitemi] \emph{initialisation\((\Phi)\)} with \(\Phi\) a set of (polymorphic) formulae extracts the initial type argument maps \(M\) and \(N\) from \(\Phi\).
+   \item[\labelitemi] \emph{type\_variables\(((\tau_1, \dots, \tau_n))\)} with \((\tau_1, \dots,\tau_n)\) a type tuple gathers all the type variables from each of \(\tau_1, \dots, \tau_n\) into a set.
+   \item[\labelitemi] \emph{match\((\upsilon, \tau)\)} with \(\upsilon\) and \(\tau\) types will match \(\upsilon\) against \(\tau\) and either fail or return \emph{Success\((\sigma)\)} where \(\sigma\) is the substitution resulting from the matching. Note that the pseudocode only matches non-monomorphic types against monomorphic types, in practice it is sufficient for \emph{match} to only cover this case.
+   \item[\labelitemi] \emph{domain\((\sigma)\)} where \(\sigma\) is a substitution returns the set of type variables instantiated by \(\sigma\).
+   \item[\labelitemi] \emph{compatible\((\sigma_1, \sigma_2)\)} where \(\sigma_1\) and \(\sigma_2\) are substitutions tests the compatibility between \(\sigma_1\) and \(\sigma_2\).
+   \item[\labelitemi] Substitution composition and application are noted mathematically but still need to be implemented.
 \end{enumerate}
 
 \SetKwFunction{IterMono}{iterative\_monomorphisation}
@@ -403,11 +400,7 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
 \label{gen_formulae}
 \end{figure}
 
-The iterative monomorphisation algorithm \ref{iter_mono}, as implemented in Zipperposition, has two main phases each consisting of a separate loop. The first loop applies a \emph{monomorphisation step} to each formula \ref{mono_step} for each iteration of the outermost for loop until the user-set limit it reached. This bound is the only limit which is necessary for the algorithm to terminate. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types.
-%Updating the maps progressively over the course of an iteration would be feasible but would result in an uneven treatment of formulae. Type arguments in a formula processed later could be matched against monomorphic type arguments generated at an earlier time in the same iteration. As a result, the later a formula is processed the more new type arguments it could generate.
-
-Once the first phase is completed, the substitutions used to create new type arguments are combined to form \emph{monomorphising substitutions} (\ref{gen_formulae}). These substitutions are subsequently applied to the input problem's polymorphic formulae. The possible number of new (monomorphic) formulae resulting from this process is high but can be limited by setting a maximal number of new formulae. In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected by the number of clauses it is given.
-
+The iterative monomorphisation algorithm (\ref{iter_mono}), as implemented in Zipperposition, has two main phases. The first phase applies a \emph{monomorphisation step} (\ref{mono_step}) to each formula in \(\Phi\) until the user-set limit it reached. This limit is the only bound necessary for the algorithm to terminate. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once the first phase is completed, the substitutions used to create new type arguments are passed to the formula generation function (\ref{gen_formulae}) for the second phase.
 
 \SetKwData{MonoCap}{mono\_cap}\SetKwData{MonoMult}{mono\_mult}\SetKwData{MonoFloor}{mono\_floor}
 \SetKwData{PolyCap}{poly\_cap}\SetKwData{PolyMult}{poly\_mult}\SetKwData{PolyFloor}{poly\_floor}
@@ -492,20 +485,20 @@ Once the first phase is completed, the substitutions used to create new type arg
 \label{mono_step}
 \end{figure}
 
-Formula monomorphisation (\ref{mono_step}) computes new type arguments for a single formula, it is the core of the monomorphisation process. The first step generates substitutions (\ref{subst_gen}) by matching the non-monomorphic type arguments against monomorphic ones. The separation of the type arguments into ``old'' and ``new'' maps is exploited here. Pairs of type argument tuples must contain at least one new type argument in order to be matched. This avoids re-computing some matchings already processed in previous iterations. Not all such redundant computations can be avoided because the same substitution can be obtained from matchings between entirely different pairs of types.
+Formula monomorphisation (\ref{mono_step}) computes new type arguments for a single formula, it is the core of the monomorphisation process. The first step generates substitutions (\ref{subst_gen}) by matching the non-monomorphic type arguments against monomorphic ones. The separation of type arguments into ``old'' and ``new'' maps is put to use here. Pairs of type argument tuples must contain at least one new type argument in order to be matched. This avoids re-computing some of the matchings processed in previous iterations. Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings.
 
-The set of substitutions generated thusly is then iterated over and each substitution is applied to all polymorphic type arguments. The application of a substitution to a tuple of polymorphic type argument only takes place if least one type variable of a type in the tuple is instantiated by the substitution. This condition filters out all substitution application that would have otherwise left the type arguments unchanged.
+The set of substitutions generated thusly is then iterated over and each substitution is applied to all polymorphic type arguments. The application of a substitution to a tuple of polymorphic type arguments only takes place if least one type variable in the tuple is instantiated by the substitution. This condition filters out all substitution application that would have otherwise left all type arguments unchanged.
 
 %[If we assume there are after \(k\) iterations \(N_k\) total type arguments split evenly between monomorphic and polymorphic type arguments, all in a single formula. There can be up to \((\frac{N_k}{2})^2\) successful matches yielding as many substitutions. Each substitution is then applied to each polymorphic type argument for a total of \((\frac{N_k}{2})^3\) new type arguments. If half of these new type arguments are monomorphic and the other half is polymorphic, then the next iteration will begin with \(N_{k+1} = (\frac{N_k}{2})^{3}\) evenly split type arguments. Meaning that the total number of type arguments on the \(k^\text{th}\) iteration can reach \(N_k = (\frac{N_0}{2})^{3^k}\). This paragraph is wrong on several points, it can be fixed but it would be annoying, the main idea is that it can be shown relatively easily in a semi-formal way that the total number of type arguments is doubly exponential in the number of iterations.]
 
 The total number of type arguments can increase cubicly in the number of type arguments at each iteration and can therefore grow doubly exponentially in the number of iterations. Depending on the shape and size of the input problem and the number of iterations performed, this may be problematic. Introducing bounds can help solve this potential issue. The limit on the number of new monomorphic type arguments (in \textcolor{ourblueviolet}{blue}) has three components (similar bounds are used for the non-monomorphic type arguments):
 \begin{enumerate}
-   \item \textcolor{ourblueviolet}{\MonoCap} is an absolute limit on the total number of new type arguments
-   \item \textcolor{ourblueviolet}{\MonoMult} is used to allow the total number of type arguments to increase by a certain proportion
-   \item \textcolor{ourblueviolet}{\MonoFloor} balances out \MonoMult when the number of type arguments is too low, and guarantees that a minimum number of new type arguments
+   \item \textcolor{ourblueviolet}{\MonoCap} is an absolute limit on the total number of new type arguments.
+   \item \textcolor{ourblueviolet}{\MonoMult} is used to allow the total number of type arguments to increase by a certain proportion of the current number of type arguments.
+   \item \textcolor{ourblueviolet}{\MonoFloor} balances out \textcolor{ourblueviolet}{\MonoMult}, it guarantees that a minimum number of new type arguments even if the total number of type arguments is low.
 \end{enumerate}
 
-Additionally, it is possible to either generalise or further refine these bounds. Indeed, the maximum number of newly generated type arguments is fixed per formula, per iteration. This algorithm can easily be modified such that the limit on new type arguments is fixed per iteration. Conversely, it can be made to limit new type arguments per symbol, per formula, per iteration.
+It is possible to either generalise or further refine these bounds. The maximum number of newly generated type arguments is fixed per formula, per iteration. This algorithm can easily be modified such that the limit on new type arguments is fixed per iteration. Conversely, new type arguments can be limited per symbol, per formula, per iteration.
 
 \begin{figure}
 \begin{quote}
@@ -567,9 +560,9 @@ Additionally, it is possible to either generalise or further refine these bounds
 \label{subst_gen}
 \end{figure}
 
-Substitution generation (\ref{subst_gen}) consists in computing all possible matchings between the type arguments of the given type argument maps and returns the resulting substitutions. For each pair of type argument tuples, the non-monomorphic types are matched against their monomorphic counterparts and the resulting substitutions are composed if they are compatible. In the pseudocode, this is checked by making sure that the while loop has iterated over all elements of the type argument tuple. If the substitutions are incompatible, the matchings are discarded. [Note that the composition of two compatible substitutions is commutative and that the order of composition is therefore irrelevant]. [The Zipperposition implementation is written in a functional style and does not directly map onto the pseudocode].
+Substitution generation (\ref{subst_gen}) consists in computing all possible matchings between the type arguments of the given type argument maps and returns the resulting substitutions. For each pair of type argument tuples, the non-monomorphic types are matched against their monomorphic counterparts and the resulting substitutions are composed if they are compatible. In the pseudocode, this is checked by making sure that the while loop has iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. The composition of two compatible substitutions is commutative and that the order of composition is therefore irrelevant.
 
-The various bounds presented here are, to some extent, redundant. For instance, limiting the number of substitutions generated at this step may be sufficient to curb the number of new type arguments, making the related bounds superfluous. Each bound nonetheless has its use cases. For example, sets of problems which lead to few successful matches but many type arguments may benefit from a limit on the number of new type arguments whilst sets of problems where substitution generation is more explosive might consider a limit on the number of generated substitution to be more useful. 
+The various bounds presented here are, to some extent, redundant. For instance, limiting the number of substitutions generated at this step may be sufficient to curb the number of new type arguments, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its use cases. For example, sets of problems which lead to few successful matches but many type arguments may benefit from a limit on the number of new type arguments whilst sets of problems where substitution generation is more explosive might consider a limit on the number of generated substitution to be more useful. 
 
 \begin{figure}
 \begin{quote}
@@ -620,9 +613,9 @@ The various bounds presented here are, to some extent, redundant. For instance, 
 \label{mono_substs}
 \end{figure}
 
-Once all monomorphisation iterations have been completed, we are left with a set of substitutions. The last phase uses these substitutions to instantiate the type variables in the input problem's polymorphic formuale.
+Once all monomorphisation iterations have been completed, we are left with a set of substitutions. The last phase uses these substitutions to instantiate the type variables in the input problem's polymorphic formuale. The ordering of the set \(S\) of substitutions can have a significant impact on the formulae resulting from the last phase. As discussed in parameter optimisation \ref{param_opti}, the best results were obtained when substitutions generated in earlier iterations are ordered first.
 
-To monomorphise a polymorphic formula, we first compute its \emph{monomorphising substitutions} (\ref{mono_substs}). A substitution \(\sigma\) is a monomorphising substitution for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic. It is a recursive function, given a set of type variables \(V\) and a pool of substitutions \(S\), it will select a substitution \(\sigma_{\negvthinspace\Delta}\) from \(S\) which instantiates at least one of the type variables in \(V\). It is important that \(\sigma_{\negvthinspace\Delta}\) be compatible with \(\sigma\) so that they may be composed and the function recursively called to instantiate the remaining type variables.
+To monomorphise a polymorphic formula, we first compute its \emph{monomorphising substitutions} (\ref{mono_substs}). A substitution \(\sigma\) is a monomorphising substitution for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic. Such substitutions are computing using a recursive function, given a set of type variables \(V\) and a pool of substitutions \(S\), it will select a substitution \(\sigma_{\negvthinspace\Delta}\) from \(S\) which instantiates at least one of the type variables in \(V\). It is important that \(\sigma_{\negvthinspace\Delta}\) be compatible with \(\sigma\) so that they may be composed and the function recursively called to instantiate the remaining type variables.
 
 The Zipperposition implementation of this function makes use of a map from type variables to substitutions in place of a set to filter the relevant substitutions from \(S^\text{all}\) more efficiently. The \textcolor{ourblueviolet}{max\_substs} exists for two main reasons:
 \begin{enumerate}
@@ -631,7 +624,7 @@ The Zipperposition implementation of this function makes use of a map from type 
 \end{enumerate}
 %[This function can be thought of as exploring the tree of all possible monomorphising substitutions, \(S_{\text{res}}\) would represent the leaves that have already been visited and \(\sigma\) would represent the current node of the tree.]
 
-Finally, once all monomorphising substitutions have been generated, they are applied to the polymorphic formula of the input problem that they instantiate (\ref{gen_formulae}). The fact that the substitutions are monomorphising relative to the formula they applied to ensures that the resulting formulae are monomorphic. A final bound here is used to control the total number of new formulae. It largely overlaps in use with the bound limiting the number of monomorphising substitutions per clause, but can be useful as a means to set an absolute cap on the size of the final problem.
+Finally, once all monomorphising substitutions have been generated, they are applied to the polymorphic formula of the input problem that they instantiate (\ref{gen_formulae}). The fact that the substitutions are monomorphising relative to the formula they applied to ensures that the resulting formulae are monomorphic. A final bound here is used to control the total number of new formulae. It overlaps in role with the bound limiting the number of monomorphising substitutions per clause, but can be useful as a means to set an absolute cap on the size of the final problem. In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected by the number of clauses it is given.
 
 Once the newly generated monomorphic formulae are output, an extra post-processing step may be required. Indeed, monomorphic provers, such as E, do not necessarily support type constructors. Consequently, transforming the monomorphic formulae into equivalent ones without type constructors may be necessary as was the case for the Zipperposition implementation. This transformation is largely syntactic and relatively simple. It is documented in [insert names] 's paper \cite[Sections 4 and 5]{mono-trans}.
 
@@ -643,6 +636,7 @@ Once the newly generated monomorphic formulae are output, an extra post-processi
 % We ignore the following bounds: ty var limit per clause, subst per ty var, limiting the new type args per clause
 
 \subsection{Parameter optimisation}
+\label{param_opti}
 
 Considering the total number of parameters, it would be impractical to exhaustively test all option combinations. Consequently, options have been grouped together into sets of 2 or 3 options that will be more thouroughly tested. Two options will be part of the same group if it is deemed likely that a change in one of the options will significantly impact how much a change in the second option will affect the overall results.
 
