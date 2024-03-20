@@ -400,7 +400,9 @@ The iterative monomorphisation algorithm (Figure~\ref{iter_mono}) has two phases
 new type arguments are passed to the formula generation function
 (Figure~\ref{gen_formulae}) for the second phase.
 
-\SetKwData{MonoCap}{mono\_cap}\SetKwData{MonoMult}{mono\_mult}\SetKwData{MonoFloor}{mono\_floor}
+\SetKwData{MonoCap}{\textcolor{ourblueviolet}{mono\_cap}}
+\SetKwData{MonoMult}{\textcolor{ourblueviolet}{mono\_mult}}
+\SetKwData{MonoFloor}{\textcolor{ourblueviolet}{mono\_floor}}
 \SetKwData{PolyCap}{poly\_cap}\SetKwData{PolyMult}{poly\_mult}\SetKwData{PolyFloor}{poly\_floor}
 \SetKwData{TypeVars}{type\_variables}
 \SetKwData{MaxMono}{max\_mono\_args}
@@ -486,17 +488,17 @@ new type arguments are passed to the formula generation function
 Formula monomorphisation (Figure~\ref{mono_step}) computes new type arguments for a single formula. It forms the core of the monomorphisation process. The first step generates substitutions (Figure~\ref{subst_gen}) by matching the non-monomorphic type arguments against monomorphic ones. The separation of type arguments into old and new maps is put to use here. Pairs of type argument tuples must contain at least one new type argument to be matched. This avoids re-computing some of the matchings processed in previous iterations. Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings.
 
 The set of substitutions generated in this way is then iterated over.
-Each substitution is applied to all polymorphic type argument tuples such that at least one type variable in the tuple is instantiated by the substitution. %This condition filters out all substitution application that would have otherwise left all type arguments unchanged.
+Each substitution is applied to all polymorphic type argument tuples such that at least one type variable in the tuple is instantiated by the substitution.
 
 The total number of type arguments can increase cubicly in the number of type arguments at each iteration and can therefore grow doubly exponentially in the number of iterations. We sketch an example of such growth.
 %
 If we assume that there are after \(k\) iterations \(N_k\) total type arguments split evenly between monomorphic and non-monomorphic type arguments, all in a single formula, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type arguments are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = \bigl(\frac{N_k}{2}\bigr)^{3}\) evenly split type argument tuples. Therefore, the total number of type arguments on the \(k\)th iteration can reach \(N_k = \bigl(\smash{\frac{N_0}{2}\bigr)^{3^k}} \cdot \bigl(\frac{1}{2}\bigl)^{3k}\).
 
-Depending on the shape and size of the input problem and the number of iterations performed, the doubly exponential growth may be problematic. Introducing bounds addresses this potential issue. The limit on the number of new monomorphic type arguments (in \textcolor{ourblueviolet}{blue}) has three components:
+   Depending on the shape and size of the input problem and the number of iterations performed, the doubly exponential growth may be problematic. Introducing bounds addresses this potential issue. The limit on the number of new monomorphic type argument tuples is \(\emph{min}(\emph{max}(\MonoMult\cdot n, \MonoFloor), \MonoCap)\), where \(n\) is the total number of monomorphic type argument tuples. The components of this limit are:
 \begin{enumerate}
-   \item \textcolor{ourblueviolet}{\MonoCap} is an absolute limit on the total number of new type argument tuples.
-   \item \textcolor{ourblueviolet}{\MonoMult} is used to allow the total number of type argument tuples to increase by a certain proportion of the current number of type argument tuples.
-   \item \textcolor{ourblueviolet}{\MonoFloor} balances out \textcolor{ourblueviolet}{\MonoMult}. It prevents \textcolor{ourblueviolet}{\MonoMult} from inhibiting new type argument tuple generation if the total number of type argument tuples is low.
+   \item \MonoCap, an absolute limit on the total number of new type argument tuples.
+   \item \MonoMult, it is used to allow the total number of (monomorphic) type argument tuples to grow by a certain proportion of the current number \(n\) of monomorphic type argument tuples.
+   \item \MonoFloor, which balances out \MonoMult. It prevents \MonoMult from inhibiting new type argument tuple generation if \(n\) is too low.
 \end{enumerate}
 
 Similar bounds are used for the non-monomorphic type arguments.
