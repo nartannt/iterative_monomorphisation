@@ -396,17 +396,19 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
 \label{gen_formulae}
 \end{figure}
 
-The iterative monomorphisation algorithm (Figure~\ref{iter_mono}) has two phases. The first phase applies a \emph{monomorphisation step} (Figure~\ref{mono_step}) to each formula in \(\Phi\) until the user-set limit is reached. This limit is the only bound necessary for the algorithm to terminate. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is completed and the substitutions used to create
+The iterative monomorphisation algorithm (Figure~\ref{iter_mono}) has two phases. The first phase applies a \emph{monomorphisation step} (Figure~\ref{mono_step}) to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and for all code that is related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is completed and the substitutions used to create
 new type arguments are passed to the formula generation function
 (Figure~\ref{gen_formulae}) for the second phase.
 
 \SetKwData{MonoCap}{\textcolor{ourblueviolet}{mono\_cap}}
 \SetKwData{MonoMult}{\textcolor{ourblueviolet}{mono\_mult}}
 \SetKwData{MonoFloor}{\textcolor{ourblueviolet}{mono\_floor}}
-\SetKwData{PolyCap}{poly\_cap}\SetKwData{PolyMult}{poly\_mult}\SetKwData{PolyFloor}{poly\_floor}
+\SetKwData{PolyCap}{\textcolor{ourblueviolet}{nonmono\_cap}}
+\SetKwData{PolyMult}{\textcolor{ourblueviolet}{nonmono\_mult}}
+\SetKwData{PolyFloor}{\textcolor{ourblueviolet}{nonmono\_floor}}
+\SetKwData{MaxMono}{\textcolor{ourblueviolet}{max\_mono\_args}}
+\SetKwData{MaxPoly}{\textcolor{ourblueviolet}{max\_nonmono\_args}}
 \SetKwData{TypeVars}{type\_variables}
-\SetKwData{MaxMono}{max\_mono\_args}
-\SetKwData{MaxPoly}{max\_poly\_args}
 \SetKwData{UsedSubst}{\(S\)}
 
 \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
@@ -494,15 +496,17 @@ The total number of type arguments can increase cubicly in the number of type ar
 %
 If we assume that there are after \(k\) iterations \(N_k\) total type arguments split evenly between monomorphic and non-monomorphic type arguments, all in a single formula, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type arguments are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = \bigl(\frac{N_k}{2}\bigr)^{3}\) evenly split type argument tuples. Therefore, the total number of type arguments on the \(k\)th iteration can reach \(N_k = \bigl(\smash{\frac{N_0}{2}\bigr)^{3^k}} \cdot \bigl(\frac{1}{2}\bigl)^{3k}\).
 
-   Depending on the shape and size of the input problem and the number of iterations performed, the doubly exponential growth may be problematic. Introducing bounds addresses this potential issue. The limit on the number of new monomorphic type argument tuples is \(\emph{min}(\emph{max}(\MonoMult\cdot n, \MonoFloor), \MonoCap)\), where \(n\) is the total number of monomorphic type argument tuples. The components of this limit are:
+   Depending on the shape and size of the input problem and the number of iterations performed, the doubly exponential growth may be problematic. Introducing bounds addresses this potential issue. The limit on the number of new monomorphic type argument tuples is \(\min(\max(\MonoMult\cdot m, \MonoFloor), \MonoCap)\), where \(m\) is the total number of monomorphic type argument tuples. The components of this limit are
 \begin{enumerate}
-   \item \MonoCap, an absolute limit on the total number of new type argument tuples.
-   \item \MonoMult, it is used to allow the total number of (monomorphic) type argument tuples to grow by a certain proportion of the current number \(n\) of monomorphic type argument tuples.
-   \item \MonoFloor, which balances out \MonoMult. It prevents \MonoMult from inhibiting new type argument tuple generation if \(n\) is too low.
+   \item \MonoCap, an absolute limit on the total number of new type argument tuples;
+   \item \MonoMult, which is used to allow the total number of (monomorphic) type argument tuples to grow by a certain proportion of the current number \(m\) of monomorphic type argument tuples;
+   \item \MonoFloor, which balances out \MonoMult, preventing \MonoMult from inhibiting new type argument tuple generation if \(m\) is too low.
 \end{enumerate}
 
-Similar bounds are used for the non-monomorphic type arguments.
-It is possible to either generalise or further refine these bounds. The maximum number of newly generated type arguments is fixed per formula, per iteration. This algorithm can easily be modified such that the limit on new type arguments is fixed per iteration. Conversely, new type arguments can be limited per symbol, per formula, per iteration.
+Similar bounds are used for the non-monomorphic type arguments:
+The limit on the number of new non-monomorphic type argument tuples is \(\min(\max(\PolyMult\cdot n, \PolyFloor),\allowbreak \PolyCap)\), where \(n\) is the number of non-monomorphic type argument tuples associated with the current formula.
+Both in the monomorphic and in the non-monomorphic case, the maximum number of newly generated type argument tuples is fixed per formula and per iteration.
+%This algorithm can easily be modified such that the limit on new type arguments is fixed per iteration. Conversely, new type arguments can be limited per symbol, per formula, per iteration.
 
 \begin{figure}
 \begin{quote}
@@ -564,9 +568,9 @@ It is possible to either generalise or further refine these bounds. The maximum 
 \label{subst_gen}
 \end{figure}
 
-Substitution generation (Figure~\ref{subst_gen}) consists in computing all possible matchings between the type arguments of the given type argument maps and returns the resulting substitutions. For each pair of type argument tuples, the non-monomorphic types are matched against their monomorphic counterparts and the resulting substitutions are composed if they are compatible. In the pseudocode, this is checked by making sure that the while loop has iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. The composition of two compatible substitutions is commutative and that the order of composition is therefore irrelevant.
+Substitution generation (Figure~\ref{subst_gen}) consists of computing all possible matchings between the type arguments of the given type argument maps and returns the resulting substitutions. For each pair of type argument tuples, the non-monomorphic types are matched against their monomorphic counterparts, and the resulting substitutions are composed if they are compatible. In the pseudocode, this is checked by making sure that the \textbf{while} loop has iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant.
 
-The various bounds presented here are, to some extent, redundant. For instance, limiting the number of substitutions generated at this step may be sufficient to curb the number of new type arguments, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its use cases. For example, sets of problems which lead to few successful matches but many type arguments may benefit from a limit on the number of new type arguments whilst sets of problems where substitution generation is more explosive might consider a limit on the number of generated substitution to be more useful. 
+The various bounds presented here overlap to some extent. For instance, limiting the number of substitutions generated at this step may be sufficient to curb the number of new type argument tuples, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its use cases. For example, problems that lead to few successful matches but many type arguments may benefit from a limit on the number of new type arguments whilst sets of problems where substitution generation is more explosive might consider a limit on the number of generated substitution to be more useful. 
 
 \begin{figure}
 \begin{quote}
