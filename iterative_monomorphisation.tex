@@ -44,6 +44,27 @@
 
 \DontPrintSemicolon
 
+% some keywords
+\SetKwFunction{GenFormulae}{generate\_mono\_formulae}
+\SetKw{ST}{such that}
+
+\SetKwData{MonoCap}{\textcolor{ourblueviolet}{mono\_cap}}
+\SetKwData{MonoMult}{\textcolor{ourblueviolet}{mono\_mult}}
+\SetKwData{MonoFloor}{\textcolor{ourblueviolet}{mono\_floor}}
+\SetKwData{PolyCap}{\textcolor{ourblueviolet}{nonmono\_cap}}
+\SetKwData{PolyMult}{\textcolor{ourblueviolet}{nonmono\_mult}}
+\SetKwData{PolyFloor}{\textcolor{ourblueviolet}{nonmono\_floor}}
+\SetKwData{MaxMono}{\textcolor{ourblueviolet}{max\_mono\_args}}
+\SetKwData{MaxPoly}{\textcolor{ourblueviolet}{max\_nonmono\_args}}
+\SetKwData{TypeVars}{type\_variables}
+\SetKwData{UsedSubst}{\(S\)}
+
+\SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
+
+\SetKwFunction{Max}{max}\SetKwFunction{Min}{min}
+\SetKwFunction{Domain}{subst\_domain}\SetKwFunction{Len}{len}
+\SetKwFunction{SubstGen}{matches}\SetKwFunction{TyVars}{type\_variables}
+\SetKwFunction{FMonoStep}{formula\_mono\_step}
 \SetKwProg{Fn}{Function}{}{end}\SetKwFunction{FRecurs}{FnRecursive}%
 \newcommand{\forcond}{$i=0$ \KwTo $n$}
 
@@ -346,77 +367,9 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
 \label{iter_mono}
 \end{figure}
 
-\SetKwFunction{GenFormulae}{generate\_mono\_formulae}
-\SetKw{ST}{such that}
 
-\begin{figure}
-\begin{quote}
-\begin{algorithm}[H]
-\Fn(){\(\GenFormulae(\Phi, S)\)}{
-   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{To}{to}
+The iterative monomorphisation algorithm (Figure~\ref{iter_mono}) has two phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and for all code that is related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is completed and the substitutions used to create new type arguments are passed to the formula generation function for the second phase.
 
-   \SetKwData{Loop}{num\_loops}\SetKwData{NewFormulae}{\(\Psi\)}
-   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(S\)}
-   \SetKwData{Limit}{total\_new\_formulae}
-
-   \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step} 
-   \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{mono\_substs}
-   \SetKwFunction{GenFormulae}{generate\_formulae}
-
-   \KwData{\begin{minipage}[t]{.8\textwidth}
-     \strut set \(\Phi\) of polymorphic formulae \\
-     set $S$ of substitutions\strut
-     \end{minipage}}
-   \KwResult{set of monomorphic formulae}
-
-   \BlankLine
-
-   \NewFormulae \(\leftarrow\emptyset\)\;
-
-   \BlankLine
-
-   \ForEach{\(\varphi\in\Phi\) \ST $\varphi$ is non-monomorphic}{
-      \ForEach{\(\sigma\in \MonoSubst(\AllSubst, \TyVars{\(\varphi\)}, \emptyset, \{\})\)}{
-         \textcolor{ourblueviolet}{
-         \eIf{\(|\NewFormulae|<\Limit\)}{
-            \textcolor{black}{
-            \(\NewFormulae\leftarrow\NewFormulae\cup \{\sigma(\varphi)\}\)\;}
-         }
-         {\Return \NewFormulae}
-      }}
-   }
-
-   \BlankLine
-
-   \Return \NewFormulae
-}
-\end{algorithm}
-\end{quote}
-\caption{Pseudocode for monomorphic formula generation}
-\label{gen_formulae}
-\end{figure}
-
-The iterative monomorphisation algorithm (Figure~\ref{iter_mono}) has two phases. The first phase applies a \emph{monomorphisation step} (Figure~\ref{mono_step}) to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and for all code that is related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is completed and the substitutions used to create
-new type arguments are passed to the formula generation function
-(Figure~\ref{gen_formulae}) for the second phase.
-
-\SetKwData{MonoCap}{\textcolor{ourblueviolet}{mono\_cap}}
-\SetKwData{MonoMult}{\textcolor{ourblueviolet}{mono\_mult}}
-\SetKwData{MonoFloor}{\textcolor{ourblueviolet}{mono\_floor}}
-\SetKwData{PolyCap}{\textcolor{ourblueviolet}{nonmono\_cap}}
-\SetKwData{PolyMult}{\textcolor{ourblueviolet}{nonmono\_mult}}
-\SetKwData{PolyFloor}{\textcolor{ourblueviolet}{nonmono\_floor}}
-\SetKwData{MaxMono}{\textcolor{ourblueviolet}{max\_mono\_args}}
-\SetKwData{MaxPoly}{\textcolor{ourblueviolet}{max\_nonmono\_args}}
-\SetKwData{TypeVars}{type\_variables}
-\SetKwData{UsedSubst}{\(S\)}
-
-\SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
-
-\SetKwFunction{Max}{max}\SetKwFunction{Min}{min}
-\SetKwFunction{Domain}{subst\_domain}\SetKwFunction{Len}{len}
-\SetKwFunction{SubstGen}{matches}\SetKwFunction{TyVars}{type\_variables}
-\SetKwFunction{FMonoStep}{formula\_mono\_step}
 
 \begin{figure}
 \begin{quote}
@@ -487,14 +440,11 @@ new type arguments are passed to the formula generation function
 \label{mono_step}
 \end{figure}
 
-Formula monomorphisation (Figure~\ref{mono_step}) computes new type arguments for a single formula. It forms the core of the monomorphisation process. The first step generates substitutions (Figure~\ref{subst_gen}) by matching the non-monomorphic type arguments against monomorphic ones. The separation of type arguments into old and new maps is put to use here. Pairs of type argument tuples must contain at least one new type argument to be matched. This avoids re-computing some of the matchings processed in previous iterations. Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings.
 
-The set of substitutions generated in this way is then iterated over.
-Each substitution is applied to all polymorphic type argument tuples such that at least one type variable in the tuple is instantiated by the substitution.
+Formula monomorphisation (Figure~\ref{mono_step}) computes new type arguments for a single formula. It forms the core of the monomorphisation process. A set of substitutions obtained from matching type argument tuples is iterated over. The separation of type arguments into old and new maps is put to use here. \emph{matches} (Figure~\ref{subst_gen}) is only called with at least one new type argument map. This avoids re-computing some of the matchings processed in previous iterations. Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings. Each substitution is applied to all polymorphic type argument tuples such that at least one type variable in the tuple is instantiated by the substitution.
 
-The total number of type arguments can increase cubicly in the number of type arguments at each iteration and can therefore grow doubly exponentially in the number of iterations. We sketch an example of such growth.
-%
-If we assume that there are after \(k\) iterations \(N_k\) total type arguments split evenly between monomorphic and non-monomorphic type arguments, all in a single formula, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type arguments are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = \bigl(\frac{N_k}{2}\bigr)^{3}\) evenly split type argument tuples. Therefore, the total number of type arguments on the \(k\)th iteration can reach \(N_k = \bigl(\smash{\frac{N_0}{2}\bigr)^{3^k}} \cdot \bigl(\frac{1}{2}\bigl)^{3k}\).
+
+The total number of type arguments can increase cubicly in the number of type arguments at each iteration and can therefore grow doubly exponentially in the number of iterations. We sketch an example of such growth. If we assume that there are after \(k\) iterations \(N_k\) total type arguments split evenly between monomorphic and non-monomorphic type arguments, all in a single formula, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type arguments are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type arguments on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
 
    Depending on the shape and size of the input problem and the number of iterations performed, the doubly exponential growth may be problematic. Introducing bounds addresses this potential issue. The limit on the number of new monomorphic type argument tuples is \(\min(\max(\MonoMult\cdot m, \MonoFloor), \MonoCap)\), where \(m\) is the total number of monomorphic type argument tuples. The components of this limit are
 \begin{enumerate}
@@ -508,11 +458,16 @@ The limit on the number of new non-monomorphic type argument tuples is \(\min(\m
 Both in the monomorphic and in the non-monomorphic case, the maximum number of newly generated type argument tuples is fixed per formula and per iteration.
 %This algorithm can easily be modified such that the limit on new type arguments is fixed per iteration. Conversely, new type arguments can be limited per symbol, per formula, per iteration.
 
+
+The substitutions used for generating new type arguments are obtained thanks to the \emph{matches} function (Figure~\ref{subst_gen}).
+Each symbol instances from \(N(\varphi)\) is matched against all symbol instances from \(M\) of the same symbol.
+For two such symbol instances, types from the non-monomorphic type argument tuple are matched against the corresponding types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the pseudocode, this is checked by making sure that the \textbf{while} loop has iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant.
+
 \begin{figure}
 \begin{quote}
 \begin{algorithm}[H]
 \SetKwFunction{SubstGen}{matches}
-\Fn(){\(\SubstGen(M, P(\varphi))\)}{
+\Fn(){\(\SubstGen(M, N(\varphi))\)}{
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}
    \SetKwData{SubstLimit}{substitution\_limit}
    \SetKwFunction{Success}{Success}\SetKwFunction{Compatible}{compatible}
@@ -522,7 +477,7 @@ Both in the monomorphic and in the non-monomorphic case, the maximum number of n
 
    \KwData{\begin{minipage}[t]{.8\textwidth}
       \strut monomorphic type argument map \(M\) \\
-      non-monomorphic type argument map \(P(\varphi)\)\strut
+      non-monomorphic type argument map \(N(\varphi)\)\strut
       \end{minipage}
    }
    \KwResult{set of substitutions}
@@ -532,7 +487,7 @@ Both in the monomorphic and in the non-monomorphic case, the maximum number of n
 
    \BlankLine
 
-   \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in P(\varphi)\)}{
+   \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in N(\varphi)\)}{
       \ForEach{\( (\tau_1, \dots,\tau_n) \in M(f) \)}{
          \(\sigma\leftarrow \{\}\)\;
          \(i \leftarrow 1\)\;
@@ -568,7 +523,53 @@ Both in the monomorphic and in the non-monomorphic case, the maximum number of n
 \label{subst_gen}
 \end{figure}
 
-Substitution generation (Figure~\ref{subst_gen}) consists of computing all possible matchings between the type arguments of the given type argument maps and returns the resulting substitutions. For each pair of type argument tuples, the non-monomorphic types are matched against their monomorphic counterparts, and the resulting substitutions are composed if they are compatible. In the pseudocode, this is checked by making sure that the \textbf{while} loop has iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant.
+\begin{figure}
+\begin{quote}
+\begin{algorithm}[H]
+\Fn(){\(\GenFormulae(\Phi, S)\)}{
+   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{To}{to}
+
+   \SetKwData{Loop}{num\_loops}\SetKwData{NewFormulae}{\(\Psi\)}
+   \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(S\)}
+   \SetKwData{Limit}{total\_new\_formulae}
+
+   \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step} 
+   \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{mono\_substs}
+   \SetKwFunction{GenFormulae}{generate\_formulae}
+
+   \KwData{\begin{minipage}[t]{.8\textwidth}
+     \strut set \(\Phi\) of polymorphic formulae \\
+     set $S$ of substitutions\strut
+     \end{minipage}}
+   \KwResult{set of monomorphic formulae}
+
+   \BlankLine
+
+   \NewFormulae \(\leftarrow\emptyset\)\;
+
+   \BlankLine
+
+   \ForEach{\(\varphi\in\Phi\) \ST $\varphi$ is non-monomorphic}{
+      \ForEach{\(\sigma\in \MonoSubst(\AllSubst, \TyVars{\(\varphi\)}, \emptyset, \{\})\)}{
+         \textcolor{ourblueviolet}{
+         \eIf{\(|\NewFormulae|<\Limit\)}{
+            \textcolor{black}{
+            \(\NewFormulae\leftarrow\NewFormulae\cup \{\sigma(\varphi)\}\)\;}
+         }
+         {\Return \NewFormulae}
+      }}
+   }
+
+   \BlankLine
+
+   \Return \NewFormulae
+}
+\end{algorithm}
+\end{quote}
+\caption{Pseudocode for monomorphic formula generation}
+\label{gen_formulae}
+\end{figure}
+
 
 The various bounds presented here overlap to some extent. For instance, limiting the number of substitutions generated at this step may be sufficient to curb the number of new type argument tuples, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its use cases. For example, problems that lead to few successful matches but many type arguments may benefit from a limit on the number of new type arguments whilst problems for which substitution generation is more explosive may benefit from a limit on the number of generated substitution.
 
