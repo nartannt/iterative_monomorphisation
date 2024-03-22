@@ -330,6 +330,7 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
    \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step} 
    \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{mono\_substs}
    \SetKwFunction{GenFormulae}{generate\_mono\_formulae}
+   \SetKwFunction{Mangle}{mangle}
 
    \KwData{set \(\Phi\) of polymorphic formulae}
    \KwResult{set of monomorphic formulae}
@@ -359,7 +360,7 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
 
    \BlankLine
 
-   \Return \(\GenFormulae(\Phi, S)\)
+   \Return \(\Mangle(\GenFormulae(\Phi, S))\)
 }
 \end{algorithm}
 \end{quote}
@@ -368,8 +369,9 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
 \end{figure}
 
 
-The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has two phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is done and the substitutions used to create new type arguments are passed to $\mathit{generate\_mono\_formulae}$ for the second phase.
-
+The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is done and the substitutions used to create new type arguments are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. The third phase
+mangles composite types, so that we can target a simply typed logic with no general support for $n$-ary type constructors.
+% \cite[Sections 4 and 5]{mono-trans}.
 
 \begin{figure}
 \begin{quote}
@@ -624,19 +626,19 @@ The various bounds presented here overlap to some extent. For instance, limiting
 
 Once all monomorphisation iterations have been completed, we are left with a set of substitutions. The last phase uses these substitutions to instantiate the type variables in the input problem's polymorphic formuale. In the presence of bounds, the order in which the elements of the set \(S\) of substitutions is traversed affects the formulae resulting from the last phase. As we will discuss in Section~\ref{param_opti}, the best results were obtained when substitutions generated in earlier iterations are ordered first.
 
+The \emph{generate\_mono\_formulae} function is given in Figure~\ref{gen_formulae}.
+It generates monomorphising substitutions and applies them to the polymorphic formula of the input problem that they instantiate. Since the substitutions are monomorphising relative to the formula they applied to, the resulting formulae are monomorphic. The \textcolor{ourblueviolet}{total\_new\_formulae} bound is used to control the total number of new formulae. It overlaps with \textcolor{ourblueviolet}{max\_substs} but can be useful to set an absolute limit on the size of the final problem.
+%In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected by the number of clauses it is given.
+
 To monomorphise a polymorphic formula, we first compute its {monomorphising substitutions} using the \emph{mono\_substs} function given in Figure~\ref{mono_substs}.
 A substitution \(\sigma\) is \emph{monomorphising} for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic. Such substitutions are computed using a recursive function. Given a set \(V\) of type variables and a set \(S\) of substitutions, it will select a substitution \(\sigma_{\negvthinspace\Delta}\) from \(S\) that instantiates at least one of the type variables in \(V\). It is important that \(\sigma_{\negvthinspace\Delta}\) be compatible with \(\sigma\) so that they can be composed and the function recursively called to instantiate the remaining type variables.
 
-The Zipperposition implementation of the \emph{mono\_substs} function uses a map from type variables to substitutions instead of a set to filter the relevant substitutions from \(S^\text{all}\) more efficiently. The \textcolor{ourblueviolet}{max\_substs} bound exists for two main reasons:
+The Zipperposition implementation of the \emph{mono\_substs} function uses a map from type variables to substitutions instead of a set to filter the relevant substitutions from \(S\) more efficiently. The \textcolor{ourblueviolet}{max\_substs} bound exists for two main reasons:
 \begin{enumerate}
    \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic clause per initial polymorphic clause. Generating an excessive number of new clauses can flood the downstream prover.
    \item The \emph{mono\_substs} function is the most explosive part of the algorithm. If \(S\) contains \(n\) substitutions that each instantiate exactly one of \(v\) different type variables, up to \(n^v\) monomorphising substititions may be generated. Recall that the total number of type argument tuples that are used to generate \(S\) is doubly exponential in the number of loop iterations.
 \end{enumerate}
 %[This function can be thought of as exploring the tree of all possible monomorphising substitutions, \(S_{\text{res}}\) would represent the leaves that have already been visited and \(\sigma\) would represent the current node of the tree.]
-
-Finally, once all monomorphising substitutions have been generated, they are applied to the polymorphic formula of the input problem that they instantiate (Figure~\ref{gen_formulae}). The fact that the substitutions are monomorphising relative to the formula they applied to ensures that the resulting formulae are monomorphic. A final bound here is used to control the total number of new formulae. It overlaps in role with the bound limiting the number of monomorphising substitutions per clause, but can be useful as a means to set an absolute cap on the size of the final problem. In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected by the number of clauses it is given.
-
-Once the newly generated monomorphic formulae are output, an extra post-processing step may be required. Indeed, monomorphic provers, such as E, do not necessarily support type constructors. Consequently, transforming the monomorphic formulae into equivalent ones without type constructors may be necessary as was the case for the Zipperposition implementation. This transformation is largely syntactic and relatively simple. It is documented in [insert names] 's paper \cite[Sections 4 and 5]{mono-trans}.
 
 % target page number: 2-4
 \section{Evaluation}
