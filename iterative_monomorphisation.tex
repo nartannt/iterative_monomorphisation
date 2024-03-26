@@ -50,11 +50,11 @@
 \SetKwData{MonoCap}{\textcolor{ourblueviolet}{mono\_cap}}
 \SetKwData{MonoMult}{\textcolor{ourblueviolet}{mono\_mult}}
 \SetKwData{MonoFloor}{\textcolor{ourblueviolet}{mono\_floor}}
-\SetKwData{PolyCap}{\textcolor{ourblueviolet}{nonmono\_cap}}
-\SetKwData{PolyMult}{\textcolor{ourblueviolet}{nonmono\_mult}}
-\SetKwData{PolyFloor}{\textcolor{ourblueviolet}{nonmono\_floor}}
+\SetKwData{PolyCap}{\textcolor{ourblueviolet}{nmono\_cap}}
+\SetKwData{PolyMult}{\textcolor{ourblueviolet}{nmono\_mult}}
+\SetKwData{PolyFloor}{\textcolor{ourblueviolet}{nmono\_floor}}
 \SetKwData{MaxMono}{\textcolor{ourblueviolet}{max\_mono\_args}}
-\SetKwData{MaxPoly}{\textcolor{ourblueviolet}{max\_nonmono\_args}}
+\SetKwData{MaxPoly}{\textcolor{ourblueviolet}{max\_nmono\_args}}
 \SetKwData{TypeVars}{type\_variables}
 \SetKwData{UsedSubst}{\(S\)}
 
@@ -307,7 +307,7 @@ The data structures used in the pseudocode are based on the ones used in the hig
 All sets referenced in the pseudocode are assumed to be finite. Additionally, this algorithm relies on primitives whose implementation depends on the specifics of the grammar and logic used. They will therefore not be expanded upon. Functions computing the following are assumed to be available: 
 \begin{enumerate}
    \item[\labelitemi] \emph{initialisation\((\Phi)\)}, where \(\Phi\) is a set of (polymorphic) formulae, extracts the initial type argument maps \(M\) and \(N\) from \(\Phi\).
-   \item[\labelitemi] \emph{type\_variables\((\tau_1, \dots, \tau_n)\)}, where \(\tau_1, \dots,\tau_n\) are types, gathers all the type variables from each of \(\tau_1, \dots, \tau_n\) into a set.
+   \item[\labelitemi] \emph{type\_variables\((\tau_1, \dots, \tau_n)\)}, where \(\tau_1, \dots,\tau_n\) are types, gathers all the type variables from each type \(\tau_1, \dots, \tau_n\) into a set.
    \item[\labelitemi] \emph{match\((\upsilon, \tau)\)}, where \(\upsilon\) and \(\tau\) are types, will match \(\upsilon\) against \(\tau\) and either fail or return \emph{Success\((\sigma)\)}, where \(\sigma\) is the substitution resulting from the matching. The pseudocode matches only non-monomorphic types against monomorphic types.
    \item[\labelitemi] \emph{domain\((\sigma)\)}, where \(\sigma\) is a substitution, returns the set of type variables \(\alpha\) such that \(\sigma(
    \alpha) \not= \alpha\).
@@ -369,7 +369,7 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
 \end{figure}
 
 
-The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is done and the substitutions used to create new type arguments tuples are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. The third phase mangles the composite types of the newly monomorphised formulae. This allows targeting a simply typed logic with no general support for $n$-ary type constructors \cite[Sections 4 and 5]{monotonicity}.
+The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is done and the substitutions used to create new type arguments tuples are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. The third phase mangles \cite[Sections 4 and 5]{monotonicity} the composite types of the newly monomorphised formulae. This allows targeting a simply typed logic with no general support for $n$-ary type constructors.
 % \cite[Sections 4 and 5]{mono-trans}.
 % Paper name is gt
 
@@ -409,7 +409,7 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
    \ForEach{\(\sigma\in \SubstGen(M_{\text{new}}, N_{\text{new}}(\varphi))
    \cup \SubstGen(M_{\text{new}}, N_{\text{old}}(\varphi))
    \cup \SubstGen(M_{\text{old}}, N_{\text{new}}(\varphi))\)}{
-      \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in N_{\text{old}}(\varphi)\)}{
+   \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in N_{\text{old}}(\varphi)\cup N_{\text{new}}(\varphi)\)}{
             \eIf{\(\TyVars((\upsilon_1, \dots, \upsilon_n)) \subseteq \Domain(\sigma)\)}{
                \textcolor{ourblueviolet}{
                \uIf{\(|M_{\text{next}}| < \MaxMono\)}{
@@ -443,11 +443,11 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
 \end{figure}
 
 
-The formula monomorphisation algorithm is given in Figure~\ref{mono_step}. It forms the core of the monomorphisation process. It computes new type arguments tuples for a single formula. A set of substitutions obtained from matching type argument tuples is iterated over. 
-The separation of type arguments tuples into old and new maps is put to use to ensure that only combinations involving at least one new map are considered. This avoids re-computing some of the matchings processed in previous iterations. Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings. Each substitution is applied to all polymorphic type argument tuples such that at least one type variable in the tuple is instantiated by the substitution.
+The formula monomorphisation algorithm is given in Figure~\ref{mono_step}. It forms the core of the monomorphisation process by computing new type arguments tuples for a single formula. Type argument tuples are matched against each other to obtain a set of substitutions which is iterated over in the outermost loop. 
+The separation of type arguments tuples into old and new maps is put to use to ensure that only combinations involving at least one new map are considered. This avoids re-computing some of the matchings processed in previous iterations. Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings. New type argument tuples are obtained by applying each substitution to each non-monomorphic type argument tuple such that at least one type variable in the tuple is instantiated by the substitution.
 
 
-The total number of type argument tuples can increase cubicly in the number of type arguments tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We sketch an example of such growth. If we assume that there are after \(k\) iterations \(N_k\) total type argument tuples divided evenly between monomorphic and non-monomorphic type arguments tuples, all in a single formula, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type arguments tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
+The total number of type argument tuples can increase cubicly in the number of type arguments tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We sketch an example of such growth, for a single formula. If we assume that after \(k\) iterations, there are \(N_k\) total type argument tuples divided evenly between monomorphic and non-monomorphic type arguments tuples, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type arguments tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
 
    Depending on the shape and size of the input problem and the number of iterations performed, the doubly exponential growth may be problematic. Introducing bounds addresses this potential issue. The limit on the number of new monomorphic type argument tuples is \(\min(\max(\MonoMult\cdot m, \MonoFloor), \MonoCap)\), where \(m\) is the total number of monomorphic type argument tuples. The components of this limit are
 \begin{enumerate}
@@ -457,11 +457,11 @@ The total number of type argument tuples can increase cubicly in the number of t
 \end{enumerate}
 
 Similar bounds are used for the non-monomorphic type arguments tuples:
-The limit on the number of new non-monomorphic type argument tuples is \(\min(\max(\PolyMult\cdot n, \PolyFloor),\allowbreak \PolyCap)\), where \(n\) is the number of non-monomorphic type argument tuples associated with the current formula.
+The limit on the number of new non-monomorphic type argument tuples is \(\min(\max(\PolyMult\cdot n, \PolyFloor),\allowbreak \PolyCap)\), where \(n\) is the number of non-monomorphic type argument tuples associated with the current formula. A significant difference with the monomorphic case is that \(n\) depends on the current formula being processed whilst \(m\) does not.
 Both in the monomorphic and in the non-monomorphic case, the maximum number of newly generated type argument tuples is fixed per formula and per iteration.
 
 The \emph{matches} function, which computes the substitutions used for generating new type arguments, is given in Figure~\ref{subst_gen}. Each symbol instance from \(N(\varphi)\) is matched against all corresponding symbol instances from \(M\).
-For two such symbol instances, types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the pseudocode, this is checked by making sure that the \textbf{while} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant.
+For two such symbol instances, types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the pseudocode, this is checked by making sure the \textbf{while} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant. The total number of substitutions generated is capped by \textcolor{ourblueviolet}{substitution\_limit}.
 
 \begin{figure}
 \begin{quote}
@@ -571,7 +571,7 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 \end{figure}
 
 
-The various bounds presented here overlap to some extent. For instance, limiting the number of substitutions generated at this step may be sufficient to curb the number of new type argument tuples, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its uses. For example, problems that lead to few successful matches but many type arguments tuples may benefit from a limit on the number of new type arguments tuples whilst problems for which substitution generation is more explosive may benefit from a limit on the number of generated substitution.
+The various bounds presented here overlap to some extent. For instance, having at most \textcolor{ourblueviolet}{substitution\_limit} substitutions generated by \emph{matches} may be sufficient to curb the number of new type argument tuples, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its uses. For example, problems that lead to few successful matches but many type arguments tuples may benefit from a limit on the number of new type arguments tuples whilst problems for which substitution generation is more explosive may benefit from a limit on the number of generated substitution.
 
 \begin{figure}
 \begin{quote}
@@ -622,7 +622,7 @@ The various bounds presented here overlap to some extent. For instance, limiting
 \label{mono_substs}
 \end{figure}
 
-Once all monomorphisation iterations have been completed, we are left with a set of substitutions. The last phase uses these substitutions to instantiate the type variables in the input problem's polymorphic formuale. In the presence of bounds, the order in which the elements of the set \(S\) of substitutions is traversed affects the formulae resulting from the last phase. As we will discuss in Section~\ref{param_opti}, the best results were obtained when substitutions generated in earlier iterations are ordered first.
+Once all monomorphisation iterations have been completed, we are left with a set of the substitutions that have been used to generate new type arguments. The last phase uses these substitutions to instantiate the type variables in the input problem's non-monomrophic formuale. In the presence of bounds, the order in which the elements of the set \(S\) of substitutions is traversed affects the formulae resulting from the last phase. As we will discuss in Section~\ref{param_opti}, the best results were obtained when substitutions generated in earlier iterations are ordered first.
 
 The \emph{generate\_mono\_formulae} function is given in Figure~\ref{gen_formulae}.
 It generates monomorphising substitutions and applies them to the polymorphic formula of the input problem that they instantiate. Since the substitutions are monomorphising relative to the formula they applied to, the resulting formulae are monomorphic. The \textcolor{ourblueviolet}{total\_new\_formulae} bound is used to control the total number of new formulae. It overlaps with \textcolor{ourblueviolet}{max\_substs} but can be useful to set an absolute limit on the size of the final problem.
@@ -633,7 +633,7 @@ A substitution \(\sigma\) is \emph{monomorphising} for a formula \(\varphi\) if 
 
 The Zipperposition implementation of the \emph{mono\_substs} function uses a map from type variables to substitutions instead of a set to filter the relevant substitutions from \(S\) more efficiently. The \textcolor{ourblueviolet}{max\_substs} bound exists for two main reasons:
 \begin{enumerate}
-   \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic clause per initial polymorphic clause. Generating an excessive number of new clauses can flood the downstream prover.
+   \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic clause per initial polymorphic clause. Generating an excessive number of new clauses can flood the downstream prover. The final number of output formulae is ensured to be at most \(|\Phi|\cdot \textcolor{ourblueviolet}{max\_substs}\).
    \item The \emph{mono\_substs} function is the most explosive part of the algorithm. If \(S\) contains \(n\) substitutions that each instantiate exactly one of \(v\) different type variables, up to \(n^v\) monomorphising substititions may be generated. Recall that the total number of type argument tuples that are used to generate \(S\) is doubly exponential in the number of loop iterations.
 \end{enumerate}
 %[This function can be thought of as exploring the tree of all possible monomorphising substitutions, \(S_{\text{res}}\) would represent the leaves that have already been visited and \(\sigma\) would represent the current node of the tree.]
