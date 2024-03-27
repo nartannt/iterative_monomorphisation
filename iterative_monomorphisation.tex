@@ -369,7 +369,7 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
 \end{figure}
 
 
-The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is done and the substitutions used to create new type arguments tuples are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. The third phase mangles \cite[Sections 4 and 5]{monotonicity} the composite types of the newly monomorphised formulae. This allows targeting a simply typed logic with no general support for $n$-ary type constructors.
+The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is done and the substitutions used to create new type arguments tuples are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. The third phase mangles the composite types of the newly monomorphised formulae. This allows targeting a simply typed logic with no general support for $n$-ary type constructors.
 % \cite[Sections 4 and 5]{mono-trans}.
 % Paper name is gt
 
@@ -410,7 +410,7 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
    \cup \SubstGen(M_{\text{new}}, N_{\text{old}}(\varphi))
    \cup \SubstGen(M_{\text{old}}, N_{\text{new}}(\varphi))\)}{
    \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in N_{\text{old}}(\varphi)\cup N_{\text{new}}(\varphi)\)}{
-            \eIf{\(\TyVars((\upsilon_1, \dots, \upsilon_n)) \subseteq \Domain(\sigma)\)}{
+            \eIf{\(\TyVars(\upsilon_1, \dots, \upsilon_n) \subseteq \Domain(\sigma)\)}{
                \textcolor{ourblueviolet}{
                \uIf{\(|M_{\text{next}}| < \MaxMono\)}{
                   \textcolor{black}{
