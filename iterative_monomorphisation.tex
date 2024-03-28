@@ -633,7 +633,7 @@ A substitution \(\sigma\) is \emph{monomorphising} for a formula \(\varphi\) if 
 
 The Zipperposition implementation of the \emph{mono\_substs} function uses a map from type variables to substitutions instead of a set to filter the relevant substitutions from \(S\) more efficiently. The \textcolor{ourblueviolet}{max\_substs} bound exists for two main reasons:
 \begin{enumerate}
-   \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic clause per initial polymorphic clause. Generating an excessive number of new clauses can flood the downstream prover. The final number of output formulae is ensured to be at most \(|\Phi|\cdot \textcolor{ourblueviolet}{max\_substs}\).
+   \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic clause per initial polymorphic clause. Generating an excessive number of new clauses can flood the downstream prover. The final number of output formulae is ensured to be at most \(|\Phi|\cdot \text{\textcolor{ourblueviolet}{max\_substs}}\).
    \item The \emph{mono\_substs} function is the most explosive part of the algorithm. If \(S\) contains \(n\) substitutions that each instantiate exactly one of \(v\) different type variables, up to \(n^v\) monomorphising substititions may be generated. Recall that the total number of type argument tuples that are used to generate \(S\) is doubly exponential in the number of loop iterations.
 \end{enumerate}
 %[This function can be thought of as exploring the tree of all possible monomorphising substitutions, \(S_{\text{res}}\) would represent the leaves that have already been visited and \(\sigma\) would represent the current node of the tree.]
@@ -648,15 +648,8 @@ The Zipperposition implementation of the \emph{mono\_substs} function uses a map
 \subsection{Parameter optimisation}
 \label{param_opti}
 
-Considering the total number of parameters, it would be impractical to exhaustively test all option combinations. Consequently, options have been grouped together into sets of 2 or 3 options that will be more thouroughly tested. Two options will be part of the same group if it is deemed likely that a change in one of the options will significantly impact how much a change in the second option will affect the overall results.
+Each bound presented presents a tradeoff, a higher bound will allow for a more exhaustive monomorphisation at the cost of taking longer to run. Our main goal being higher performance automatic theorem provers, we chose the number of problems solved in a 30 second time-frame as a measure of success of the monomorphisation procedure. To find the best bounds for this, it would be ideal to exhaustively test all possible combinations of values each bound could take. Given the number of bounds, this is not realistic. Instead, closely linked bounds are grouped together and their possible values are more thouroughly searched. Once the best performing set of values for a group of bounds is found, these values are chosen as a default and the search for the next group begins.
 
-The first two groups of options are natural as they affect how many new monomorphic and polymorphic type arguments tuples are generated respectively for each symbol at each iteration. These options are closely linked and must be set together if they are to be relevant.
-
-During an iteration, for each symbol (for each clause in the polymorphic case), the number of newly generated type arguments tuples is determined by this formula:
-\( \min(\text{cap}, \max(\text{floor}, \text{multiplier} \cdot \text{number of type arguments})) \)
-
-The multiplier allows for a controlled increase of the number of type arguments, relative to the size of the problem whilst the floor prevents some symbols seeing no new type arguments if the multiplier is too low.
-The cap acts as a final limit in the case the explosion is too fast despite the multiplier bound.
 
 \begin{table}[th]
 \caption{Evaluation of bounds for monomorphic type argument generation}
