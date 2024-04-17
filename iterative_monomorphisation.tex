@@ -642,15 +642,16 @@ The Zipperposition implementation of the \emph{mono\_substs} function uses a map
 \section{Evaluation}
 \label{sec:evaluation}
 
-% Provide complete list of problems explain which ones were excluded and why
-% We ignore the following bounds: ty var limit per clause, subst per ty var, limiting the new type args per clause
+In order to measure the performance of an instance of an automatic theorem prover, we chose as a measure of success the number of probelms said instance managed to solve in under 30 seconds. This setup reflects practical use cases of automatic provers in interactive provers. The problems used for such tests are taken from the TPTP library. The set of selected problems is constituted of all problems in the TF1 and TH1 grammars, ie: all first and higher-order problems with rank-1 polymorphism. Because Zipperposition does not support reasoning on real numbers, all problems including real numbers or relying on axioms including real numbers were removed. This likely skews comparisons between provers dissavantageously for provers which do support real numbers. However, our evaluations aim to study the effect of monomorphisation, not compare different provers, this bias is therefore irrelevant.
 
 \subsection{Parameter optimisation}
 \label{param_opti}
 
-Each bound presented presents a tradeoff, a higher bound will allow for a more exhaustive monomorphisation at the cost of taking longer to run. Our main goal being higher performance automatic theorem provers, we chose the number of problems solved in a 30 second time-frame as a measure of success of the monomorphisation procedure. To find the best bounds for this, it would be ideal to exhaustively test all possible combinations of values each bound could take. Given the number of bounds, this is not realistic. Instead, closely linked bounds are grouped together and their possible values are more thouroughly searched. Once the best performing set of values for a group of bounds is found, these values are chosen as a default and the search for the next group begins.
+Each bound presented presents a tradeoff, a higher bound will allow for more exhaustive instantiations of type variables at the cost of taking more time. We chose the number of problems solved in under 30 seconds as a measure of success of the monomorphisation procedure. Ideally, all possible combinations of values each bound could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, this is not realistic. Instead, closely related bounds are grouped together. For a single group combinations of different values each bound can take are tested. Once the best performing set of values for a group of bounds is found, these values are set for these bounds and the search for the next group begins.
 
+This method requires an initial default set of bounds, the values chosen for this are reasonable defaults based on preliminary tests during development and informal application of this method. A pitfall of this approach is to overfit the bounds to the problems used as measure of performance. To mitigate this, 500 test problems were taken at random from our set of 1754 selected TPTP problems. Tests whose results are used to inform the value of bounds or parameters make use of the 500 problems set.
 
+The number of new monomorphic (and non-monomorphic) type arguments that can be generated at each iteration can be limited at the clause level or the function symbol level. Bounds limiting the number of new type arguments at the function symbol level are more fine-grained and are therefore those that will be kept. The limit of new type arguments depends on three closely related bounds (ref to explanation).
 \begin{table}[th]
 \caption{Evaluation of bounds for monomorphic type argument generation}
 \centering\begin{tabular}{@{}l*{9}{>{\centering\arraybackslash}p{1.1em}}@{}}
@@ -672,10 +673,9 @@ Each bound presented presents a tradeoff, a higher bound will allow for a more e
 \bigskip
 \bigskip
 
-If the floor and multiplier are set to 0 and 0, no new polymorphic type arguments will be generated, as a result the cap will be irrelevant.
 
 \begin{table}[th]
-\caption{Evaluation of bounds for polymorphic type argument generation}
+\caption{Evaluation of bounds for non-monomorphic type argument generation}
 \centering\begin{tabular}{@{}l*{9}{>{\centering\arraybackslash}p{1.1em}}@{}}
    \toprule
    & &&& \multicolumn{3}{c}{floor} \\
