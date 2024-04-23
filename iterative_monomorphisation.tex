@@ -622,7 +622,7 @@ The various bounds presented here overlap to some extent. For instance, having a
 \label{mono_substs}
 \end{figure}
 
-Once all monomorphisation iterations have been completed, we are left with a set of the substitutions that have been used to generate new type arguments. The last phase uses these substitutions to instantiate the type variables in the input problem's non-monomrophic formuale. In the presence of bounds, the order in which the elements of the set \(S\) of substitutions is traversed affects the formulae resulting from the last phase. As we will discuss in Section~\ref{param_opti}, the best results were obtained when substitutions generated in earlier iterations are ordered first.
+Once all monomorphisation iterations have been completed, we are left with a set of the substitutions that have been used to generate new type arguments. The last phase uses these substitutions to instantiate the type variables in the input problem's non-monomrophic formuale. In the presence of bounds, the order in which the elements of the set \(S\) of substitutions is traversed affects the formulae resulting from the last phase. As we will discuss in Section~\ref{param_opti}, the best results were obtained when substitutions generated in the same iteration are grouped together.
 
 The \emph{generate\_mono\_formulae} function is given in Figure~\ref{gen_formulae}.
 It generates monomorphising substitutions and applies them to the polymorphic formula of the input problem that they instantiate. Since the substitutions are monomorphising relative to the formula they applied to, the resulting formulae are monomorphic. The \textcolor{ourblueviolet}{total\_new\_formulae} bound is used to control the total number of new formulae. It overlaps with \textcolor{ourblueviolet}{max\_substs} but can be useful to set an absolute limit on the size of the final problem.
@@ -654,18 +654,18 @@ A potential pitfall of this approach is to overfit the bounds to the problems us
 Table [ref] groups bounds that influence the maximum number of newly generated monomorphic type arguments per clause per iteration. It is calculated using three bounds [backwards ref] which therefore form a natural group. Our results show that in this configuration, there seems to be certain range within which the values of the bounds have little effect on performance. Beyond this range, however, the number of problems solved drops-off sharply.
 \begin{table}[th]
 \caption{Evaluation of bounds for monomorphic type argument generation}
-\centering\begin{tabular}{@{}l*{9}{>{\centering\arraybackslash}p{1.5em}}@{}}
+\centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
-   & &&& \multicolumn{3}{c}{floor} \\
-   & \multicolumn{3}{c}{50} & \multicolumn{3}{c}{100} & \multicolumn{3}{c}{200}\\
-   \cmidrule(l){2-10}
-   & &&& \multicolumn{3}{c}{multiplier} \\
-   \multirow{1}{2em}{cap} & 0 & 1 & 2 & 0 & 1 & 2 & 0 & 1 & 2\\
-    \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
-    250   & 164 & 164 & 164 & 164 & 164 & 163 & 163 & 164 & 164 \\
-    500   & 164 & 163 & 164 & 164 & 165 & 163 & 164 & 164 & 164 \\
-    750   & 164 & 164 & 165 & 164 & 163 & 164 & 164 & 164 & 164 \\
-    %\(\infty\) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+   & &&& \multicolumn{6}{c}{cap} \\
+   & \multicolumn{4}{c}{500} &\multicolumn{4}{c}{1000} & \multicolumn{4}{c}{\(\infty\)}\\
+   \cmidrule(l){2-13}
+   & &&& \multicolumn{6}{c}{floor} \\
+   \multirow{1}{2em}{mult} & 0 & 50 & 100 & 200& 0 & 50 & 100 & 200& 0 & 50 & 100 & 200\\
+    \cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(l){10-13} 
+    0         & 170 & 151 & 146 & 136 & 170 & 151 & 144 & 137 & 170 & 170 & 170 & 170\\
+    1         & 130 & 130 & 133 & 132 & 131 & 131 & 131 & 131 & 132 & 131 & 131 & 132\\
+    2         & 130 & 131 & 131 & 132 & 131 & 131 & 132 & 130 & 132 & 132 & 131 & 130\\
+    \(\infty\)& 131 & 132 & 131 & 131 & 131 & 131 & 130 & 131 & 148 & 148 & 146 & 149\\
     \bottomrule
 \end{tabular}
 \end{table}
@@ -673,7 +673,7 @@ Table [ref] groups bounds that influence the maximum number of newly generated m
 \bigskip
 \bigskip
 
-Table [ref 2] fills the same role except it is for bounds limiting the number of new non-monomorphic type arguments. The bound values are lower because non-monomorphic type arguments tend to be more explosive. The results are similar to that of table 1 [ref ].
+Table [ref 2] fills the same role except it is for bounds limiting the number of new non-monomorphic type arguments. The bound values are lower because non-monomorphic type arguments are more explosive. The results are similar to that of table 1 [ref ].
 
 \begin{table}[th]
 \caption{Evaluation of bounds for non-monomorphic type argument generation}
@@ -693,25 +693,28 @@ Table [ref 2] fills the same role except it is for bounds limiting the number of
 \end{tabular}
 \end{table}
 
+The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related as the construction of monomorphising substitution makes use of all available substitutions. Additionnally, the substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions based on which iteration they were generated in, earlier substitutions are ordered first. The ``random'' ordering randomly shuffles substitutions, preliminary tests clearly established this ordering to be garbage. Finally, the ``segregation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently.
 \begin{table}[th]
 \caption{Evaluation of bounds for substitution generation}
-\centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1em}}@{}}
+\centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{1em}}@{}}
    \toprule
-   & \multicolumn{4}{c}{mono subst}\\
-   \multirow{1}{4em}{subst cap} & 2 & 5 & 7 & 10\\
-   \midrule
-   50   & 0 & 0 & 0 & 0\\
-   100  & 0 & 0 & 0 & 0\\
-   500  & 0 & 0 & 0 & 0\\
-   \(\infty\) & 0 & 0 & 0 & 0\\
+   & &&&& \multicolumn{4}{c}{ordering} \\
+   & \multicolumn{4}{c}{age} & \multicolumn{4}{c}{random} & \multicolumn{4}{c}{segregation}\\
+   \cmidrule(l){2-13}
+   & &&&& \multicolumn{4}{c}{mono subst}\\
+   \multirow{1}{4em}{subst cap} & 2 & 5 & 7 & 10 & 2 & 5 & 7 & 10 & 2 & 5 & 7 & 10 \\
+   \cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(l){10-13}
+   50   & 0 & 0 & 0 & 0& 0 & 0 & 0 & 0& 0 & 0 & 0 & 0\\
+   100   & 0 & 0 & 0 & 0& 0 & 0 & 0 & 0& 0 & 0 & 0 & 0\\
+   200   & 0 & 0 & 0 & 0& 0 & 0 & 0 & 0& 0 & 0 & 0 & 0\\
+   \(\infty\) & 0 & 0 & 0 & 0& 0 & 0 & 0 & 0& 0 & 0 & 0 & 0\\
    
    \bottomrule
 \end{tabular}
 \end{table}
 
-This table groups two bounds that directly affect the number of clauses generated, a first one that allows at most a number of new clauses equal to `multiplier' times the original number of clauses. And the cap that gives an absolute bound over the total number of clauses generated.
 
-The choice to also include e-timeout in this table is due to the fact that E being successful in solving a monomorphised problem in a certain time limit has been observed to be highly dependent on the number of clauses it is given.
+Table [ref] groups together the bounds related to the size of the output problem to be passed to the E prover. The absolute cap refers to the maximum total number of formulae passed to E. The multiplier instead limits the total number of newly generated formulae based on the problem's initial number of formuale. The performance of the E prover is highly dependent on the number of formulae it is given. Testing the amount of time allocated to E on the monomorphised problem against the size of the monomorphised problem is necessary to account for this.
 
 \begin{table}[th]
 \caption{Evaluation of bounds directly related to the size of the output problem}
@@ -723,30 +726,27 @@ The choice to also include e-timeout in this table is due to the fact that E bei
    & &&& \multicolumn{3}{c}{multiplier} \\
     \multirow{1}{5.4em}{E timeout (s)} & 1 & 2 & 3 & 1 & 2 & 3 & 1 & 2 & 3 \\
     \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
-    2   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    5   & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    10  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    \(\infty\)& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    2  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    5  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    10 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    30 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     \bottomrule
 \end{tabular}
 \end{table}
-The next table gathers the bounds linked to substitutions generation, the first one limits the number of monomorphising substitutions that are generated per clause during the final phase. The second one gives an absolute cap on the overall number of substitutions generated at each clause during the type argument generation.
 
-
-This last table attempts to determine which are the best bounds related to the depth at which the monomorphisation problem is run as well as how long zipperposition is allowed to run before monomorphisation (and the subsequent call of E) is ran.
+The last table [ref] tests the amount of time that monomorphisation is allowed to run for before being interrupted and returning to the normal operation of Zipperposition against the number of iteration of the monomorphisation algorithm. A higher loop number will lead to longer monomorphisation time, we therefore expect better performance whenever loop number and monomorphisation time are coherent.
 
 \begin{table}[th]
-% not super happy with caption
-\caption{Evaluation of parameters indirectly related to the size of the output problem}
+\caption{Evaluation of parameters related to the depth of monomorphisation}
 \centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1em}}@{}}
    \toprule
-   & \multicolumn{4}{c}{loop nb} \\
-   \multirow{1}{4.5em}{E call step} & 2 & 3 & 4 & 5\\
+   & \multicolumn{4}{c}{mono time} \\
+   \multirow{1}{4.5em}{loop nb} & 5 & 10 & 20 & 30\\
    \midrule
-   0 & 0 & 0 & 0 & 0\\
-   15 & 0 & 0 & 0 & 0\\
-   45 & 0 & 0 & 0 & 0\\
-   90 & 0 & 0 & 0 & 0\\
+   2 & 0 & 0 & 0 & 0\\
+   3 & 0 & 0 & 0 & 0\\
+   4 & 0 & 0 & 0 & 0\\
+   5 & 0 & 0 & 0 & 0\\
    
    \bottomrule
 \end{tabular}
