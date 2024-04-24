@@ -642,16 +642,19 @@ The Zipperposition implementation of the \emph{mono\_substs} function uses a map
 \section{Evaluation}
 \label{sec:evaluation}
 
-To measure the performance of a Zipperposition instance, we chose as a measure of success the number of problems solved by that instance in under 30 seconds. This setup reflects practical use cases of automatic provers in the context of interactive provers. The problems used for these tests are taken from the TPTP library. The set of selected problems is made up of all problems in the TF1 and TH1 grammars, ie: all first-order and higher-order problems with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, all problems with real numbers or importing axioms with real numbers were removed.
+The monomorphisation algorithm is paramatrised by many bounds, the first step of the evaluation process is to find appropriate values for these bounds. The second step compares the performance of Zipperposition with and without monomorphisation. Finally, the third step tests the relative performance of different provers on polymorphic problems and their monomorphised counterparts.
+
+The problems used for these tests are taken from the TPTP library. The TPTP library contains ???? problems in the TF1 and TH1 grammars, they are first-order and higher-order problems with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems including real numbers or importing axioms including real numbers. In total our testing suite contains 1754 polymorphic problems. For the first step, to measure the performance of a Zipperposition instance, we chose as a measure of success the number of problems solved by that instance in under 30 seconds with a single thread. This setup mirrors the setting of interactive provers in which an instance of an automatic prover can typically be called for similar durations. As a precaution against overfitting, all tests of this phase are made on 500 problems randomly selected out of the 1754 total problems. 
 
 \subsection{Parameter optimisation}
 \label{param_opti}
 
-Each bound of the monomorphisation process presents a tradeoff: a higher bound will allow for a more exhaustive instantiations of type variables at the cost of taking more time. Ideally, all possible combinations of values for each bound could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, however, this is not feasible. Instead, closely related bounds are grouped together and combinations of values for bounds in these groups are tested. Once the best performing set of values for a group of bounds is found, these values are assigned to the corresponding bounds as the search for the next group begins. This method requires an initial default set of bounds, the values chosen for these are based on preliminary tests during development.
+Each bound of the monomorphisation process presents a tradeoff: a higher bound will allow for a more exhaustive instantiations of type variables at the cost of taking more time. Ideally, all possible combinations of values for each bound could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, however, this is not feasible. Instead, closely related bounds are grouped together and combinations of values for bounds in these groups are tested. Once the best performing set of values for a group of bounds is found, these values are assigned to the corresponding bounds as the search for the next group begins. This method requires an initial default set of bounds and reasonable ranges of values for each bound. We chose these values based on the results of some preliminary evaluations.
 
-A potential pitfall of this approach is to overfit the bounds to the problems used as tests. To mitigate this, 500 test problems were taken at random from our set of 1754 selected TPTP problems. Tests whose results are used to inform the value of bounds or parameters always make use of the 500 problems set.
+A potential pitfall of this approach is to overfit the bounds to the problems used as tests. To mitigate this, 500 test problems were taken at random from our set of 1754 selected TPTP problems. Tests whose results are used to inform the value of bounds or parameters are always limited to the 500 problems set.
 
-Table [ref] groups bounds that influence the maximum number of newly generated monomorphic type arguments per clause per iteration. It is calculated using three bounds [backwards ref] which therefore form a natural group. Our results show that in this configuration, there seems to be certain range within which the values of the bounds have little effect on performance. Beyond this range, however, the number of problems solved drops-off sharply.
+Table~\ref{mono_ty_args} groups bounds that influence the maximum number of newly generated monomorphic type arguments per clause per iteration. It is calculated using three bounds which form a natural group. Our results show that TODO
+
 \begin{table}[th]
 \caption{Evaluation of bounds for monomorphic type argument generation}
 \centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{1.5em}}@{}}
@@ -662,18 +665,16 @@ Table [ref] groups bounds that influence the maximum number of newly generated m
    & &&& \multicolumn{6}{c}{floor} \\
    \multirow{1}{2em}{mult} & 0 & 50 & 100 & 200& 0 & 50 & 100 & 200& 0 & 50 & 100 & 200\\
     \cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(l){10-13} 
-    0         & 170 & 151 & 146 & 136 & 170 & 151 & 144 & 137 & 170 & 170 & 170 & 170\\
-    1         & 130 & 130 & 133 & 132 & 131 & 131 & 131 & 131 & 132 & 131 & 131 & 132\\
-    2         & 130 & 131 & 131 & 132 & 131 & 131 & 132 & 130 & 132 & 132 & 131 & 130\\
-    \(\infty\)& 131 & 132 & 131 & 131 & 131 & 131 & 130 & 131 & 148 & 148 & 146 & 149\\
+    0         & 170 & 151 & 146 & 136 & 170 & 151 & 144 & 137 & 171 & 149 & 137 & 132\\
+    1         & 130 & 130 & 133 & 132 & 131 & 131 & 131 & 131 & 131 & 131 & 131 & 130\\
+    2         & 130 & 131 & 131 & 132 & 131 & 131 & 132 & 130 & 129 & 130 & 130 & 130\\
+    \(\infty\)& 131 & 132 & 131 & 131 & 131 & 131 & 130 & 131 & 145 & 144 & 146 & 147\\
     \bottomrule
 \end{tabular}
+\label{mono_ty_args}
 \end{table}
 
-\bigskip
-\bigskip
-
-Table [ref 2] fills the same role except it is for bounds limiting the number of new non-monomorphic type arguments. The bound values are lower because non-monomorphic type arguments are more explosive. The results are similar to that of table 1 [ref ].
+Table~\ref{nmon_ty_args} fills the same role except it is for bounds limiting the number of new non-monomorphic type arguments. The bound values are lower because non-monomorphic type arguments are more explosive. The results are similar to that of table \ref{mono_ty_args}.
 
 \begin{table}[th]
 \caption{Evaluation of bounds for non-monomorphic type argument generation}
@@ -691,6 +692,7 @@ Table [ref 2] fills the same role except it is for bounds limiting the number of
     \(\infty\) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     \bottomrule
 \end{tabular}
+\label{nmon_ty_args}
 \end{table}
 
 The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related as the construction of monomorphising substitution makes use of all available substitutions. Additionnally, the substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions based on which iteration they were generated in, earlier substitutions are ordered first. The ``random'' ordering randomly shuffles substitutions, preliminary tests clearly established this ordering to be garbage. Finally, the ``segregation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently.
@@ -714,7 +716,7 @@ The substitution generation phase occurs once all type arguments have been gener
 \end{table}
 
 
-Table [ref] groups together the bounds related to the size of the output problem to be passed to the E prover. The absolute cap refers to the maximum total number of formulae passed to E. The multiplier instead limits the total number of newly generated formulae based on the problem's initial number of formuale. The performance of the E prover is highly dependent on the number of formulae it is given. Testing the amount of time allocated to E on the monomorphised problem against the size of the monomorphised problem is necessary to account for this.
+Table \ref{pb_size} groups together the bounds related to the size of the output problem to be passed to the E prover. The absolute cap refers to the maximum total number of formulae passed to E. The multiplier instead limits the total number of newly generated formulae based on the problem's initial number of formuale. The performance of the E prover is highly dependent on the number of formulae it is given. Testing the amount of time allocated to E on the monomorphised problem against the size of the monomorphised problem is necessary to account for this.
 
 \begin{table}[th]
 \caption{Evaluation of bounds directly related to the size of the output problem}
@@ -732,9 +734,10 @@ Table [ref] groups together the bounds related to the size of the output problem
     30 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
     \bottomrule
 \end{tabular}
+\label{pb_size}
 \end{table}
 
-The last table [ref] tests the amount of time that monomorphisation is allowed to run for before being interrupted and returning to the normal operation of Zipperposition against the number of iteration of the monomorphisation algorithm. A higher loop number will lead to longer monomorphisation time, we therefore expect better performance whenever loop number and monomorphisation time are coherent.
+Table \ref{mono_time} tests the amount of time that monomorphisation is allowed to run for before being interrupted and returning to the normal operation of Zipperposition against the number of iteration of the monomorphisation algorithm. A higher loop number will lead to longer monomorphisation time, we therefore expect better performance whenever loop number and monomorphisation time are coherent.
 
 \begin{table}[th]
 \caption{Evaluation of parameters related to the depth of monomorphisation}
@@ -747,9 +750,9 @@ The last table [ref] tests the amount of time that monomorphisation is allowed t
    3 & 0 & 0 & 0 & 0\\
    4 & 0 & 0 & 0 & 0\\
    5 & 0 & 0 & 0 & 0\\
-   
    \bottomrule
 \end{tabular}
+\label{mono_time}
 \end{table}
 
 
