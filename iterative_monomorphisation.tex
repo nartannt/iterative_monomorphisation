@@ -649,11 +649,11 @@ The problems used for these tests are taken from the TPTP library. The TPTP libr
 \subsection{Parameter optimisation}
 \label{param_opti}
 
-Before finding values to assign to the bounds of the monomorphisation algorithm, we must make the choice of the base options with which Zipperposition will be instantiated. Zipperposition has a portfolio mode with several different configurations, we evaluated all base configurations which called E against our test set of 500 problems. The best performing configurationis the basis upon which we test the different monomorphisation options. Our evaluation found that the ``40 e lift'' configuration performed best by solving 136 problems in under 30 seconds each.
+Before finding values to assign to the bounds of the monomorphisation algorithm, we must make the choice of the base options with which Zipperposition will be instantiated. Zipperposition has a portfolio mode with several different configurations, we evaluated all base configurations which called E against our test set of 500 problems. The best performing configuration became the basis upon which we tested the different monomorphisation options. Our evaluation found that the ``40 e lift'' configuration performed best by solving 136 problems in under 30 seconds each.%[TODO recheck this]
 
-Each bound of the monomorphisation process presents a tradeoff: a higher bound will allow for a more exhaustive instantiations of type variables at the cost of taking more time. Ideally, all possible combinations of values for each bound could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, however, this is not feasible. Instead, we group closely related bounds together and test combinations of values for bounds in these groups. Once we find the best performing set of values for a group of bounds, we assign these values to the corresponding bounds as we begin the search for the next group. This method requires an initial default set of bounds and reasonable ranges of values for each bound. We chose these values based on the results of preliminary evaluations.
+Each bound of the monomorphisation process presents a tradeoff: a higher bound allows for a more exhaustive instantiations of type variables at the cost of taking more time. Ideally, all possible combinations of values for all bounds could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, however, this is not feasible. Instead, we group closely related bounds together and test combinations of values for bounds in these groups. Once we find the best performing set of values for a group of bounds, we assign these values to the corresponding bounds as we begin the search for the next group. This method requires an initial default set of bounds and reasonable ranges of values for each bound. We chose these values based on the results of preliminary evaluations.
 
-Table~\ref{mono_ty_args} groups bounds that influence the maximum number of newly generated monomorphic type arguments per clause per iteration. It is calculated using three bounds which form a natural group. Our results show that generating no new monomorphic type arguments yields significantly better results. This is only possible because generating non-monomorphic type arguments can generate substitutions which instantiate one or more type variables.
+Table~\ref{mono_ty_args} groups bounds that influence the maximum number of newly generated monomorphic type arguments per clause per iteration. The limit of newly generated type arguments per clause is determined by three components which form a natural group of bounds. Our results show that generating no new monomorphic type arguments seems to be the best approach. It is possible to monorphise formuale without generating monomorphic type arguments because non-monomorphic type argument generation can generate substitutions which instantiate one or more type variables and it is these substitutions which are used to monomorphise formulae.
 
 \begin{table}[th]
 \caption{Evaluation of bounds for monomorphic type argument generation}
@@ -674,7 +674,7 @@ Table~\ref{mono_ty_args} groups bounds that influence the maximum number of newl
 \label{mono_ty_args}
 \end{table}
 
-Table~\ref{nmon_ty_args} fills the same role except it is for bounds limiting the number of new non-monomorphic type arguments. The bound values are lower because in preliminary evaluation we found non-monomorphic type arguments to be explosive. The results confirm that it is non-monomorphic argument generation which drives the creation of useful non-monomorphic clauses. This is indicatied by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Additionally, we observe that removing all bounds considerably reduces performance. TODO check that 124 is what we get if we just run Zipperposition for 10 seconds (maybe with a few extra problems that are easily monomorphised)
+Table~\ref{nmon_ty_args} fills the same role except it is for bounds limiting the number of new non-monomorphic type arguments. The bound values are lower because in preliminary evaluation we found non-monomorphic type arguments to be explosive. The results confirm that it is non-monomorphic argument generation which drives the creation of useful non-monomorphic clauses. This is indicatied by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Additionally, we observe that removing all bounds considerably reduces performance. %TODO check that 124 is what we get if we just run Zipperposition for 10 seconds (maybe with a few extra problems that are easily monomorphised)
 
 \begin{table}[th]
 \caption{Evaluation of bounds for non-monomorphic type argument generation}
@@ -684,10 +684,10 @@ Table~\ref{nmon_ty_args} fills the same role except it is for bounds limiting th
    & \multicolumn{4}{c}{500} &\multicolumn{4}{c}{1000} & \multicolumn{4}{c}{\(\infty\)}\\
    \cmidrule(l){2-13}
    & &&& \multicolumn{6}{c}{floor} \\
-   \multirow{1}{2em}{mult} & 0 & 10 & 50 & 100& 0 & 10 & 50 & 100& 0 & 10 & 50 & 100\\
+   \multirow{1}{3em}{mult} & 0 & 10 & 50 & 100& 0 & 10 & 50 & 100& 0 & 10 & 50 & 100\\
     \cmidrule(lr){2-5} \cmidrule(lr){6-9} \cmidrule(l){10-13} 
     0          & 124 & 170 & 171 & 170 & 124 & 170 & 171 & 171 & 124 & 170 & 171 & 170\\
-    0.5        &165 &171&\bf{172}& 170 & 165 & 171 & 171 & 170 & 165 & 171 & 171 & 170\\
+    0.5        & 165&171&\bf{172}& 170 & 165 & 171 & 171 & 170 & 165 & 171 & 171 & 170\\
     1          & 170 & 171 & 171 & 171 & 170 & 171 & 171 & 171 & 170 & 171 & 171 & 171\\
     \(\infty\) & 171 & 171 & 171 & 171 & 168 & 169 & 167 & 168 & 124 & 124 & 124 & 124\\
     \bottomrule
@@ -695,24 +695,25 @@ Table~\ref{nmon_ty_args} fills the same role except it is for bounds limiting th
 \label{nmon_ty_args}
 \end{table}
 
-The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related as the construction of monomorphising substitution makes use of all available substitutions. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions based on which iteration they were generated in, earlier substitutions are ordered first. The ``random'' ordering randomly shuffles substitutions, preliminary tests clearly established this ordering to be garbage. Finally, the ``segregation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently.
+The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related as the construction of monomorphising substitutions makes use of all available substitutions. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions based on which iteration they were generated in, earlier substitutions are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``segregation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently. Table \ref{subst_gen_table} shows that the specific choice of bounds limiting the number of substitutions generated has very little impact on overall performance contrary to the ordering heuristic.
 \begin{table}[th]
 \caption{Evaluation of bounds for substitution generation}
-\centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{1em}}@{}}
+\centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
    & &&&& \multicolumn{4}{c}{ordering} \\
    & \multicolumn{4}{c}{age} & \multicolumn{4}{c}{random} & \multicolumn{4}{c}{segregation}\\
    \cmidrule(l){2-13}
    & &&&& \multicolumn{4}{c}{mono subst}\\
-   \multirow{1}{4em}{subst cap} & 2 & 5 & 7 & 10 & 2 & 5 & 7 & 10 & 2 & 5 & 7 & 10 \\
+   \multirow{1}{5.5em}{subst cap} & 2 & 5 & 7 & 10 & 2 & 5 & 7 & 10 & 2 & 5 & 7 & 10 \\
    \cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(l){10-13}
-   50   & 0 & 0 & 0 & 0& 0 & 0 & 0 & 0& 0 & 0 & 0 & 0\\
-   100   & 0 & 0 & 0 & 0& 0 & 0 & 0 & 0& 0 & 0 & 0 & 0\\
-   200   & 0 & 0 & 0 & 0& 0 & 0 & 0 & 0& 0 & 0 & 0 & 0\\
-   \(\infty\) & 0 & 0 & 0 & 0& 0 & 0 & 0 & 0& 0 & 0 & 0 & 0\\
+   50         & 158 & 158 & 158 & 158& 169 & 169 & 169 & 169& 167 & 170 & 170 & 171\\
+   100        & 158 & 158 & 158 & 158& 169 & 169 & 169 & 169& 167 & 170 & 170 & 171\\
+   200        & 158 & 158 & 158 & 158& 169 & 169 & 169 & 169& 167 & 171 & 170 & 171\\
+   \(\infty\) & 158 & 158 & 158 & 158& 169 & 169 & 169 & 169& 167 & 170 & 170 & 171\\
    
    \bottomrule
 \end{tabular}
+\label{subst_gen_table}
 \end{table}
 
 
