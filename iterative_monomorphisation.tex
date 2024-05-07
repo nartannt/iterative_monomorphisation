@@ -1,6 +1,7 @@
 \documentclass[]{ceurart}
 
 \usepackage{soul}
+\usepackage{multicol}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{caption}
 \usepackage{booktabs}
@@ -47,6 +48,7 @@
 \SetKwFunction{GenFormulae}{generate\_mono\_formulae}
 \SetKw{ST}{such that}
 
+% bounds keywords
 \SetKwData{MonoCap}{\textcolor{ourblueviolet}{mono\_cap}}
 \SetKwData{MonoMult}{\textcolor{ourblueviolet}{mono\_mult}}
 \SetKwData{MonoFloor}{\textcolor{ourblueviolet}{mono\_floor}}
@@ -55,6 +57,10 @@
 \SetKwData{PolyFloor}{\textcolor{ourblueviolet}{nonm\_floor}}
 \SetKwData{MaxMono}{\textcolor{ourblueviolet}{max\_mono\_args}}
 \SetKwData{MaxPoly}{\textcolor{ourblueviolet}{max\_nonm\_args}}
+\SetKwData{Limit}{\textcolor{ourblueviolet}{total\_new\_formulae}}
+\SetKwData{MonoSubstsLimit}{\textcolor{ourblueviolet}{max\_substs}}
+\SetKwData{SubstLimit}{\textcolor{ourblueviolet}{substitution\_limit}}
+\SetKwData{Loop}{\textcolor{ourblueviolet}{num\_loops}}
 \SetKwData{TypeVars}{type\_variables}
 \SetKwData{UsedSubst}{\(S\)}
 
@@ -100,7 +106,6 @@
 %   - higher-order -> higher order
 %   - TH1 with ugly 1
 %   - correctly spelled TPTP, Leo-III, Zipperposition, E, Vampire
-%   - use of formula vs clause
 %   - polymorphic and monomorphic
 %   - title of bits of the algorithms
 %   - TH1 ugly for height of 1 reasons, can be fixed with case feature
@@ -323,9 +328,7 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
 \Fn(){\(\IterMono(\Phi)\)}{
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{To}{to}
 
-   \SetKwData{Loop}{num\_loops}\SetKwData{NewFormulae}{\(\Psi\)}
    \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(S\)}
-   \SetKwData{Limit}{total\_new\_formulae}
 
    \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step} 
    \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{mono\_substs}
@@ -469,7 +472,6 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 \SetKwFunction{SubstGen}{matches}
 \Fn(){\(\SubstGen(M, N(\varphi))\)}{
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}
-   \SetKwData{SubstLimit}{substitution\_limit}
    \SetKwFunction{Success}{Success}\SetKwFunction{Compatible}{compatible}
    \SetKwFunction{Match}{match}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
@@ -529,7 +531,7 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 \Fn(){\(\GenFormulae(\Phi, S)\)}{
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{To}{to}
 
-   \SetKwData{Loop}{num\_loops}\SetKwData{NewFormulae}{\(\Psi\)}
+   \SetKwData{NewFormulae}{\(\Psi\)}
    \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(S\)}
    \SetKwData{Limit}{total\_new\_formulae}
 
@@ -580,7 +582,6 @@ The various bounds presented here overlap to some extent. For instance, having a
    \SetKwFunction{Compatible}{compatible}
    \SetKwFunction{MonoSubst}{mono\_substs}
    \SetKwFunction{Domain}{domain}
-   \SetKwData{Limit}{max\_substs}
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
    \SetKw{Let}{let}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
@@ -605,7 +606,7 @@ The various bounds presented here overlap to some extent. For instance, having a
       \Let \(\alpha \) \ST \(\alpha\in V\)\;
       \ForEach{\(\sigma_{\negvthinspace\Delta}\in S\) \ST \(\alpha\in\Domain(\sigma_{\negvthinspace\Delta})\) \And \(\Compatible(\sigma,\sigma_{\negvthinspace\Delta})\)}{
          \textcolor{ourblueviolet}{
-         \eIf{\(|S_{\text{res}}|<\Limit\)}{
+         \eIf{\(|S_{\text{res}}|<\MonoSubstsLimit\)}{
             \textcolor{black}{
             \(S_{\text{res}}\leftarrow \MonoSubst(S, V\setminus\Domain(\sigma_{\negvthinspace\Delta}), S_{\text{res}}, \sigma_{\negvthinspace\Delta}\circ\sigma)\)\;}
          }
@@ -626,14 +627,14 @@ Once all monomorphisation iterations have been completed, we are left with a set
 
 The \emph{generate\_mono\_formulae} function is given in Figure~\ref{gen_formulae}.
 It generates monomorphising substitutions and applies them to the polymorphic formula of the input problem that they instantiate. Since the substitutions are monomorphising relative to the formula they applied to, the resulting formulae are monomorphic. The \textcolor{ourblueviolet}{total\_new\_formulae} bound is used to control the total number of new formulae. It overlaps with \textcolor{ourblueviolet}{max\_substs} but can be useful to set an absolute limit on the size of the final problem.
-%In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected by the number of clauses it is given.
+%In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected by the number of formuale it is given.
 
 To monomorphise a polymorphic formula, we first compute its {monomorphising substitutions} using the \emph{mono\_substs} function given in Figure~\ref{mono_substs}.
 A substitution \(\sigma\) is \emph{monomorphising} for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic. Such substitutions are computed using a recursive function. Given a set \(V\) of type variables and a set \(S\) of substitutions, it will select a substitution \(\sigma_{\negvthinspace\Delta}\) from \(S\) that instantiates at least one of the type variables in \(V\). It is important that \(\sigma_{\negvthinspace\Delta}\) be compatible with \(\sigma\) so that they can be composed and the function recursively called to instantiate the remaining type variables.
 
 The Zipperposition implementation of the \emph{mono\_substs} function uses a map from type variables to substitutions instead of a set to filter the relevant substitutions from \(S\) more efficiently. The \textcolor{ourblueviolet}{max\_substs} bound exists for two main reasons:
 \begin{enumerate}
-   \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic clause per initial polymorphic clause. Generating an excessive number of new clauses can flood the downstream prover. The final number of output formulae is ensured to be at most \(|\Phi|\cdot \text{\textcolor{ourblueviolet}{max\_substs}}\).
+   \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic formula per initial polymorphic formula. Generating an excessive number of new formulae can flood the downstream prover. The final number of output formulae is ensured to be at most \(|\Phi|\cdot \text{\textcolor{ourblueviolet}{max\_substs}}\).
    \item The \emph{mono\_substs} function is the most explosive part of the algorithm. If \(S\) contains \(n\) substitutions that each instantiate exactly one of \(v\) different type variables, up to \(n^v\) monomorphising substititions may be generated. Recall that the total number of type argument tuples that are used to generate \(S\) can be doubly exponential in the number of loop iterations.
 \end{enumerate}
 %[This function can be thought of as exploring the tree of all possible monomorphising substitutions, \(S_{\text{res}}\) would represent the leaves that have already been visited and \(\sigma\) would represent the current node of the tree.]
@@ -644,17 +645,37 @@ The Zipperposition implementation of the \emph{mono\_substs} function uses a map
 
 The monomorphisation algorithm is parametrised by many bounds. The first part of the evaluation process is to find appropriate values for these bounds. The second part compares the performance of Zipperposition without and with monomorphisation. The third part compares the performance of different provers on polymorphic problems and their monomorphised counterparts.
 
-The benchmarks are taken from the TPTP library \cite{tptp}. The TPTP library version TODO contains 1765 problems in the TF1 and TH1 grammars, corresponding respectively to first-order and higher-order logic with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems that include real numbers. In total, our benchmark suite contains 1754 polymorphic problems. We chose as a measure of success for a given prover (or prover configuration) the number of problems that could each be solved by the prover in under 30 seconds with a single thread. This corresponds to the default time limit in Sledgehammer.
+The benchmarks are taken from the TPTP library \cite{tptp}. The TPTP library, in version 8.2.0, contains 1765 problems in the TF1 and TH1 grammars, corresponding respectively to first-order and higher-order logic with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems that include real numbers. In total, our benchmark suite contains 1754 polymorphic problems. We chose as a measure of success for a given prover (or prover configuration) the number of problems that could each be solved by the prover in under 30 seconds with a single thread. This corresponds to the default time limit in Sledgehammer.
 
 \subsection{Parameter optimisation}
 \label{param_opti}
 
-As a precaution against overfitting, the part of the evaluation related to parameter optimisation was carried out on 500 randomly chosen problems out of the 1754 selected problems, and the rest of the evaluation was carried out on the remaining 1254 problems. Before finding values to assign to the bounds of the monomorphisation algorithm, we must make the choice of the base options used to run Zipperposition. Zipperposition has a portfolio mode with several configurations. In a preliminary experiment, we informally evaluated all portfolio configurations that called E against our benchmark suite of 500 problems without using monomorphisation. The best performing configuration became the base configuration, which we used as a basis to evaluate the different monomorphisation options. Our informal evaluation found that the so-called \verb|40_e_lift| configuration performed best by proving 136 problems.%[TODO recheck this]
+Each bound of the monomorphisation process presents a tradeoff: a higher bound allows for a more exhaustive instantiations of type variables at the cost of taking more time. Ideally, all possible combinations of values for all bounds could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, however, this is not feasible. Instead, we group closely related bounds together and test combinations of values for bounds in these groups. Once we find the best performing set of values for a group of bounds, we assign these values to the corresponding bounds as we begin the search for the next group. If several groups of bounds result in the same number of proved problems, the most constraining bound values are selected, and shown in bold in Tables \ref{mono_ty_args} to \ref{mono_time}.
 
-Each bound of the monomorphisation process presents a tradeoff: a higher bound allows for a more exhaustive instantiations of type variables at the cost of taking more time. Ideally, all possible combinations of values for all bounds could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, however, this is not feasible. Instead, we group closely related bounds together and test combinations of values for bounds in these groups. Once we find the best performing set of values for a group of bounds, we assign these values to the corresponding bounds as we begin the search for the next group. If several groups of bounds result in the same number of proved problems, the most constraining bound values are selected,
-and shown in bold in Tables \ref{mono_ty_args} to \ref{xxx}. This method requires an initial default set of bounds and reasonable ranges of values for each bound. We determined these values based on the results of preliminary experiments on the benchmark suite of 500 problems.
+As a precaution against overfitting, the part of the evaluation related to parameter optimisation and all related preliminary evaluations were carried out on 500 randomly chosen problems out of the 1754 selected problems. The rest of the evaluation was carried out on the remaining 1254 problems. Before finding values to assign to the bounds of the monomorphisation algorithm, we must make the choice of the base options used to run Zipperposition. Zipperposition has a portfolio mode with several configurations. Because the space of possible base configurations is too large to evaluate, we informally evaluated, in a preliminary experiment, all portfolio configurations that called E (against our benchmark suite of 500 problems)? without using monomorphisation. The best performing configuration became the base configuration, which we used as a basis to evaluate the different monomorphisation options. Our informal evaluation found that the so-called \verb|40_e_lift| configuration performed best by proving 136 problems. %[TODO recheck this]
+We conducted additionnal informal preliminary evaluations (on the benchmark suite of 500 problems)? to find appropriate default values and approriate test ranges for the monomorphisation bounds. We started with the base configuration \verb|40_e_lift|, with the following values for the monomorphisation bounds:
 
-Table~\ref{mono_ty_args} groups bounds that influence the maximum number of newly generated monomorphic type arguments per clause per iteration. The limit on newly generated type arguments is determined by three components that form a natural group of bounds. The table shows that generating no new monomorphic type arguments seems to be the best approach. This result may seem counterintuitive, but it is possible to monomorphise formulae without generating monomorphic type arguments. This is because non-monomorphic type argument generation can generate substitutions that instantiate one or more type variables, and it is these substitutions that are used to monomorphise formulae.
+\begin{multicols}{2}% 3 columns?
+\begin{itemize}
+   \item \MonoCap: irrelevant
+   \item \MonoMult: irrelevant
+   \item \MonoFloor: irrelevant
+   \item \PolyCap: \(\infty\)
+   \item \PolyMult: \(1\)
+   \item \PolyFloor: \(50\)
+   \item substitution ordering: segregation
+   \item \SubstLimit: \(\infty\)
+   \item \MonoSubstsLimit: \(10\)
+   \item \Limit: \(2000\)
+   \item new formulae limit multiplier: \(0\)
+   \item E timeout: \(30\)
+   \item monomorphisation timeout: \(20\)
+   \item \Loop: \(4\)
+\end{itemize}
+\end{multicols}
+Monomorphistion (and the subsequent call to E) occurs at the beginning of the invocation of Zipperposition. Departing from the original \verb|40_e_lift| configuration, which would otherwise call E after 8\% of the total alloted time for Zipperposition has passed.
+
+Table~\ref{mono_ty_args} groups bounds that influence the maximum number of newly generated monomorphic type arguments per formuala per iteration. The limit on newly generated type arguments is determined by three components that form a natural group of bounds. The table shows that generating no new monomorphic type arguments seems to be the best approach. This result may seem counterintuitive, but it is possible to monomorphise formulae without generating monomorphic type arguments. This is because non-monomorphic type argument generation can generate substitutions that instantiate one or more type variables, and it is these substitutions that are used to monomorphise formulae.
 
 \begin{table}[th]
 \caption{Evaluation of bounds for monomorphic type argument generation}
@@ -675,7 +696,7 @@ Table~\ref{mono_ty_args} groups bounds that influence the maximum number of newl
 \label{mono_ty_args}
 \end{table}
 
-Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except that it evaluates the bounds limiting the number of new \emph{non-}monomorphic type arguments. The bound values are lower because we found non-monomorphic type arguments to be explosive in preliminary evaluations. The table confirms that non-monomorphic type argument generation drives the creation of useful non-monomorphic formulae. This is indicated by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Performance of the monomorphisation algorithm seems largely unaffected by the bounds' values when within a certain range but drops off significantly beyond this range.
+Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except that it evaluates the bounds limiting the number of new \emph{non-}monomorphic type arguments. The bound values are lower because we found non-monomorphic type arguments to be explosive in preliminary evaluations. The table confirms that non-monomorphic type argument generation drives the creation of useful non-monomorphic formulae. This is indicated by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Performance of the monomorphisation algorithm seems to plateau for a large range of the tested values for these bounds and drops off sharply beyond.
 %TODO check that 124 is what we get if we just run Zipperposition for 10 seconds (maybe with all additionnal problems that are easily monomorphised)
 
 \begin{table}[th]
@@ -721,40 +742,42 @@ The substitution generation phase occurs once all type arguments have been gener
 \end{table}
 
 
-Table \ref{pb_size} groups together the bounds related to the size of the output problem to be passed to the E prover. The absolute cap is the maximum number of formulae passed to E. The multiplier limits the total number of newly generated formulae based on the problem's initial number of formulae. The performance of the E prover is highly dependent on the number of formulae it is given. To account for this, we test the effects of the amount of time allocated to E on the monomorphised problem against the size of the monomorphised problem. We expect degraded performance when E is given many formulae but little time and few formulae but a lot of time.
+Table \ref{pb_size} groups together the bounds related to the size of the output problem to be passed to the E prover. The absolute cap is the maximum number of formulae passed to E. The multiplier limits the total number of newly generated formulae based on the problem's initial number of formulae. The performance of the E prover is highly dependent on the number of formulae it is given. To account for this, we test the effects of the amount of time allocated to E on the monomorphised problem against the size of the monomorphised problem. We observe that the timeout of E has the biggest impact on performance whilst the precise limits on problem size seem to have little effect.
+
 
 \begin{table}[th]
 \caption{Evaluation of bounds directly related to the size of the output problem}
-\centering\begin{tabular}{@{}l*{9}{>{\centering\arraybackslash}p{1.1em}}@{}}
+\centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
-   & &&& \multicolumn{3}{c}{cap} \\
-   & \multicolumn{3}{c}{500} & \multicolumn{3}{c}{2000} & \multicolumn{3}{c}{\(\infty\)}\\
-   \cmidrule(l){2-10}
-   & &&& \multicolumn{3}{c}{multiplier} \\
-    \multirow{1}{5.4em}{E timeout (s)} & 1 & 2 & 3 & 1 & 2 & 3 & 1 & 2 & 3 \\
-    \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(l){8-10}
-    2  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    5  & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    10 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    30 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    \bottomrule
+   & &&&& \multicolumn{4}{c}{formula cap} \\
+   & \multicolumn{4}{c}{500} & \multicolumn{4}{c}{2000} & \multicolumn{4}{c}{\(\infty\)}\\
+   \cmidrule(l){2-13}
+   & &&&& \multicolumn{4}{c}{formula multiplier}\\
+   \multirow{1}{5.5em}{E timeout (s)} & 1 & 2 & 3 & \(\infty\)& 1 & 2 & 3 & \(\infty\)& 1 & 2 & 3 & \(\infty\)\\
+   \cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(l){10-13}
+   2          & 155 & 154 & 155 & 155 & 154 & 154 & 155 & 154 & 155 & 154 & 156 & 137\\
+   5          & 163 & 164 & 164 & 163 & 163 & 164 & 163 & 163 & 163 & 162 & 163 & 137\\
+   10         & 166 & 167 & 166 & 166 & 166 & 166 & 166 & 166 & 165 & 166 & 167 & 137\\
+   30         &169&\bf{171}&170 & 169 & 170 & 170 & 170 & 170 & 163 & 169 & 170 & 124\\
+   \bottomrule
 \end{tabular}
 \label{pb_size}
 \end{table}
 
-For larger problems, the monomorphisation algorithm may timeout despite the bounds. In these cases neither Zipperposition nor E will have had a chance to attempt to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table \ref{mono_time} tests the amount of time that monomorphisation is allowed to run for against the number of iteration of the monomorphisation algorithm.
+For larger problems, the monomorphisation algorithm may timeout despite the bounds. In these cases neither Zipperposition nor E will have had a chance to attempt to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table \ref{mono_time} tests the amount of time that monomorphisation is allowed to run for against the number of iteration of the monomorphisation algorithm. The number of iterations and timeout seem to have almost no effect on the performance of the monomorphisation algorithm.
 
 \begin{table}[th]
 \caption{Evaluation of parameters related to the depth of monomorphisation}
-\centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1em}}@{}}
+\centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
    & \multicolumn{4}{c}{mono time} \\
-   \multirow{1}{4.5em}{loop nb} & 5 & 10 & 20 & 30\\
+   \multirow{1}{4em}{loop nb} & 5 & 10 & 20 & 30\\
    \midrule
-   2 & 0 & 0 & 0 & 0\\
-   3 & 0 & 0 & 0 & 0\\
-   4 & 0 & 0 & 0 & 0\\
-   5 & 0 & 0 & 0 & 0\\
+   2     &\bf{171}&171&171 & 170\\
+   3     & 170 & 171 & 170 & 169\\
+   4     & 170 & 171 & 170 & 169\\
+   5     & 169 & 169 & 169 & 168\\
+   6     & 169 & 169 & 169 & 168\\
    \bottomrule
 \end{tabular}
 \label{mono_time}
