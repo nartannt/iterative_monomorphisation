@@ -650,10 +650,10 @@ The benchmarks are taken from the TPTP library \cite{tptp}. The TPTP library, in
 \subsection{Parameter optimisation}
 \label{param_opti}
 
-Each bound of the monomorphisation process presents a tradeoff: a higher bound allows for a more exhaustive instantiations of type variables at the cost of taking more time. Ideally, all possible combinations of values for all bounds could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, however, this is not feasible. Instead, we group closely related bounds together and test combinations of values for bounds in these groups. Once we find the best performing set of values for a group of bounds, we assign these values to the corresponding bounds as we begin the search for the next group. If several groups of bounds result in the same number of proved problems, the most constraining bound values are selected, and shown in bold in Tables \ref{mono_ty_args} to \ref{mono_time}.
+Each bound of the monomorphisation process presents a tradeoff: a higher bound allows for a more exhaustive instantiations of type variables at the cost of taking more time. Ideally, all possible combinations of values for all bounds could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, however, this is not feasible. Instead, we group closely related bounds together and test combinations of values for bounds in these groups. Once we find the best performing set of values for a group of bounds, we assign these values to the corresponding bounds as we begin the search for the next group. If several groups of bounds result in the same number of proved problems, the most constraining bound values are selected, they are shown in bold in Tables \ref{mono_ty_args} to \ref{mono_time}.
 
-As a precaution against overfitting, the part of the evaluation related to parameter optimisation and all related preliminary evaluations were carried out on 500 randomly chosen problems out of the 1535 selected problems. The rest of the evaluation was carried out on the remaining 1034 problems. Before finding values to assign to the bounds of the monomorphisation algorithm, we must make the choice of the base options used to run Zipperposition. Zipperposition has a portfolio mode with several configurations. Because the space of possible base configurations is too large to evaluate, we informally evaluated, in a preliminary experiment, all portfolio configurations that called E against our benchmark suite of 500 problems without using monomorphisation. The best performing configuration became the base configuration, which we used as a basis to evaluate the different monomorphisation options. Our informal evaluation found that the so-called \verb|40_e_lift| configuration performed best by proving xxx problems. %[TODO recheck this]
-We conducted additionnal informal preliminary evaluations (on the 500 problems benchmark suite) to find appropriate default values and test ranges for the monomorphisation bounds. We started with the base configuration \verb|40_e_lift|, with the following default values for the monomorphisation bounds:
+As a precaution against overfitting, we carried out the part of the evaluation related to parameter optimisation and all preliminary evaluations on 500 randomly chosen problems out of the 1534 selected problems. We carried out the rest of the evaluation on the remaining 1034 problems. Before finding values to assign to the bounds of the monomorphisation algorithm, we must make the choice of the base options used to run Zipperposition. Zipperposition has a portfolio mode with several configurations. Because the space of possible base configurations is too large to evaluate, we informally? evaluated, in a preliminary experiment, all portfolio configurations that called E against our benchmark suite of 500 problems, without using monomorphisation. The best performing configuration became the base configuration, which we used as a basis to evaluate the different monomorphisation options. Our informal? evaluation found that the so-called \verb|40_b.comb| configuration performed best by proving 131 problems. %[TODO discuss with Jasmin]
+We conducted additionnal informal preliminary evaluations (on the 500 problems benchmark suite) to find appropriate default values and test ranges for the monomorphisation bounds. We started the option evaluation process with base configuration \verb|40_b.comb|, with the following default values for the monomorphisation bounds:
 
 \begin{multicols}{2}% 3 columns?
 \begin{itemize}
@@ -673,7 +673,7 @@ We conducted additionnal informal preliminary evaluations (on the 500 problems b
    \item \Loop: \(4\)
 \end{itemize}
 \end{multicols}
-Monomorphistion (and the subsequent call to E) occurs at the beginning of the invocation of Zipperposition. Departing from the original \verb|40_e_lift| configuration, which would otherwise call E after 8\% of the total alloted time for Zipperposition has passed. All others options either appear explicitely in the following tables or have been left unmodified.
+Monomorphistion (and the subsequent call to E) occurs at the beginning of the invocation of Zipperposition. Departing from the original \verb|40_b.comb| configuration, which would otherwise call E after 15\% of the total alloted time for Zipperposition has passed. All others options either appear explicitely in the following tables or have been left unmodified.
 
 Table~\ref{mono_ty_args} groups bounds that influence the maximum number of newly generated monomorphic type arguments per formuala per iteration. The limit on newly generated type arguments is determined by three components that form a natural group of bounds. The table shows that generating no new monomorphic type arguments seems to be the best approach. This result may seem counterintuitive, but it is possible to monomorphise formulae without generating monomorphic type arguments. This is because non-monomorphic type argument generation can generate substitutions that instantiate one or more type variables, and it is these substitutions that are used to monomorphise formulae.
 
@@ -696,7 +696,7 @@ Table~\ref{mono_ty_args} groups bounds that influence the maximum number of newl
 \label{mono_ty_args}
 \end{table}
 
-Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except that it evaluates the bounds limiting the number of new \emph{non-}monomorphic type arguments. The bound values are lower because we found non-monomorphic type arguments to be explosive in preliminary evaluations. The table confirms that non-monomorphic type argument generation drives the creation of useful non-monomorphic formulae. This is indicated by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Performance of the monomorphisation algorithm seems to plateau for a large range of the tested values drops off sharply beyond.
+Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except that it evaluates the bounds limiting the number of new \emph{non-}monomorphic type arguments. The bound values are lower because we found non-monomorphic type arguments to be explosive in preliminary evaluations. The table confirms that non-monomorphic type argument generation drives the creation of useful non-monomorphic formulae. This is indicated by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Performance of the monomorphisation algorithm seems to plateau for a large range of the tested values drops off beyond.
 %TODO check that 124 is what we get if we just run Zipperposition for 10 seconds (maybe with all additionnal problems that are easily monomorphised)
 
 \begin{table}[th]
@@ -718,21 +718,20 @@ Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except 
 \label{nmon_ty_args}
 \end{table}
 
-The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related through the role they play in the construction of monomorphising substitutions. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``segregation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of substitutions generated has very little impact on overall performance contrary to the ordering heuristic.
+%The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related through the role they play in the construction of monomorphising substitutions. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``segregation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of substitutions generated has very little impact on overall performance contrary to the ordering heuristic.
+The substitution generation phase occurs once all type arguments have been generated. The bound limiting the number of monomorphising substiutions per formula is directly related to the ordering which dictates how such monomorphising substitutions are generated. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``segregation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of monomorphising substitutions only seems to affect performance when the ``segregation'' heuristic is used.
+% TODO find a better term than "segregation heuristic"
 \begin{table}[th]
 \caption{Evaluation of bounds for substitution generation}
-\centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{1.5em}}@{}}
+\centering\begin{tabular}{@{}l*{3}{>{\centering\arraybackslash}p{5em}}@{}}
    \toprule
-   & &&&& \multicolumn{4}{c}{ordering} \\
-   & \multicolumn{4}{c}{age} & \multicolumn{4}{c}{random} & \multicolumn{4}{c}{segregation}\\
-   \cmidrule(l){2-13}
-   & &&&& \multicolumn{4}{c}{mono subst}\\
-   \multirow{1}{5.5em}{subst cap} & 2 & 5 & 7 & 10 & 2 & 5 & 7 & 10 & 2 & 5 & 7 & 10 \\
-   \cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(l){10-13}
-   5          & 162 & 162 & 162 & 162 & 183 & 183 & 183 & 183 & 179 & 186 & 186 &\bf{188}\\
-   50         & 162 & 162 & 162 & 162 & 183 & 183 & 183 & 183 & 179 & 186 & 186 & 188 \\
-   100        & 162 & 162 & 162 & 162 & 183 & 183 & 183 & 183 & 179 & 186 & 186 & 188 \\
-   \(\infty\) & 162 & 162 & 162 & 162 & 184 & 184 & 183 & 183 & 179 & 186 & 186 & 188 \\
+   & & ordering \\
+   \multirow{1}{5em}{mono subst} & age & random & segregation\\
+   \cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(l){4-4}
+   2       & 162 & 183 & 179 \\
+   5       & 162 & 183 & 186 \\
+   7       & 162 & 183 & 186 \\
+   10      & 162 & 183 & \bf{188} \\
    \bottomrule
 \end{tabular}
 \label{subst_gen_table}
@@ -752,10 +751,10 @@ Table \ref{pb_size} groups together the bounds related to the size of the output
    & &&&& \multicolumn{4}{c}{formula multiplier}\\
    \multirow{1}{5.5em}{E timeout (s)} & 1 & 2 & 3 & \(\infty\)& 1 & 2 & 3 & \(\infty\)& 1 & 2 & 3 & \(\infty\)\\
    \cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(l){10-13}
-   2          &&&&&&&&&&&&\\
-   5          &&&&&&&&&&&&\\
-   10         &&&&&&&&&&&&\\
-   30         &&&&&&&&&&&&\\
+   2          & 182 & 181 & 183 & 180 & 184 & 184 & 182 & 183 & 176 & 180 & 181 & 149 \\
+   5          & 189 & 189 & 189 & 188&\bf{190}&190& 190 & 190 & 180 & 184 & 187 & 149 \\
+   10         & 189 & 189 & 189 & 188 & 190 & 190 & 190 & 190 & 180 & 184 & 187 & 148 \\
+   30         & 187 & 187 & 187 & 186 & 188 & 188 & 188 & 188 & 175 & 180 & 185 & 125 \\
    \bottomrule
 \end{tabular}
 \label{pb_size}
@@ -770,11 +769,11 @@ For larger problems, the monomorphisation algorithm may timeout despite the boun
    & \multicolumn{4}{c}{mono time} \\
    \multirow{1}{4em}{loop nb} & 5 & 10 & 20 & 30\\
    \midrule
-   2     &&&&\\
-   3     &&&&\\
-   4     &&&&\\
-   5     &&&&\\
-   6     &&&&\\
+   2     & 191 & 191&\bf{192}&190\\
+   3     & 191 & 191 & 191 & 190 \\
+   4     & 190 & 190 & 190 & 189 \\
+   5     & 190 & 190 & 190 & 189 \\
+   6     & 189 & 190 & 189 & 189 \\
    \bottomrule
 \end{tabular}
 \label{mono_time}
@@ -792,8 +791,8 @@ Note that Zipperposition's portfolio mode seems to consider timeouts to be more 
    \toprule
    & without E & with E & Union \\
    \midrule
-   500 problems benchmark   & 152 & 185 & 195 (-10 +43) \\
-   fresh problems benchmark & 337 & 385 & 419 (-34 +82)\\
+   500 problems benchmark   & 157 & 213 & 219 (-6 +62) \\
+   fresh problems benchmark & 341 & 442 & 467 (-25 +126)\\
    \bottomrule
 \end{tabular}
 \end{table}
