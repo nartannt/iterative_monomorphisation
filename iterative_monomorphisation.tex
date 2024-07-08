@@ -868,13 +868,14 @@ about the logical structure of the formulas in which symbols occur. For
 example, a lemma $\sym{p}\langle\alpha\rangle$ cannot be used to prove the
 conjecture $\lnot \sym{p}\langle\ty{nat}\rangle$ because of the incompatible
 polarities, but our procedure instantiates $\alpha$ with $\ty{nat}$ regardless.
-Second, some automatic provers as well as tools like Sledgehammer include
-a relevance filter that heuristically select a subset of the available axioms;
-filters such as SInE \cite{xxx} and MePo \cite{xxx} are iterative and could be
-interleaved with monomorphisation. Third, although one would expect native
-implementations of polymorphism to outperform any preprocessor, our evaluation
-clearly shows that this is not the case, therefore indicating that there is
-considerable room for improvement on the native front.
+Second, some automatic provers as well as tools like Sledgehammer include a
+relevance filter that heuristically selects a subset of the available axioms;
+filters such as MePo \cite{meng-paulson-2009} and SInE
+\cite{hoder-voronkov-2011} are iterative and could be interleaved with
+monomorphisation. Third, although one would expect native implementations of
+polymorphism to outperform any preprocessor, our evaluation clearly shows that
+this is not the case, therefore indicating that there is considerable room for
+improvement on the native front.
 
 \section*{Acknowledgements}
 
