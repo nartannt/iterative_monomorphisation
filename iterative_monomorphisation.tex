@@ -631,7 +631,7 @@ Once all monomorphisation iterations have been completed, we are left with a set
 
 The \emph{generate\_mono\_formulae} function is given in Figure~\ref{gen_formulae}.
 It generates monomorphising substitutions and applies them to the polymorphic formula of the input problem that they instantiate. Since the substitutions are monomorphising relative to the formula they applied to, the resulting formulae are monomorphic. The \textcolor{ourblueviolet}{total\_new\_formulae} bound is used to control the total number of new formulae. It overlaps with \textcolor{ourblueviolet}{max\_substs} but can be useful to set an absolute limit on the size of the final problem.
-%In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected by the number of formuale it is given.
+%In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected by the number of formulae it is given.
 
 To monomorphise a polymorphic formula, we first compute its {monomorphising substitutions} using the \emph{mono\_substs} function given in Figure~\ref{mono_substs}.
 A substitution \(\sigma\) is \emph{monomorphising} for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic. Such substitutions are computed using a recursive function. Given a set \(V\) of type variables and a set \(S\) of substitutions, it will select a substitution \(\sigma_{\negvthinspace\Delta}\) from \(S\) that instantiates at least one of the type variables in \(V\). It is important that \(\sigma_{\negvthinspace\Delta}\) be compatible with \(\sigma\) so that they can be composed and the function recursively called to instantiate the remaining type variables.
@@ -701,7 +701,7 @@ Table~\ref{mono_ty_args} groups bounds that control the maximum number of newly 
 \end{table}
 
 Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except that it evaluates the bounds limiting the number of new \emph{non-}monomorphic type arguments. The bound values are lower because we found non-monomorphic type arguments to be explosive in preliminary evaluations. The table confirms that non-monomorphic type argument generation drives the creation of useful non-monomorphic formulae. This is indicated by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Performance of the monomorphisation algorithm seems to plateau for certain ranges of the tested values and drops off beyond.
-%TODO check that 125 is what we get if we just run Zipperposition for 10 seconds (maybe with all additionnal problems that are easily monomorphised)
+%TODO check that 125 is what we get if we just run Zipperposition for 10 seconds (maybe with all additional problems that are easily monomorphised)
 
 \begin{table}[th]
 \caption{Evaluation of bounds for non-monomorphic type argument generation}
@@ -764,7 +764,7 @@ Table \ref{pb_size} groups together the bounds related to the size of the output
 \label{pb_size}
 \end{table}
 
-For larger problems, the monomorphisation algorithm may timeout despite the bounds. In these cases neither Zipperposition nor E will have had a chance to attempt to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table \ref{mono_time} tests the amount of time that monomorphisation is allowed to run for against the number of iteration of the monomorphisation algorithm. The number of iterations and timeout seem to have almost no effect on the performance of the monomorphisation algorithm. % TODO numbers are not definitive
+For larger problems, the monomorphisation algorithm may timeout despite the bounds. In these cases neither Zipperposition nor E will have had a chance to attempt to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table \ref{mono_time} tests the amount of time that monomorphisation is allowed to run for against the number of iteration of the monomorphisation algorithm. Neither the number of iterations nor the monomorphisation timeout seem to have any significant effect on the performance of the monomorphisation algorithm.
 
 \begin{table}[th]
 \caption{Evaluation of parameters related to the depth of monomorphisation}
@@ -773,11 +773,11 @@ For larger problems, the monomorphisation algorithm may timeout despite the boun
    & \multicolumn{4}{c}{mono time} \\
    \multirow{1}{4em}{loop nb} & 5 & 10 & 20 & 30\\
    \midrule
-   2     & 191 & 191&\bf{192}&190\\
-   3     & 191 & 191 & 191 & 190 \\
-   4     & 190 & 190 & 190 & 189 \\
-   5     & 190 & 190 & 190 & 189 \\
-   6     & 189 & 190 & 189 & 189 \\
+   2  &\bf{186}& 186 & 186 & 185 \\
+   3     & 186 & 186 & 186 & 185 \\
+   4     & 186 & 186 & 186 & 185 \\
+   5     & 185 & 185 & 186 & 184 \\
+   6     & 186 & 185 & 185 & 184 \\
    \bottomrule
 \end{tabular}
 \label{mono_time}
@@ -786,9 +786,9 @@ For larger problems, the monomorphisation algorithm may timeout despite the boun
 
 \subsection{E as Zipperposition backend}
 
-We conducted two evaluations of Zipperpostion with the monomorphisation algorithm and E as a backend. The first was on the 500 problems we used for option optimisation and the second on the remaining 1034 problems. This version of Zipperposition was compared against the base Zipperposition prover. The base Zipperposition instance was run wiht the sequential portfolio mode \verb|portfolio.sequential.py|. The results of these evaluation seem to suggest that some amount of overfitting did take place during the option optimisation phase because the number of problems solved only by the base version of Zipperposition grows disproportionately relative to the total number of problems.
+We compared the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py| which attempts to prove the problem with various configuration in succession. Of these configuration, some may attempt to call E as a backend when the given problem is monomorphic. Because all given problems are non-monomorphic, this instance is labeled ``without E''. The second instance, is a modification of \verb|portfolio.sequential.py| where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
+Each of the two instances is evaluated on the set of the 500 previously used problems and the set of the remaining 1034 problems separately. The results of these evaluations seem to suggest that some amount of overfitting took place during the option optimisation phase because the number of problems solved only by the base version of Zipperposition is disproportionately higher in the 1034 problems benchmark relative to the 500 problems benchmark.
 
-Note that Zipperposition's portfolio mode seems to consider timeouts to be more of a polite suggestion than a hard limit, we consequently added a manual timeout of 30 seconds.
 
 \begin{table}[ht]
 \caption{Evaluation of Zipperposition without E vs. with E}
