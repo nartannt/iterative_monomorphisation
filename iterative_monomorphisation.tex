@@ -167,7 +167,7 @@ bound to be incomplete.
 B\"ohme's iterative approach is implemented as part of the SMT (satisfiability modulo theories) integration \cite[Chapter 2]{sb-phd} in Isabelle/HOL. This implementation is also used by Sledgehammer \cite{judgement, hammer} to interface with superposition based automatic theorem provers. However, it is is documented only as a single subsection in his PhD thesis \cite[Section 2.2.1]{sb-phd}.
 A similar algorithm appears to be implemented in the \texttt{MESON} tactic \cite{harrison-1996} of HOL Light, but it is undocumented.
 
-In this paper, we present an algorithm based on our understanding of his description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed description to help future implementers. In addition, this description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
+In this paper, we present an algorithm based on our understanding of Böhme's description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed description to help future implementers. In addition, this description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
 
 The algorithm works as follows. We assume problems to be sets of formulae. All symbols of the problem are collected, and the polymorphic instances of symbols are matched against the monomorphic ones. This yields new instances of symbols, both polymorphic and monomorphic. The process is then iterated
 a number of times, making use of the newly generated instances.
