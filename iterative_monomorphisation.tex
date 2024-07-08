@@ -663,7 +663,7 @@ We conducted additionnal informal preliminary evaluations on the 500 problems be
    \item \PolyCap: \(\infty\)
    \item \PolyMult: \(1\)
    \item \PolyFloor: \(50\)
-   \item substitution ordering: segregation
+   \item substitution ordering: separation
    \item \SubstLimit: \(\infty\)
    \item \MonoSubstsLimit: \(10\)
    \item \Limit: \(2000\)
@@ -675,7 +675,7 @@ We conducted additionnal informal preliminary evaluations on the 500 problems be
 \end{multicols}
 Monomorphistion (and the subsequent call to E) occurs at the beginning of the invocation of Zipperposition. Departing from the original \verb|40_b.comb| configuration, which would otherwise call E after 15\% of the total alloted time for Zipperposition has passed. All others options either appear explicitely in the following tables or have been left unmodified.
 
-Table~\ref{mono_ty_args} groups bounds that control the maximum number of newly generated monomorphic type arguments per formuala per iteration. The limit on newly generated type arguments is determined by three components that form a natural group of bounds. The table shows that generating no new monomorphic type arguments seems to be the best approach. This result may seem counterintuitive, but it is possible to monomorphise formulae without generating monomorphic type arguments. This is because non-monomorphic type argument generation can generate substitutions that instantiate one or more type variables, and it is these substitutions that are used to monomorphise formulae.
+Table~\ref{mono_ty_args} groups bounds that control the maximum number of newly generated monomorphic type arguments per formula per iteration. The limit on newly generated type arguments is determined by three components that form a natural group of bounds. The table shows that generating no new monomorphic type arguments seems to be the best approach. This result may seem counterintuitive, but it is possible to monomorphise formulae without generating monomorphic type arguments. This is because non-monomorphic type argument generation can generate substitutions that instantiate one or more type variables, and it is these substitutions that are used to monomorphise formulae.
 
 \begin{table}[th]
 \caption{Evaluation of bounds for monomorphic type argument generation}
@@ -718,15 +718,15 @@ Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except 
 \label{nmon_ty_args}
 \end{table}
 
-%The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related through the role they play in the construction of monomorphising substitutions. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``segregation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of substitutions generated has very little impact on overall performance contrary to the ordering heuristic.
-The substitution generation phase occurs once all type arguments have been generated. The bound limiting the number of monomorphising substitutions per formula is directly related to the ordering which dictates how such monomorphising substitutions are generated. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``segregation'' ordering separates the substitutions into groups of substitutions generated in the same iteration and generates monomorphising substitutions from each of these groups independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of monomorphising substitutions only seems to affect performance when the ``segregation'' heuristic is used.
-% TODO find a better term than "segregation heuristic" maybe separation ?
+%The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related through the role they play in the construction of monomorphising substitutions. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``separation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of substitutions generated has very little impact on overall performance contrary to the ordering heuristic.
+The substitution generation phase occurs once all type arguments have been generated. The bound limiting the number of monomorphising substitutions per formula is directly related to the ordering which dictates how such monomorphising substitutions are generated. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``separation'' ordering separates the substitutions into groups of substitutions generated in the same iteration and generates monomorphising substitutions from each of these groups independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of monomorphising substitutions only seems to affect performance when the ``separation'' heuristic is used.
+% TODO find a better term than "separation heuristic" maybe separation ?
 \begin{table}[th]
 \caption{Evaluation of bounds for substitution generation}
 \centering\begin{tabular}{@{}l*{3}{>{\centering\arraybackslash}p{5em}}@{}}
    \toprule
    & \multicolumn{3}{c}{substitution ordering} \\
-   \multirow{1}{5em}{mono subst} & age & random & segregation\\
+   \multirow{1}{5em}{mono subst} & age & random & separation\\
    \cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(l){4-4}
    2  & 161 & 178 & 175 \\
    5  & 161 & 178 & 180 \\
@@ -828,6 +828,11 @@ The ``Union'' column, adds up the total number of problems solved by both tests.
 % target page number: 0.5-1
 \section{Related work}
 \label{sec:related-work}
+
+  * monomorphisation:
+    Isabelle for \textit{smt} tactic (Böhme), \textit{metis}, Sledgehammer
+    Meson of HOL Light
+    
 
   * explicitly quantified formulas a la TPTP, existentials, how to eliminate
 
