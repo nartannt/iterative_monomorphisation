@@ -156,12 +156,16 @@ Monomorphisation can be used to extend monomorphic provers to support polymorphi
 One of the main applications of automatic theorem provers is to provide automation to users of proof assistants. Many proof assistants, such as HOL4 \cite{slind-norrish-2008}, HOL Light \cite{harrison-2009}, and
 Isabelle/HOL \cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed only at the top level of formulae. On the other hand, many automatic provers operate only on monomorphic logics. One approach to close this gap is to extend provers to natively support polymorphism, as has been done for Vampire \cite{bhayat-reger-2020}. This, however, entails a lot of work that needs to be redone for every prover.
 
-The alternative is to translate polymorphic problems to monomorphic problems. One approach is to encode polymorphism using dedicated function or predicate symbols \cite{mono-trans} in a monomorphic logic. Another approach is to encode polymorphism using {iterative monomorphisation}, as introduced by B\"ohme \cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
+The alternative is to translate polymorphic problems to monomorphic problems.
+One approach is to encode polymorphism using dedicated function or predicate symbols in a monomorphic logic;
+we refer to Blanchette et al.\ \cite[Section~9]{mono-trans} for an overview of this approach.
+Another approach is to encode polymorphism using {iterative monomorphisation}, as described by B\"ohme \cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
 
 By a type version of the compactness theorem, we have that in first order logic, given a polymorphic formula \(\varphi\), there exist an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, such a set cannot be computed \cite[Theorem 1]{expr-poly-types}. As a result, any monomorphisation method based on instantiation of type variables is
 bound to be incomplete.
 
 B\"ohme's iterative approach is implemented as part of the SMT (satisfiability modulo theories) integration \cite[Chapter 2]{sb-phd} in Isabelle/HOL. This implementation is also used by Sledgehammer \cite{judgement, hammer} to interface with superposition based automatic theorem provers. However, it is is documented only as a single subsection in his PhD thesis \cite[Section 2.2.1]{sb-phd}.
+A similar algorithm appears to be implemented in the \texttt{MESON} tactic \cite{harrison-1996} of HOL Light, but it is undocumented.
 
 In this paper, we present an algorithm based on our understanding of his description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed description to help future implementers. In addition, this description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
 
@@ -826,17 +830,26 @@ The ``Union'' column, adds up the total number of problems solved by both tests.
 \break
 
 % target page number: 0.5-1
-\section{Related work}
-\label{sec:related-work}
-
-  * monomorphisation:
-    Isabelle for \textit{smt} tactic (Böhme), \textit{metis}, Sledgehammer
-    Meson of HOL Light
-    
-
-  * explicitly quantified formulas a la TPTP, existentials, how to eliminate
-
-  * Böhme
+%\section{Related work}
+%\label{sec:related-work}
+%
+%  * monomorphisation:
+%    Isabelle for \textit{smt} tactic (Böhme), \textit{metis}, Sledgehammer
+%  * a precursor for this work is the \verb|POLY_ASSUME_TAC| preprocessor of
+%    MESON for HOL Light. It is unfortunately not documented beyond the comment
+%    ``Push duplicated copies of poly theorems to match existing assumptions''
+%    but it appears to perform at least partial monomorphisation.
+%
+%  * alternative: encode polymorphism
+%    * many approaches to encode monomorphic and polymorphic types, starting
+%      with Enderton \cite{xxx}, Stickel \cite{xxx}, and Wick and McCune
+%      \cite{xxx}
+%    * Blanchette et al.~\cite{xxx} exploit ``monotonicity'' to erase type
+%      information
+%    * see Blanchette et al.~\cite[Section~9]{xxx} for a more detailed coverage
+%      of encodings of polymorphism
+%    
+%%\li{https://www.tcs.ifi.lmu.de/mitarbeiter/jasmin-blanchette/enc_types_article.pdf}
 
 % target page number: 0.5-1
 \section{Conclusion}
