@@ -764,7 +764,7 @@ Table \ref{pb_size} groups together the bounds related to the size of the output
 \label{pb_size}
 \end{table}
 
-For larger problems, the monomorphisation algorithm may timeout despite the bounds. In these cases neither Zipperposition nor E will have had a chance to attempt to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table \ref{mono_time} tests the amount of time that monomorphisation is allowed to run for against the number of iteration of the monomorphisation algorithm. Neither the number of iterations nor the monomorphisation timeout seem to have any significant effect on the performance of the monomorphisation algorithm.
+For larger problems, the monomorphisation algorithm may timeout despite the bounds. In these cases neither Zipperposition nor E will have had a chance to attempt to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table \ref{mono_time} tests the amount of time that monomorphisation is allowed to run for against the number of iteration of the monomorphisation algorithm. Neither parameter seems to have a significant effect on the performance of the monomorphisation algorithm.
 
 \begin{table}[th]
 \caption{Evaluation of parameters related to the depth of monomorphisation}
@@ -787,7 +787,7 @@ For larger problems, the monomorphisation algorithm may timeout despite the boun
 \subsection{E as Zipperposition backend}
 
 We compared the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py| which attempts to prove the problem with various configuration in succession. Of these configuration, some may attempt to call E as a backend when the given problem is monomorphic. Because all given problems are non-monomorphic, this instance is labeled ``without E''. The second instance, is a modification of \verb|portfolio.sequential.py| where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
-Each of the two instances is evaluated on the set of the 500 previously used problems and the set of the remaining 1034 problems separately. The results of these evaluations seem to suggest that some amount of overfitting took place during the option optimisation phase because the number of problems solved only by the base version of Zipperposition is disproportionately higher in the 1034 problems benchmark relative to the 500 problems benchmark.
+Each of the two instances is evaluated on the set of the 500 previously used problems and the set of the remaining 1034 problems separately. The results of these evaluations seem to suggest that some amount of overfitting took place during the option optimisation phase because the number of problems by the version without E but not by the version with E is disproportionately higher in the 1034 problems benchmark relative to the 500 problems benchmark.
 
 
 \begin{table}[ht]
@@ -796,8 +796,8 @@ Each of the two instances is evaluated on the set of the 500 previously used pro
    \toprule
    & without E & with E & Union \\
    \midrule
-   500 problems benchmark   & 157 & 213 & 219 (-6 +62) \\
-   fresh problems benchmark & 341 & 442 & 467 (-25 +126)\\
+   500 problems benchmark   & 160 & 198 & 207 \\ % -9 +47
+   fresh problems benchmark & 337 & 410 & 434 \\ % -24 +97
    \bottomrule
 \end{tabular}
 \end{table}
@@ -805,9 +805,7 @@ Each of the two instances is evaluated on the set of the 500 previously used pro
 
 \subsection{Monomorphisation as preprocessor}
 
-To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, several competitive higher-order polymorphic provers were run on the set of TPTP test problems. Evaluation of the monomorphisation approach is done in two steps, first each problem is monomorphised using the [insert configuration] configurations [options?]. Secondly, each prover is ran on the monomorphised problem and the results are tallied in the ``Mono'' column of the table. In addition to the polymorphic provers used in the ``Native'' tests, two monomorphic provers are run on the monomorphised problems. Note that instead of running each prover 30 seconds on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the ``Native'' column which does not have a similar preprocessing phase.
-
-The ``Union'' column, adds up the total number of problems solved by both tests. It serves as an indicator of the usefulness of monomorphisation as a tool in a portfolio configuration.
+To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, several competitive higher-order polymorphic provers were run on the set of TPTP test problems. Evaluation of the monomorphisation approach is done in two steps, first each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option which is removed. Secondly, each prover is ran on the monomorphised problem and the results are tallied in the ``Mono'' column of the table. In addition to the polymorphic provers used in the ``Native'' tests, two monomorphic provers are run on the monomorphised problems. Instead of running each prover 30 seconds on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the ``Native'' column which does not have a similar preprocessing phase.
 
 \begin{table}[ht]
 \caption{Evaluation of native polymorphism vs.\ monomorphisation}
