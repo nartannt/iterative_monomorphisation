@@ -752,23 +752,18 @@ The substitution generation phase occurs once all type arguments have been gener
 \end{table}
 
 
-Table \ref{pb_size} groups together the bounds related to the size of the output problem to be passed to the E prover. The absolute cap is the maximum number of formulae passed to E. The multiplier limits the total number of newly generated formulae based on the problem's initial number of formulae if it is bigger than the absolute cap. The performance of the E prover depends on the number of formulae it is given. To account for this, we test the effects of the amount of time allocated to E on the monomorphised problem against the size of the monomorphised problem. We observe that performance seems to be similar across configurations where the size of the output problem is sufficiently constrained. The effect of the the E timeout seems to be small beyond a minimal thershold.
-
+Table \ref{pb_size} groups the bounds related to the size of the output problem to be passed to the E prover. The absolute cap is the maximum number of formulae passed to E. The multiplier limits the total number of newly generated formulae based on the problem's initial number of formulae. We find that the E prover tends to perform better when given a limited number of formulae.
 
 \begin{table}[th]
 \caption{Evaluation of bounds directly related to the size of the output problem}
-\centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{1.5em}}@{}}
+\centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
-   & &&&& \multicolumn{4}{c}{formula cap} \\
-   & \multicolumn{4}{c}{500} & \multicolumn{4}{c}{2000} & \multicolumn{4}{c}{\(\infty\)}\\
-   \cmidrule(l){2-13}
-   & &&&& \multicolumn{4}{c}{formula multiplier}\\
-   \multirow{1}{5.5em}{E timeout (s)} & 1 & 2 & 3 & \(\infty\)& 1 & 2 & 3 & \(\infty\)& 1 & 2 & 3 & \(\infty\)\\
-   \cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(l){10-13}
-   2    & 178 & 178 & 179 & 179 & 178 & 178 & 179 & 178 & 169 & 176 & 177 & 149 \\
-   5 &\bf{186}& 186 & 186 & 185 & 186 & 186 & 186 & 186 & 173 & 182 & 185 & 149 \\
-   10   & 186 & 186 & 186 & 185 & 186 & 186 & 186 & 186 & 173 & 182 & 185 & 148 \\
-   30   & 184 & 184 & 184 & 183 & 184 & 184 & 184 & 184 & 168 & 178 & 183 & 125 \\
+   & \multicolumn{4}{c}{formula multiplier}\\
+   \multirow{1}{5.2em}{formula cap} & 1 & 2 & 3 & \(\infty\)\\
+   \midrule
+   500       &\bf{184}& 184 & 184 & 183 \\
+   2000         & 184 & 184 & 184 & 184 \\
+   \(\infty\)   & 168 & 178 & 183 & 125 \\
    \bottomrule
 \end{tabular}
 \label{pb_size}
@@ -783,16 +778,34 @@ For larger problems, the monomorphisation algorithm may timeout despite the boun
    & \multicolumn{4}{c}{mono time} \\
    \multirow{1}{5em}{num.\ loops} & 5 & 10 & 20 & 30\\
    \midrule
-   2  &\bf{186}& 186 & 186 & 185 \\
-   3     & 186 & 186 & 186 & 185 \\
-   4     & 186 & 186 & 186 & 185 \\
-   5     & 185 & 185 & 186 & 184 \\
-   6     & 186 & 185 & 185 & 184 \\
+   1     & 183 & 184 & 183 & 183  \\
+   2  &\bf{186}& 186 & 186 & 185  \\
+   3     & 186 & 186 & 186 & 185  \\
+   4     & 186 & 186 & 186 & 185  \\
+   5     & 185 & 185 & 185 & 184  \\
    \bottomrule
 \end{tabular}
 \label{mono_time}
 \end{table}
 
+Table \ref{e_settings} evaluates the options with which we call the E prover. The call point corresponds to a fraction of the total time alloted to Zipperposition. Zipperposition is run for \(\text{timeout} \times \text{call point}\) seconds before monomorphisation and the subsequent call to E occur. The E timeout limits how lond E is run before being interrupted and resuming the normal operation of Zipperposition. The longer Zipperposition is run, the more formulae are generated, when taking into account the explosive nature of monomorphisation ...
+
+\begin{table}[th]
+\caption{Evaluation of parameters related to the E prover}
+\centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
+   \toprule
+   & \multicolumn{4}{c}{E call point} \\
+   \multirow{1}{4em}{E timeout} & 0.0 & 0.1 & 0.2 & 0.3\\
+   \midrule
+   2      & 180 & 143 & 132 & 124 \\
+   5   &\bf{185}& 142 & 134 & 125 \\
+   10     & 184 & 143 & 132 & 125 \\
+   20     & 184 & 137 & 133 & 125 \\
+   30     & 182 & 133 & 134 & 125 \\
+   \bottomrule
+\end{tabular}
+\label{e_settings}
+\end{table}
 
 \subsection{E as Zipperposition backend}
 
