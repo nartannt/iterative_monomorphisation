@@ -803,8 +803,6 @@ Table \ref{e_settings} shows the impact of the options with which we call the E 
 
 \subsection{E as Zipperposition backend}
 
-We compare the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py|, which attempts to prove the problem with various configuration in succession. Of these configuration, some may attempt to call E as a backend when the given problem is monomorphic. Because all given problems are non-monomorphic, this instance is labeled ``without E''. The second instance, is a modification of \verb|portfolio.sequential.py| where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
-Each of the two instances is evaluated on the set of the 500 previously used problems and the set of the remaining 1034 problems separately. The results of these evaluations do not suggest that any overfitting took place during the option optimisation phase.
 
 \begin{table}[ht]
 \caption{Evaluation of Zipperposition without E vs. with E}
@@ -819,6 +817,9 @@ Each of the two instances is evaluated on the set of the 500 previously used pro
 \end{tabular}
 \end{table}
 
+We compare the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py|, which attempts to prove the problem with various configuration in succession. Of these configuration, some may attempt to call E as a backend when the given problem is monomorphic. Because all given problems are non-monomorphic, this instance is labeled ``without E''. The second instance, is a modification of \verb|portfolio.sequential.py| where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
+Each of the two instances is evaluated on the set of the 500 previously used problems and the set of the remaining 1034 problems separately. The results of these evaluations do not suggest that any overfitting took place during the option optimisation phase.
+
 Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the performance of Zipperposition. It is not a strict improvement, since some problems are solved without E and not with E.
 
 
@@ -831,7 +832,7 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
    & Native & Mono & Union \\
    \midrule
    E              & -- & 340 & 340 \\
-   Leo-III with E &  157 & 231 & 0 \\ 
+   Leo-III with E &  157 & 231 & 274 \\ 
    Zipperposition & 339 & 351 & 404 \\%[1.5\jot]
 %   Total          & 0 & 0 & 0 \\
    % Satallax       &  & 0 & 0 \\ % doesn't understand negated conjectures
