@@ -649,12 +649,12 @@ The Zipperposition implementation of the \emph{mono\_substs} function uses a map
 
 The monomorphisation algorithm is parametrised by many bounds. The first part of the evaluation process is to find appropriate values for these bounds. The second part compares the performance of Zipperposition with and without E on polymorphic problems. The third part compares the performance of different provers on polymorphic problems and their monomorphised counterparts.
 
-The benchmarks are taken from the TPTP library \cite{tptp}. Version 8.2.0 of the library contains 1765 problems in the TF1 and TH1 grammars, corresponding respectively to first-order and higher-order logic with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems that include them. In total, our benchmark suite contains 1534 polymorphic problems. We chose as a measure of success for a given prover (or prover configuration) the number of problems that could each be solved by the prover in under 30 seconds with a single thread. This corresponds to the default time limit in Sledgehammer.
+The benchmarks are taken from version 8.2.0 of the TPTP library \cite{tptp}. The library contains 1765 problems in the TF1 and TH1 grammars, corresponding respectively to first-order and higher-order logic with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems that include them. In total, our benchmark suite contains 1534 polymorphic problems. We chose as a measure of success for a given prover (or prover configuration) the number of problems that could each be solved by the prover in under 30 seconds with a single thread. This corresponds to the default time limit in Sledgehammer.
 
 \subsection{Parameter optimisation}
 \label{param_opti}
 
-Each bound of the monomorphisation process presents a tradeoff: a higher bound allows for a more exhaustive instantiations of type variables at the cost of taking more time. Ideally, all possible combinations of values for all bounds could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, however, this is unfeasible. Instead, we group closely related bounds together and test combinations of values for the bounds in these groups. Once we find the best performing set of values for a group of bounds, we assign these values to the corresponding bounds as we begin the search for the next group. If several groups of bounds result in the same number of proved problems, the most constraining bound values are selected. Winners are shown in bold in Tables \ref{mono_ty_args} to \ref{e_settings}.
+Each bound of the monomorphisation process presents a tradeoff: a higher bound allows for a more exhaustive instantiations of type variables at the cost of taking more time. Ideally, all possible combinations of values for all bounds could be exhaustively tested to find the best compromise between completeness and speed. Given the number of bounds, however, this is unfeasible. Instead, we group closely related bounds together and test combinations of values for the bounds in these groups. Once we find the best performing set of values for a group of bounds, we assign these values to the corresponding bounds as we begin the search for the next group. If several groups of bounds result in the same number of proved problems, the most constraining bound values are selected. Winning entries are shown in bold in Tables \ref{mono_ty_args} to \ref{e_settings}.
 
 As a precaution against overfitting, we carried out the part of the evaluation related to parameter optimisation and all preliminary evaluations on 500 randomly chosen problems out of the 1534 selected problems. We carried out the rest of the evaluations on the remaining 1034 problems.
 
@@ -662,7 +662,7 @@ Before finding values to assign to the bounds of the monomorphisation algorithm,
 Our preliminary evaluation found that the so-called \verb|40_b.comb| configuration performed best by proving 131 problems.
 This configuration became the base configuration, which we used as a basis to evaluate the monomorphisation options.
 
-We conducted additional informal evaluations on the 500 problems benchmark suite to find appropriate default values and test ranges for the monomorphisation bounds. We started the option evaluation process with the base configuration and the following default values for monomorphisation bounds and parameters for E:
+We conducted additional informal evaluations on the 500 problem benchmark suite to find appropriate default values and test ranges for the monomorphisation bounds. We started the option evaluation process with the base configuration and the following default values for monomorphisation bounds and parameters for E:
 
 \begin{multicols}{2}% 3 columns?
 \begin{itemize}
@@ -763,7 +763,7 @@ Table \ref{pb_size} groups the bounds related to the size of the output problem 
 \label{pb_size}
 \end{table}
 
-For larger problems, the monomorphisation algorithm may timeout despite the bounds. In these cases neither Zipperposition nor E will have had a chance to attempt to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table \ref{mono_time} tests the amount of time that monomorphisation is allowed to run for against the number of iteration of the monomorphisation algorithm. Neither parameter seems to have a significant effect on the performance of the monomorphisation algorithm.
+For larger problems, the monomorphisation algorithm may time out despite the bounds. In these cases neither Zipperposition nor E will have had a chance to attempt to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table \ref{mono_time} tests the amount of time that monomorphisation is allowed to run for against the number of iteration of the monomorphisation algorithm. Neither parameter seems to have a significant effect on the performance of the monomorphisation algorithm.
 
 \begin{table}[th]
 \caption{Evaluation of parameters related to the depth of monomorphisation}
@@ -782,7 +782,7 @@ For larger problems, the monomorphisation algorithm may timeout despite the boun
 \label{mono_time}
 \end{table}
 
-Table \ref{e_settings} evaluates the options with which we call the E prover. The call point corresponds to the fraction of the total timeout of Zipperposition's timeout after which the normal operation of Zipperposition is interrupted to begin the monomorphisation process. The E timeout limits how lond E is run before being interrupted and resuming the normal operation of Zipperposition. The longer Zipperposition is run, the more formulae are generated this and the explosive nature of iterative monomorphisation likely explains the poor performance of greater values of E call point.
+Table \ref{e_settings} shows the impact of the options with which we call the E prover. The call point corresponds to the fraction of the total timeout of Zipperposition's timeout after which the normal operation of Zipperposition is interrupted to begin the monomorphisation process. The E timeout limits for how long E is run before being interrupted, at which point Zipperposition resumes normal operation. The longer Zipperposition runs before E is invoked, the more formulae are generated, and the more iterative monomorphisation is explosive. This likely explains the poor performance for greater values of E call point.
 
 \begin{table}[th]
 \caption{Evaluation of parameters related to the E prover}
@@ -803,11 +803,8 @@ Table \ref{e_settings} evaluates the options with which we call the E prover. Th
 
 \subsection{E as Zipperposition backend}
 
-We compared the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py| which attempts to prove the problem with various configuration in succession. Of these configuration, some may attempt to call E as a backend when the given problem is monomorphic. Because all given problems are non-monomorphic, this instance is labeled ``without E''. The second instance, is a modification of \verb|portfolio.sequential.py| where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
-Each of the two instances is evaluated on the set of the 500 previously used problems and the set of the remaining 1034 problems separately. The results of these evaluations seem to suggest that no significant overfitting took place during the option optimisation phase.
-
-Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the performance of Zipperposition. It is not a strict improvement as a number of problems are solved without E and not with E.
-
+We compare the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py|, which attempts to prove the problem with various configuration in succession. Of these configuration, some may attempt to call E as a backend when the given problem is monomorphic. Because all given problems are non-monomorphic, this instance is labeled ``without E''. The second instance, is a modification of \verb|portfolio.sequential.py| where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
+Each of the two instances is evaluated on the set of the 500 previously used problems and the set of the remaining 1034 problems separately. The results of these evaluations do not suggest that any overfitting took place during the option optimisation phase.
 
 \begin{table}[ht]
 \caption{Evaluation of Zipperposition without E vs. with E}
@@ -815,17 +812,17 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
    \toprule
    & without E & with E & Union \\
    \midrule
-   500 problems benchmark   & 160 & 198 & 207 \\ % -9 +47
-   fresh problems benchmark & 337 & 410 & 434 \\ % -24 +97
+   500 problem benchmark   & 160 & 198 & 207 \\ % -9 +47
+   1034 problem benchmark & 337 & 410 & 434 \\ % -24 +97
    \bottomrule
    \label{zipp_eval}
 \end{tabular}
 \end{table}
 
+Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the performance of Zipperposition. It is not a strict improvement, since some problems are solved without E and not with E.
+
 
 \subsection{Monomorphisation as preprocessor}
-
-To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, several competitive higher-order polymorphic provers were run on the set of TPTP test problems. Evaluation of the monomorphisation approach is done in two steps, first each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option which is removed. Secondly, each prover is ran on the monomorphised problem and the results are tallied in the ``Mono'' column of the table. In addition to the polymorphic provers used in the ``Native'' tests, two monomorphic provers are run on the monomorphised problems. Instead of running each prover 30 seconds on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the ``Native'' column which does not have a similar preprocessing phase.
 
 \begin{table}[ht]
 \caption{Evaluation of native polymorphism vs.\ monomorphisation}
@@ -833,16 +830,22 @@ To evaluate the usefulness of iterative monomorphisation as an alternative to na
    \toprule
    & Native & Mono & Union \\
    \midrule
-   E              &   & 340 & 340 \\
+   E              & -- & 340 & 340 \\
    Leo-III with E &  157 & 231 & 0 \\ 
-   Zipperposition & 339 & 351 & 404 \\[1.5\jot]
-   Total          & 0 & 0 & 0 \\
+   Zipperposition & 339 & 351 & 404 \\%[1.5\jot]
+%   Total          & 0 & 0 & 0 \\
    % Satallax       &  & 0 & 0 \\ % doesn't understand negated conjectures
    %Leo-III &  68 with cvc4 & 0 & 0 \\ % same as without anything for the native case
    %Vampire & 0 & 0 & 0 \\ % Vampire's parser fails on too many polymorphic problems (about 1/3 of them)
    \bottomrule
+   \label{native_vs_mono_eval}
 \end{tabular}
 \end{table}
+
+To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher-order polymorphic provers were run on the 1034 problem benchmark. We chose Leo-III and Zipperposition. We unfortunately had to exclude Vampire because of parsing issues.
+
+Table~\ref{native_vs_mono_eval} shows the results.
+ Evaluation of the monomorphisation approach is done in two steps. First, each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option which is removed. Second, each prover is ran on the monomorphised problem and the results are tallied in the table's ``Mono'' column. In addition to the polymorphic provers used in the ``Native'' tests, the monomorphic prover E is run on the monomorphised problems to provide an additional yardstick. Instead of running each prover 30 seconds on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the ``Native'' column, which does not have a similar preprocessing phase.
 
 % target page number: 0.5-1
 %\section{Related work}
