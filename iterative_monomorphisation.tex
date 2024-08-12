@@ -686,7 +686,6 @@ The initial values for the \MonoCap, \MonoMult and \MonoFloor options are irrele
 Table~\ref{mono_ty_args} groups bounds that control the maximum number of newly generated monomorphic type arguments per formula per iteration. The limit on newly generated type arguments is determined by three components that form a natural group of bounds. The table shows that generating no new monomorphic type arguments seems to be the best approach. This result may seem counterintuitive, but it is possible to monomorphise formulae without generating monomorphic type arguments. This is because non-monomorphic type argument generation can generate substitutions that instantiate one or more type variables, and it is these substitutions that are used to monomorphise formulae.
 
 \begin{table}[th]
-\caption{Evaluation of bounds for monomorphic type argument generation}
 \centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
    & &&& \multicolumn{6}{c}{cap} \\
@@ -702,13 +701,13 @@ Table~\ref{mono_ty_args} groups bounds that control the maximum number of newly 
     \bottomrule
 \end{tabular}
 \label{mono_ty_args}
+\caption{Evaluation of bounds for monomorphic type argument generation}
 \end{table}
 
 Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except that it evaluates the bounds limiting the number of new \emph{non-}monomorphic type arguments. The bound values are lower because we found non-monomorphic type arguments to be explosive in preliminary evaluations. The table confirms that non-monomorphic type argument generation drives the creation of useful non-monomorphic formulae. This is indicated by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Performance of the monomorphisation algorithm seems to plateau for certain ranges of the tested values and drops off beyond.
 %TODO check that 125 is what we get if we just run Zipperposition for 10 seconds (maybe with all additional problems that are easily monomorphised)
 
 \begin{table}[th]
-\caption{Evaluation of bounds for non-monomorphic type argument generation}
 \centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
    & &&& \multicolumn{6}{c}{cap} \\
@@ -724,13 +723,13 @@ Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except 
     \bottomrule
 \end{tabular}
 \label{nmon_ty_args}
+\caption{Evaluation of bounds for non-monomorphic type argument generation}
 \end{table}
 
 %The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related through the role they play in the construction of monomorphising substitutions. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``separation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of substitutions generated has very little impact on overall performance contrary to the ordering heuristic.
 The substitution generation phase occurs once all type arguments have been generated. The bound limiting the number of monomorphising substitutions per formula is directly related to the ordering which dictates how such monomorphising substitutions are generated. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``separation'' ordering separates the substitutions into groups of substitutions generated in the same iteration and generates monomorphising substitutions from each of these groups independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of monomorphising substitutions only seems to affect performance when the ``separation'' heuristic is used.
 % TODO find a better term than "separation heuristic" maybe separation ?
 \begin{table}[th]
-\caption{Evaluation of bounds for substitution generation}
 \centering\begin{tabular}{@{}l*{3}{>{\centering\arraybackslash}p{5em}}@{}}
    \toprule
    & \multicolumn{3}{c}{substitution ordering} \\
@@ -743,13 +742,13 @@ The substitution generation phase occurs once all type arguments have been gener
    \bottomrule
 \end{tabular}
 \label{subst_gen_table}
+\caption{Evaluation of bounds for substitution generation}
 \end{table}
 
 
 Table \ref{pb_size} groups the bounds related to the size of the output problem to be passed to the E prover. The absolute cap is the maximum number of formulae passed to E. The multiplier limits the total number of newly generated formulae based on the problem's initial number of formulae. We find that the E prover tends to perform better when given a limited number of formulae.
 
 \begin{table}[th]
-\caption{Evaluation of bounds directly related to the size of the output problem}
 \centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
    & \multicolumn{4}{c}{formula multiplier}\\
@@ -761,12 +760,12 @@ Table \ref{pb_size} groups the bounds related to the size of the output problem 
    \bottomrule
 \end{tabular}
 \label{pb_size}
+\caption{Evaluation of bounds directly related to the size of the output problem}
 \end{table}
 
 For larger problems, the monomorphisation algorithm may time out despite the bounds. In these cases neither Zipperposition nor E will have had a chance to attempt to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table \ref{mono_time} tests the amount of time that monomorphisation is allowed to run for against the number of iteration of the monomorphisation algorithm. Neither parameter seems to have a significant effect on the performance of the monomorphisation algorithm.
 
 \begin{table}[th]
-\caption{Evaluation of parameters related to the depth of monomorphisation}
 \centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
    & \multicolumn{4}{c}{mono time} \\
@@ -780,12 +779,12 @@ For larger problems, the monomorphisation algorithm may time out despite the bou
    \bottomrule
 \end{tabular}
 \label{mono_time}
+\caption{Evaluation of parameters related to the depth of monomorphisation}
 \end{table}
 
 Table \ref{e_settings} shows the impact of the options with which we call the E prover. The call point corresponds to the fraction of the total timeout of Zipperposition's timeout after which the normal operation of Zipperposition is interrupted to begin the monomorphisation process. The E timeout limits for how long E is run before being interrupted, at which point Zipperposition resumes normal operation. The longer Zipperposition runs before E is invoked, the more formulae are generated, and the more iterative monomorphisation is explosive. This likely explains the poor performance for greater values of E call point.
 
 \begin{table}[th]
-\caption{Evaluation of parameters related to the E prover}
 \centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1.5em}}@{}}
    \toprule
    & \multicolumn{4}{c}{E call point} \\
@@ -799,13 +798,13 @@ Table \ref{e_settings} shows the impact of the options with which we call the E 
    \bottomrule
 \end{tabular}
 \label{e_settings}
+\caption{Evaluation of parameters related to the E prover}
 \end{table}
 
 \subsection{E as Zipperposition backend}
 
 
 \begin{table}[ht]
-\caption{Evaluation of Zipperposition without E vs. with E}
 \centering\begin{tabular}{@{}lccc@{}}
    \toprule
    & without E & with E & Union \\
@@ -815,6 +814,7 @@ Table \ref{e_settings} shows the impact of the options with which we call the E 
    \bottomrule
    \label{zipp_eval}
 \end{tabular}
+\caption{Evaluation of Zipperposition without E vs. with E}
 \end{table}
 
 We compare the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py|, which attempts to prove the problem with various configuration in succession. Of these configuration, some may attempt to call E as a backend when the given problem is monomorphic. Because all given problems are non-monomorphic, this instance is labeled ``without E''. The second instance, is a modification of \verb|portfolio.sequential.py| where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
@@ -826,7 +826,6 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
 \subsection{Monomorphisation as preprocessor}
 
 \begin{table}[ht]
-\caption{Evaluation of native polymorphism vs.\ monomorphisation}
 \centering\begin{tabular}{@{}lccc@{}}
    \toprule
    & Native & Mono & Union \\
@@ -841,6 +840,7 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
    \bottomrule
    \label{native_vs_mono_eval}
 \end{tabular}
+\caption{Evaluation of native polymorphism vs.\ monomorphisation}
 \end{table}
 
 To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher-order polymorphic provers were run on the 1034 problem benchmark. We chose Leo-III and Zipperposition. We unfortunately had to exclude Vampire because of parsing issues.
