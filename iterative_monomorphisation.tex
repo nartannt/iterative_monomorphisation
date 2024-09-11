@@ -354,10 +354,10 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
    \For{\(i = 1\) \To \textcolor{ourblueviolet}{\Loop}}{
       \((M_{\text{next}}, N_{\text{next}})\leftarrow(\emptyset,\emptyset)\)\;
       \ForEach{\(\varphi \in \Problem\)} {
-         \((M_{\Delta}, N_{\Delta}(\varphi), S_{\Delta})\leftarrow \FStep(M_{\text{old}}, N_{\text{old}}(\varphi), M_{\text{new}}, N_{\text{new}}(\varphi))\)\;
-         \(\AllSubst\leftarrow\AllSubst\cup S_{\Delta}\)\;
+         \((M_{\Delta}, N_{\Delta}, S_{\Delta})\leftarrow \FStep(M_{\text{old}}, N_{\text{old}}(\varphi), M_{\text{new}}, N_{\text{new}}(\varphi))\)\;
+         \(\AllSubst(\varphi)\leftarrow\AllSubst(\varphi)\cup S_{\Delta}\)\;
          \(M_{\text{next}}\leftarrow M_{\text{next}}\cup M_{\Delta}\)\;
-         \(N_{\text{next}}(\varphi)\leftarrow N_{\text{next}}(\varphi)\cup N_{\Delta}(\varphi)\)\;
+         \(N_{\text{next}}(\varphi)\leftarrow N_{\text{next}}(\varphi)\cup N_{\Delta}\)\;
       }
 
       \((M_{\text{old}}, M_{\text{new}})\leftarrow (M_{\text{old}}\cup M_{\text{new}}, M_{\text{next}})\)\;
@@ -384,7 +384,7 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
 \begin{quote}
 \begin{algorithm}[H]
 
-   \Fn(){\(\FMonoStep(\varphi, M_{\text{old}}, M_{\text{new}}, N_{\text{old}}(\varphi), N_{\text{new}}(\varphi)\)}{
+   \Fn(){\(\FMonoStep(\varphi, M_{\text{old}}, M_{\text{new}}, N_{\text{old}}(\varphi), N_{\text{new}}(\varphi))\)}{
 
    \KwData{\begin{minipage}[t]{.8\textwidth}
      \strut polymorphic formula $\varphi$ \\
@@ -545,7 +545,7 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 
    \KwData{\begin{minipage}[t]{.8\textwidth}
      \strut set \(\Phi\) of polymorphic formulae \\
-     set $S$ of substitutions\strut
+     substitution map $S$\strut
      \end{minipage}}
    \KwResult{set of monomorphic formulae}
 
@@ -556,7 +556,7 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
    \BlankLine
 
    \ForEach{\(\varphi\in\Phi\) \ST $\varphi$ is non-monomorphic}{
-      \ForEach{\(\sigma\in \MonoSubst(\AllSubst, \TyVars{\(\varphi\)}, \emptyset, \{\})\)}{
+      \ForEach{\(\sigma\in \MonoSubst(\AllSubst(\varphi), \TyVars{\(\varphi\)}, \emptyset, \{\})\)}{
          \textcolor{ourblueviolet}{
          \eIf{\(|\NewFormulae|<\Limit\)}{
             \textcolor{black}{
