@@ -643,7 +643,7 @@ The various bounds presented here overlap to some extent. For instance, having a
 \label{mono_substs}
 \end{figure}
 
-Once all monomorphisation iterations have been completed, we are left with a set of the substitutions that have been used to generate new type arguments. The last phase uses this set to instantiate the type variables in the input problem's non-monomrophic formuale. In the presence of bounds, the order in which the elements of \(S\) are traversed affects the formulae resulting from the last phase. %As we will discuss in Section~\ref{param_opti}, the best results were obtained when substitutions generated in the same iteration are grouped together.
+Once all monomorphisation iterations have been completed, we are left with a set of the substitutions that have been used to generate new type arguments. The last phase uses this set to instantiate the type variables in the input problem's non-monomorphic formuale. In the presence of bounds, the order in which the elements of \(S\) are traversed affects the formulae resulting from the last phase. %As we will discuss in Section~\ref{param_opti}, the best results were obtained when substitutions generated in the same iteration are grouped together.
 
 The \emph{generate\_mono\_formulae} function is given in Figure~\ref{gen_formulae}.
 It generates monomorphising substitutions and applies them to the polymorphic formula of the input problem that they instantiate. Since the substitutions are monomorphising relative to the formula they applied to, the resulting formulae will be monomorphic. The \textcolor{ourblueviolet}{total\_new\_formulae} bound is used to control the total number of new formulae. It overlaps with \textcolor{ourblueviolet}{max\_substs} but can be useful to set an absolute limit on the size of the final problem.
@@ -656,7 +656,7 @@ The Zipperposition implementation of the \emph{mono\_substs} function uses a map
 \begin{enumerate}
    \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic formula per initial polymorphic formula. Generating an excessive number of new formulae can flood the downstream prover. The final number of output formulae is ensured to be at most \(|\Phi|\cdot \text{\textcolor{ourblueviolet}{max\_substs}}\).
    \item The \emph{mono\_substs} function is the most explosive part of the algorithm. For a formula \(\varphi\), if \(S(\varphi)\) contains \(n\) substitutions that each instantiate exactly one of \(v\) %different
-type variables, up to \(n^v\) monomorphising substititions may be generated. Recall that the total number of type argument tuples that are used to generate \(S(\varphi)\) can be doubly exponential in the number of loop iterations.
+type variables, up to \(n^v\) monomorphising substitutions may be generated. Recall that the total number of type argument tuples that are used to generate \(S(\varphi)\) can be doubly exponential in the number of loop iterations.
 \end{enumerate}
 %[This function can be thought of as exploring the tree of all possible monomorphising substitutions, \(S_{\text{res}}\) would represent the leaves that have already been visited and \(\sigma\) would represent the current node of the tree.]
 
