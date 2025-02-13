@@ -19,6 +19,7 @@
 \usepackage[noend]{algorithm2e}
 \usepackage{amsmath}
 \usepackage{enumitem}
+\usepackage{hyperref}
 
 \begin{document}
 \SetNlSty{bfseries}{\color{black}}{}
@@ -135,29 +136,37 @@
 
 \title{Iterative Monomorphisation}
 
-\author{Tanguy Bozec\inst{1,2} \and
-Jasmin Blanchette\inst{2}\orcidID{0000-0002-8367-0936}}
+\def\orcid#1{{\href{http://orcid.org/#1}{\protect\raisebox{-1.25pt}{\protect\includegraphics{orcid.pdf}}}}}
+
+\author{Tanguy Bozec\inst{1,2}\orcid{TODO} \and
+Jasmin Blanchette\inst{2}\orcid{0000-0002-8367-0936}}
+
+\authorrunning{T. Bozec and J. Blanchette}
 
 \institute{ENS Paris-Saclay, Université Paris-Saclay, France \and
-Institute of Informatics, Ludwig-Maximilians-Universität München, Germany}
+%Institute of Informatics,
+Ludwig-Maximilians-Universität München, Germany}
 
 
 \maketitle
 
+\begin{sloppy}
 \begin{abstract}
-Monomorphisation can be used to extend monomorphic provers to support polymorphic logics. We propose an iterative approach, which is necessarily incomplete but which works well in practice. It is implemented in the Zipperposition prover, where it can be used to translate away polymorphism before invoking the monomorphic prover E as a backend. Our evaluation demonstrates that this approach increases Zipperposition's success rate. Moreover, we find that iterative monomorphisation outperforms native implementations of polymorphism.
+Monomorphisation can be used to extend monomorphic provers to support polymorphic logics. We propose an iterative approach, which is necessarily incomplete but which works well in practice. We implemented it in the Zipperposition prover, where it can be used to translate away polymorphism before invoking the monomorphic prover E as a backend. Our evaluation demonstrates that this approach increases Zipperposition's success rate. Moreover, we find that iterative monomorphisation outperforms native implementations of polymorphism.
 
-\keywords{Polymorphism  \and Monomorphism    \and Automated theorem proving}
+\keywords{Polymorphism  \and monomorphism \and first-order logic
+  \and higher-order logic}
 \end{abstract}
+\end{sloppy}
 
 % target page number: 2-2.5
 \section{Introduction}
 
 One of the main applications of automatic theorem provers is to provide automation to users of proof assistants. Many proof assistants, such as HOL4~\cite{slind-norrish-2008}, HOL Light~\cite{harrison-2009}, and
-Isabelle/HOL~\cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed only at the top level of formulae. On the other hand, many automatic provers operate only on monomorphic logics. One approach to close this gap is to extend provers to natively support polymorphism, as has been done for Vampire~\cite{bhayat-reger-2020}. This, however, entails a lot of work that needs to be redone for every prover.
+Isabelle/HOL~\cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed at the top level of formulae. On the other hand, many automatic provers operate only on monomorphic logics. One approach to close this gap is to extend provers to natively support polymorphism, as has been done for Vampire~\cite{bhayat-reger-2020}. This, however, entails a lot of work that needs to be redone for every prover.
 
 The alternative is to translate polymorphic problems to monomorphic problems.
-One approach is to encode polymorphism using dedicated function or predicate symbols in a monomorphic logic;
+One approach to achieve this is to encode polymorphism using dedicated function or predicate symbols in a monomorphic logic;
 we refer to Blanchette et al.~\cite[Section~9]{mono-trans} for an overview of this approach.
 Another approach is to encode polymorphism using {iterative monomorphisation}, as described by B\"ohme~\cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
 
@@ -327,8 +336,8 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
 \end{enumerate}
 
 \SetKwFunction{IterMono}{iterative\_monomorphisation}
-\begin{figure}[b]
-\begin{quote}
+\begin{figure}[t]
+%\begin{quote}
 \begin{algorithm}[H]
 \Fn(){\(\IterMono(\Phi)\)}{
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{To}{to}
@@ -371,7 +380,7 @@ All sets referenced in the pseudocode are assumed to be finite. Additionally, th
    \Return \(\Mangle(\GenFormulae(\Phi, S))\)
 }
 \end{algorithm}
-\end{quote}
+%\end{quote}
 \caption{Pseudocode for iterative monomorphisation}
 \label{iter_mono}
 \end{figure}
@@ -381,8 +390,8 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
 %~\cite[Sections 4 and 5]{mono-trans}.
 % Paper name is gt
 
-\begin{figure}
-\begin{quote}
+\begin{figure}[t]
+%\begin{quote}
 \begin{algorithm}[H]
 
    \Fn(){\(\FMonoStep(\varphi, M_{\text{old}}, M_{\text{new}}, N_{\text{old}}(\varphi), N_{\text{new}}(\varphi))\)}{
@@ -445,7 +454,7 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
 }
 
 \end{algorithm}
-\end{quote}
+%\end{quote}
 \caption{Pseudocode for formula monomorphisation step}
 \label{mono_step}
 \end{figure}
@@ -471,8 +480,8 @@ Both in the monomorphic and in the non-monomorphic case, the maximum number of n
 The \emph{matches} function, which computes the substitutions used for generating new type arguments, is given in Figure~\ref{subst_gen}. Each symbol instance from \(N(\varphi)\) is matched against all corresponding symbol instances from \(M\).
 For two such symbol instances, types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the pseudocode, this is checked by making sure the \textbf{while} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant. The total number of substitutions generated is capped by \textcolor{ourblueviolet}{substitution\_limit}.
 
-\begin{figure}
-\begin{quote}
+\begin{figure}[t]
+%\begin{quote}
 \begin{algorithm}[H]
 \SetKwFunction{SubstGen}{matches}
 \Fn(){\(\SubstGen(M, N(\varphi))\)}{
@@ -525,13 +534,13 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 
 }
 \end{algorithm}
-\end{quote}
+%\end{quote}
 \caption{Pseudocode for match generation}
 \label{subst_gen}
 \end{figure}
 
-\begin{figure}
-\begin{quote}
+\begin{figure}[t]
+%\begin{quote}
 \begin{algorithm}[H]
 \Fn(){\(\GenFormulae(\Phi, S)\)}{
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{To}{to}
@@ -572,7 +581,7 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
    \Return \NewFormulae
 }
 \end{algorithm}
-\end{quote}
+%\end{quote}
 \caption{Pseudocode for monomorphic formula generation}
 \label{gen_formulae}
 \end{figure}
@@ -580,8 +589,8 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 
 The various bounds presented here overlap to some extent. For instance, having at most \textcolor{ourblueviolet}{substitution\_limit} substitutions generated by \emph{matches} may be sufficient to curb the number of new type argument tuples, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its uses. For example, problems that lead to few successful matches but many type arguments tuples may benefit from a limit on the number of new type arguments tuples whilst problems for which substitution generation is more explosive may benefit from a limit on the number of generated substitution.
 
-\begin{figure}
-\begin{quote}
+\begin{figure}[t]
+%\begin{quote}
    \begin{algorithm}[H]
 
    \SetKwFunction{Compatible}{compatible}
@@ -623,7 +632,7 @@ The various bounds presented here overlap to some extent. For instance, having a
 
 
 \end{algorithm}
-\end{quote}
+%\end{quote}
 \caption{Pseudocode for monomorphising substitution generation}
 \label{mono_substs}
 \end{figure}
