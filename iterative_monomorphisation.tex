@@ -666,7 +666,7 @@ type variables, up to \(n^v\) monomorphising substititions may be generated. Rec
 
 The monomorphisation algorithm is parametrised by many bounds. The first part of the evaluation process is to find appropriate values for these bounds. The second part compares the performance of Zipperposition with and without E on polymorphic problems. The third part compares the performance of different provers on polymorphic problems and their monomorphised counterparts.
 Our raw evaluation data is available online.%
-\footnote{\url{https://nekoka-project.github.io/pubs/monomorphization_data.zip}}
+\footnote{\url{https://nekoka-project.github.io/pubs/monomorphisation_data.zip}}
 
 The benchmarks are taken from version 8.2.0 of the TPTP library~\cite{tptp}. The library contains 1765 problems in the TF1 and TH1 grammars, corresponding respectively to first-order and higher-order logic with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems that include them. In total, our benchmark suite contains 1534 polymorphic problems. We chose as a measure of success for a given prover (or prover configuration) the number of problems that could each be solved by the prover in at most 30 seconds with a single thread.
 %This corresponds to the default time limit in Sledgehammer.
