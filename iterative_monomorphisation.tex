@@ -697,6 +697,9 @@ Table~\ref{mono_ty_args} groups bounds that control the maximum number of newly 
 
 \begin{table}[th]
 \caption{Evaluation of bounds for monomorphic type argument generation}
+
+\medskip
+
 \centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{2.5em}}@{}}
    \toprule
    & &&& \multicolumn{6}{c}{cap} \\
@@ -719,6 +722,9 @@ Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except 
 
 \begin{table}[th]
 \caption{Evaluation of bounds for non-monomorphic type argument generation}
+
+\medskip
+
 \centering\begin{tabular}{@{}l*{12}{>{\centering\arraybackslash}p{2.5em}}@{}}
    \toprule
    & &&& \multicolumn{6}{c}{cap} \\
@@ -741,6 +747,9 @@ The substitution generation phase occurs once all type arguments have been gener
 % TODO find a better term than "separation heuristic" maybe separation ?
 \begin{table}[th]
 \caption{Evaluation of bounds for substitution generation}
+
+\medskip
+
 \centering\begin{tabular}{@{}l*{3}{>{\centering\arraybackslash}p{6em}}@{}}
    \toprule
    & \multicolumn{3}{c}{substitution ordering} \\
@@ -760,6 +769,9 @@ Table \ref{pb_size} groups the bounds related to the size of the output problem 
 
 \begin{table}[th]
 \caption{Evaluation of bounds directly related to the size of the output problem}
+
+\medskip
+
 \centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{3em}}@{}}
    \toprule
    & \multicolumn{4}{c}{formula multiplier}\\
@@ -777,6 +789,9 @@ For larger problems, the monomorphisation algorithm may time out despite the bou
 
 \begin{table}[th]
 \caption{Evaluation of parameters related to the depth of monomorphisation}
+
+\medskip
+
 \centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{2.5em}}@{}}
    \toprule
    & \multicolumn{4}{c}{mono time} \\
@@ -796,6 +811,9 @@ Table \ref{e_settings} shows the impact of the options with which we call the E 
 
 \begin{table}[th]
 \caption{Evaluation of parameters related to the E prover}
+
+\medskip
+
 \centering\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{3em}}@{}}
    \toprule
    & \multicolumn{4}{c}{E call point} \\
@@ -815,7 +833,10 @@ Table \ref{e_settings} shows the impact of the options with which we call the E 
 
 
 \begin{table}[ht]
-\caption{Evaluation of Zipperposition without E vs. with E}
+\caption{Evaluation of Zipperposition without E vs.\ with E}
+
+\medskip
+
 \centering\begin{tabular}{@{}l*{3}{>{\centering\arraybackslash}p{6em}}@{}}
    \toprule
    & without E & with E & union \\
@@ -823,8 +844,8 @@ Table \ref{e_settings} shows the impact of the options with which we call the E 
    500 problem benchmark   & 160 & 198 & 207 \\ % -9 +47
    1034 problem benchmark & 337 & 410 & 434 \\ % -24 +97
    \bottomrule
-   \label{zipp_eval}
 \end{tabular}
+\label{zipp_eval}
 \end{table}
 
 We compare the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py|, which attempts to prove the problem with various configuration in succession. Of these configuration, some may attempt to call E as a backend when the given problem is monomorphic. Because all given problems are non-monomorphic, this instance is labeled ``without E''. The second instance, is a modification of the \verb|portfolio.sequential.py| file where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
@@ -837,6 +858,9 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
 
 \begin{table}[ht]
 \caption{Evaluation of native polymorphism vs.\ monomorphisation}
+
+\medskip
+
 \centering\begin{tabular}{@{}l*{3}{>{\centering\arraybackslash}p{6em}}@{}}
    \toprule
    & Native & Mono & Union \\
