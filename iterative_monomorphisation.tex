@@ -169,7 +169,7 @@ One approach \cite[Section~9]{mono-trans} to achieve this is to encode polymorph
 By a type version of the compactness theorem, we have that in first order logic, given a polymorphic formula \(\varphi\), there exist an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, such a set cannot be computed~\cite[Theorem 1]{expr-poly-types}. As a result, any monomorphisation method based on instantiation of type variables is
 bound to be incomplete.
 
-B\"ohme's iterative approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,hammer} to interface with superposition based automatic theorem provers. However, it is is documented only as a single subsection in B\"ohme's PhD thesis~\cite[Section 2.2.1]{sb-phd}.
+B\"ohme's iterative approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,paulson-blanchette-2010} to interface with superposition based automatic theorem provers. However, it is is documented only as a single subsection in B\"ohme's PhD thesis~\cite[Section 2.2.1]{sb-phd}.
 A similar algorithm appears to be implemented in the \texttt{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
 
 In this paper, we present an algorithm based on our understanding of Böhme's description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed description to help future implementers. In addition, our description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
@@ -181,7 +181,7 @@ Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(
 
 To keep the number of generated formulae finite, we limit the number of iterations. After the iterations are completed, the new monomorphic symbol instances are used to instantiate the polymorphic symbols in the problem's formulae, generating new monomorphic formulae. Finally, because monomorphic provers do not support $n$-ary type constructors, types must be `mangled'; for example, the compound type $\ty{list}(\ty{int})$ could be mangled to $\ty{list\_int}$.
 
-We implemented iterative monomorphisation in Zipperposition~\cite{zipp}, a higher order prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E~\cite{e} as a backend. Thanks to our work, E can now be used with polymorphic problems. Moreover, our implementation can be used as a preprocessor to interface with other stand-alone provers.
+We implemented iterative monomorphisation in Zipperposition~\cite{vukmirovic-et-al-2021}, a higher order prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E~\cite{e} as a backend. Thanks to our work, E can now be used with polymorphic problems. Moreover, our implementation can be used as a preprocessor to interface with other stand-alone provers.
 
 Our empirical evaluation on TPTP~\cite{tptp} problems attempts to answer three questions (Section~\ref{sec:evaluation}):
 \begin{enumerate}
