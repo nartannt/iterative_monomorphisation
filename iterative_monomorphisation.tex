@@ -187,12 +187,8 @@ Our empirical evaluation on TPTP~\cite{tptp} problems attempts to answer three q
 \begin{enumerate}
 \item Is the new Zipperposition with the E backend more successful on polymorphic problems than Zipperposition without backend?
 
-\smallskip
-
 \item How competitive are monomorphic provers on monomorphised %polymorphic
 problems?
-
-\smallskip
 
 \item Is iterative monomorphisation more effective than the native polymorphism implemented in polymorphic provers?
 \end{enumerate}
@@ -201,11 +197,7 @@ problems?
 %\begin{enumerate}
 %\item Zipperposition benefits substantially from the E backend.
 %
-%\smallskip
-%
 %\item E with monomorphisation comes close second to the polymorphic prover Vampire.
-%
-%\smallskip
 %
 %\item For Leo-III~\cite{leo-iii} and Vampire~\cite{vamp}, we find that monomorphisation is indeed more effective than native polymorphism.
 %\end{enumerate}
@@ -260,8 +252,6 @@ The initial phase of each iteration consists of computing two maps, \(M\) and \(
 \begin{enumerate}
 \item[\labelitemi] Given a symbol \(f\) occurring in \(\Phi\), the set \(M(f)\) consists of all monomorphic type arguments tuples to which \(f\) is applied in \(\Phi\). For example, if \(\sym{foldl}\langle \ty{nat}, \ty{int}\rangle\) occurs in \(\Phi\), then \((\ty{nat}, \ty{int}) \in M(\sym{foldl}) \).
 
-\smallskip
-
 \item[\labelitemi] Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(N(\varphi)(f)\) consists of all type arguments tuples to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in N(\varphi)(\sym{foldl}) \).
 \end{enumerate}
 
@@ -290,7 +280,8 @@ add the formula \((\sigma_1 \circ \dots \circ \sigma_n)(\varphi)\) to \(\Phi'\).
 The algorithm is sound because the newly generated formulae are instances of the initial problem's formulae. %, where type variables have been instantiated with monomorphic types.
 It is, however, not guaranteed to be complete.
 
-\begin{examplex}Consider the following problem:
+\begin{examplex}\rm
+Consider the following problem:
 \begin{enumerate}
    \item \(\sym{p}\langle \ty{int}\rangle(0)\)
    \item \(\forall a: \alpha{,}\; \mathit{as}:\ty{list}(\alpha){,}\; \sym{p}\langle\alpha\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\alpha)\rangle(\mathit{as})\)
@@ -474,14 +465,16 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
 
 
 The formula monomorphisation algorithm is given in Figure~\ref{mono_step}. It forms the core of the monomorphisation process by computing new type arguments tuples for a single formula. Type argument tuples are matched against each other to obtain a set of substitutions which is iterated over in the outermost loop. 
-The separation of type arguments tuples into old and new maps is put to use to ensure that only combinations involving at least one new map are considered. This avoids re-computing some of the matchings processed in previous iterations. Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings. New type argument tuples are obtained by applying each substitution to each non-monomorphic type argument tuple such that at least one type variable in the tuple is instantiated by the substitution.
+The separation of type arguments tuples into old and new maps is put to use to ensure that only combinations involving at least one new map are considered. This avoids re-computing some of the matchings processed in previous iterations. %Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings.
+New type argument tuples are obtained by applying each substitution to each non-monomorphic type argument tuple such that at least one type variable in the tuple is instantiated by the substitution.
 
 
 The total number of type argument tuples can increase cubicly in the number of type arguments tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We sketch an example of such growth, for a single formula. If we assume that after \(k\) iterations, there are \(N_k\) total type argument tuples divided evenly between monomorphic and non-monomorphic type arguments tuples, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type arguments tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
 
    Depending on the shape and size of the input problem and the number of iterations performed, the doubly exponential growth may be problematic. Introducing bounds addresses this potential issue. The limit on the number of newly generated monomorphic type argument tuples is \(\min(\max(\MonoMult\cdot m, \MonoFloor), \MonoCap)\), where \(m\) is the total number of monomorphic type argument tuples. The components of this limit are
 \begin{enumerate}
-   \item \MonoCap, an absolute limit on the total number of new type argument tuples;
+   \item \MonoCap, a %n absolute
+   limit on the total number of new type argument tuples;
    \item \MonoMult, which is used to allow the total number of (monomorphic) type argument tuples to grow by a certain proportion of the current number \(m\) of monomorphic type argument tuples;
    \item \MonoFloor, which balances out \MonoMult, preventing \MonoMult from inhibiting new type argument tuple generation if \(m\) is too low.
 \end{enumerate}
@@ -650,7 +643,7 @@ The various bounds presented here overlap to some extent. For instance, having a
 \label{mono_substs}
 \end{figure}
 
-Once all monomorphisation iterations have been completed, we are left with a set of the substitutions that have been used to generate new type arguments. The last phase uses these substitutions to instantiate the type variables in the input problem's non-monomrophic formuale. In the presence of bounds, the order in which the elements of the sets of substitutions of \(S\) are traversed affects the formulae resulting from the last phase. As we will discuss in Section~\ref{param_opti}, the best results were obtained when substitutions generated in the same iteration are grouped together.
+Once all monomorphisation iterations have been completed, we are left with a set of the substitutions that have been used to generate new type arguments. The last phase uses this set to instantiate the type variables in the input problem's non-monomrophic formuale. In the presence of bounds, the order in which the elements of \(S\) are traversed affects the formulae resulting from the last phase. %As we will discuss in Section~\ref{param_opti}, the best results were obtained when substitutions generated in the same iteration are grouped together.
 
 The \emph{generate\_mono\_formulae} function is given in Figure~\ref{gen_formulae}.
 It generates monomorphising substitutions and applies them to the polymorphic formula of the input problem that they instantiate. Since the substitutions are monomorphising relative to the formula they applied to, the resulting formulae will be monomorphic. The \textcolor{ourblueviolet}{total\_new\_formulae} bound is used to control the total number of new formulae. It overlaps with \textcolor{ourblueviolet}{max\_substs} but can be useful to set an absolute limit on the size of the final problem.
@@ -659,10 +652,11 @@ It generates monomorphising substitutions and applies them to the polymorphic fo
 To monomorphise a polymorphic formula, we first compute its {monomorphising substitutions} using the \emph{mono\_substs} function given in Figure~\ref{mono_substs}.
 A substitution \(\sigma\) is \emph{monomorphising} for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic. Such substitutions are computed using a recursive function. Given a set \(V\) of type variables and a set \(S(\varphi)\) of substitutions, it will select a substitution \(\sigma_{\negvthinspace\Delta}\) from \(S(\varphi)\) that instantiates at least one of the type variables in \(V\). It is important that \(\sigma_{\negvthinspace\Delta}\) be compatible with \(\sigma\) so that they can be composed and the function recursively called to instantiate the remaining type variables.
 
-The Zipperposition implementation of the \emph{mono\_substs} function uses a map from type variables to substitutions instead of a set to filter the relevant substitutions from \(S\) more efficiently. The \textcolor{ourblueviolet}{max\_substs} bound exists for two main reasons:
+The Zipperposition implementation of the \emph{mono\_substs} function uses a map from type variables to substitutions instead of a set to filter the relevant substitutions from \(S\) efficiently. The \textcolor{ourblueviolet}{max\_substs} bound exists for two main reasons:
 \begin{enumerate}
    \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic formula per initial polymorphic formula. Generating an excessive number of new formulae can flood the downstream prover. The final number of output formulae is ensured to be at most \(|\Phi|\cdot \text{\textcolor{ourblueviolet}{max\_substs}}\).
-   \item The \emph{mono\_substs} function is the most explosive part of the algorithm. For a formula \(\varphi\), if \(S(\varphi)\) contains \(n\) substitutions that each instantiate exactly one of \(v\) different type variables, up to \(n^v\) monomorphising substititions may be generated. Recall that the total number of type argument tuples that are used to generate \(S(\varphi)\) can be doubly exponential in the number of loop iterations.
+   \item The \emph{mono\_substs} function is the most explosive part of the algorithm. For a formula \(\varphi\), if \(S(\varphi)\) contains \(n\) substitutions that each instantiate exactly one of \(v\) %different
+type variables, up to \(n^v\) monomorphising substititions may be generated. Recall that the total number of type argument tuples that are used to generate \(S(\varphi)\) can be doubly exponential in the number of loop iterations.
 \end{enumerate}
 %[This function can be thought of as exploring the tree of all possible monomorphising substitutions, \(S_{\text{res}}\) would represent the leaves that have already been visited and \(\sigma\) would represent the current node of the tree.]
 
@@ -846,7 +840,7 @@ Table \ref{e_settings} shows the impact of the options with which we call the E 
 \subsection{E as Zipperposition backend}
 
 
-\begin{table}[ht]
+\begin{table}[t!]
 \caption{Evaluation of Zipperposition without E vs.\ with E}
 
 \medskip
