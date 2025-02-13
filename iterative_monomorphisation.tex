@@ -916,7 +916,7 @@ The monomorphisation approach is evaluated in two steps. First, each problem is 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We described a procedure for iteratively instantiating polymorphic types to
+We described an algorithm for iteratively instantiating polymorphic types to
 produce monomorphic problems as a preprocessor. Our primary motivation was to
 improve the success rate of Zipperposition and its monomorphic E backend, and
 indeed our evaluation shows a clear improvement. We also saw that even with
@@ -929,7 +929,7 @@ blindly enumerates candidate instantiations, without exploiting any knowledge
 about the logical structure of the formulas in which symbols occur. For
 example, a lemma $\sym{p}\langle\alpha\rangle$ cannot be used to prove the
 conjecture $\lnot \sym{p}\langle\ty{nat}\rangle$ because of the incompatible
-polarities, but our procedure instantiates $\alpha$ with $\ty{nat}$ regardless.
+polarities, but our algorithm instantiates $\alpha$ with $\ty{nat}$ regardless.
 Second, some automatic provers as well as tools such as Sledgehammer include
 relevance filters that heuristically select a subset of the available axioms;
 filters such as MePo~\cite{meng-paulson-2009} and SInE
