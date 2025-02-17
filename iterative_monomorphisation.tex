@@ -138,7 +138,7 @@
 
 \def\orcid#1{{\href{http://orcid.org/#1}{\protect\raisebox{-1.25pt}{\protect\includegraphics{orcid.pdf}}}}}
 
-\author{Tanguy Bozec\inst{1,2}\orcid{TODO} \and
+\author{Tanguy Bozec\inst{1,2}\orcid{0009-0005-9497-4168} \and
 Jasmin Blanchette\inst{2}\orcid{0000-0002-8367-0936}}
 
 \authorrunning{T. Bozec and J. Blanchette}
@@ -765,7 +765,7 @@ Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except 
 \end{table}
 
 %The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related through the role they play in the construction of monomorphising substitutions. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``separation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of substitutions generated has very little impact on overall performance contrary to the ordering heuristic.
-The substitution generation phase occurs once all type arguments have been generated. The bound limiting the number of monomorphising substitutions per formula is directly related to the ordering which dictates how such monomorphising substitutions are generated. The substitution ordering heuristic has a substantial impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``separation'' ordering separates the substitutions into groups of substitutions generated in the same iteration and generates monomorphising substitutions from each of these groups independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of monomorphising substitutions only seems to affect performance when the ``separation'' heuristic is used.
+The substitution generation phase occurs once all type arguments have been generated. The bound limiting the number of monomorphising substitutions per formula is directly related to the ordering which dictates how such monomorphising substitutions are generated. The substitution ordering heuristic has a substantial impact on monomorphising substitution generation. The `age' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The `random' ordering randomly shuffles substitutions. Finally, the `separation' ordering separates the substitutions into groups of substitutions generated in the same iteration and generates monomorphising substitutions from each of these groups independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of monomorphising substitutions only seems to affect performance when the `separation' heuristic is used.
 % TODO find a better term than "separation heuristic" maybe separation ?
 
 \begin{table}[t!]
@@ -871,7 +871,7 @@ Table \ref{e_settings} shows the impact of the options with which we call the E 
 \label{zipp_eval}
 \end{table}
 
-We compare the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py|, which attempts to prove the problem with various configuration in succession. Of these configuration, some may attempt to call E as a backend when the given problem is monomorphic. Because all given problems are non-monomorphic, this instance is labeled ``without E''. The second instance, is a modification of the \verb|portfolio.sequential.py| file where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
+We compare the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py|, which attempts to prove the problem with various configuration in succession. Of these configuration, some may attempt to call E as a backend when the given problem is monomorphic. Because all given problems are non-monomorphic, this instance is labeled `without E'. The second instance, is a modification of the \verb|portfolio.sequential.py| file where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
 Each of the two instances is evaluated on the set of the 500 previously used problems and the set of the remaining 1034 problems separately. The results of these evaluations do not suggest that any overfitting took place during the option optimisation phase.
 
 Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the performance of Zipperposition. It is not a strict improvement, since some problems are solved without E and not with E.
@@ -903,7 +903,10 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
 To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher-order polymorphic provers were run on the 1034 problem suite. We chose Leo-III and Zipperposition. We unfortunately had to exclude Vampire because of parsing issues.
 
 Table~\ref{native_vs_mono_eval} shows the results.
-The monomorphisation approach is evaluated in two steps. First, each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option which is removed. Second, each prover is ran on the monomorphised problem and the results are tallied in the table's ``Mono'' column. In addition to the polymorphic provers used in the ``Native'' tests, the monomorphic prover E is run on the monomorphised problems to provide an additional yardstick. Instead of running each prover 30 seconds on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the ``Native'' column, which does not have a similar preprocessing phase.
+The monomorphisation approach is evaluated in two steps. First, each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option which is increased to 30~seconds. For 149~problems, monomorphisation times out. Second, each prover is ran on the remaining monomorphised problems, and the results are tallied in the table's `Mono' column. In addition to the polymorphic provers used in the `Native' tests, the monomorphic prover E is run on the monomorphised problems to provide an additional yardstick. Instead of running each prover 30 seconds on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the `Native' column, which does not have a similar preprocessing phase.
+
+Despite the monomorphisation timeouts, monomorphisation is more effective than Leo-III's and Zipperposition's native polymorphism on the benchmarks.
+
 
 % target page number: 0.5-1
 %\section{Related work}
