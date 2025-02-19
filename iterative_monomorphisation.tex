@@ -174,8 +174,7 @@ A similar algorithm appears to be implemented in the \texttt{MESON} tactic~\cite
 
 In this paper, we present an algorithm based on our understanding of Böhme's description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed description to help future implementers. In addition, our description shows some of the ways in which an implementation can be made more efficient and avoid explosions (Section~\ref{sec:low-level-algorithm}).
 
-Briefly, the algorithm works as follows. We assume problems to be sets of formulae. All symbols of the problem are collected, and the polymorphic instances of symbols are matched against the monomorphic ones. This yields new instances of symbols, both polymorphic and monomorphic. The process is then iterated
-a number of times, making use of the newly generated instances.
+Briefly, the algorithm works as follows. We assume problems to be sets of formulae. All symbols of the problem are collected, and the polymorphic instances of symbols are matched against the monomorphic ones. This yields new symbol instances, both polymorphic and monomorphic. The process is then iterated, making use of the newly generated instances.
 
 Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(\alpha)$, where $\alpha$ is a type variable, it may be possible to generate the types $\ty{list}(\ty{int})$, $\ty{list}(\ty{list}(\ty{int}))$, etc. However, because new types emerge through matching, $\ty{list}(\ty{list}(\ty{int}))$ can be obtained only once the $\ty{list}(\ty{int})$ instance has been generated. This example also makes it clear that the set of instances that can be generated is infinite.
 
@@ -212,7 +211,8 @@ Our raw evaluation data is available online.%
 \label{sec:preliminaries}
 
 Our algorithm works independently of the structure of the problem's formulae. It relies exclusively on the formulae's monomorphic and polymorphic symbol instances. Type variables are assumed to be implicitly universally quantified at a formula's top level. The precise form of formulae is left unspecified.
-Due to this generality, iterative monomorphisation can be used with any reasonable rank-1 polymorphic logic. In particular, it can work with the polymorphic first and higher order logics embodied by TPTP's TF1 and TH1 syntaxes~\cite{blanchette-paskevich-2013,th1}, implemented by several automatic provers.
+Due to this generality, iterative monomorphisation can be used with any reasonable rank-1 polymorphic logic. In particular, it can work with the polymorphic first and higher order logics embodied by TPTP's TF1 and TH1 syntaxes~\cite{blanchette-paskevich-2013,th1}.
+% implemented by several automatic provers.
 
 Our abstract framework relies on the following basic definitions.
 
@@ -220,9 +220,6 @@ Our abstract framework relies on the following basic definitions.
 A (\emph{polymorphic}) \emph{type} \(\tau\) can be a type variable (e.g.\ \(\alpha\)) or
 the application of an \(n\)-ary type constructor to \(n\) types (e.g.\ \(\ty{list}(\alpha)\), \(\ty{map}(\ty{int},\ty{string})\)).
 If $n = 0$, we omit the parentheses (e.g.\ \(\ty{int}\)).
-\end{definition}
-
-\begin{definition}\rm
 A type is \emph{monomorphic} if it contains no type variables.
 \end{definition}
 
@@ -250,7 +247,7 @@ Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\
 \section{High level algorithm}
 \label{sec:high level-algorithm}
 
-The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying an arbitrary number of iterations. Each iteration takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step filters out all non-monomorphic formulae returned by the last iteration.
+The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying a fixed number of iterations, each of which taking a polymorphic problem as argument and returning a problem with additional partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step filters out all non-monomorphic formulae returned by the last iteration.
 
 The initial phase of each iteration consists of computing two maps, \(M\) and \(N\), from the input problem~$\Phi$.
 %
@@ -321,12 +318,13 @@ Any reasonable implementation requires bounds limiting the number of new type ar
 \section{Low level algorithm}
 \label{sec:low-level-algorithm}
 
-The algorithm presented in the previous section is simple but too naive for an implementation. In this section, we present a lower level algorithm with the following features.
+\looseness=-1
+The algorithm presented above is too naive for an implementation. In this section, we present a lower level algorithm with the following features.
 First, numeric bounds are introduced to stop explosive enumerations.
 Second, type arguments tuples are separated into an old set and a new set to avoid re-computing some of the same matchings in successive iterations.
 Third, substitutions are directly applied to the type arguments instead of the formulae. This dispenses from having to re-extract the type arguments from the formulae at each iteration. New formulae are generated only once all iterations are complete, in a separate, final step.
 
-The data structures used in the pseudocode are based on the ones used in the high level description. Instead of a map \(M\) from symbols to monomorphic type argument tuples, we now have \(M_\text{old}\) and \(M_\text{new}\), which play the same role whilst also distinguishing between type arguments tuples having already been matched against and those that have not. Similarly, \(N_\text{old}\) and \(N_\text{new}\) replace the map \(N\) from formulae to symbols to non-monomorphic type argument tuples. Finally, we keep track of a map \(S\) from formulae to the substitutions generated by the matchings. It is used to generate new formulae in the final phase.
+The data structures used in the pseudocode are based on the ones used in the high level description. Instead of a map \(M\) from symbols to monomorphic\pagebreak[2] type argument tuples, we now have \(M_\text{old}\) and \(M_\text{new}\), which play the same role whilst also distinguishing between type arguments tuples having already been matched against and those that have not. Similarly, \(N_\text{old}\) and \(N_\text{new}\) replace the map \(N\) from formulae to symbols to non-monomorphic type argument tuples. Finally, we keep track of a map \(S\) from formulae to the substitutions generated by the matchings. It is used to generate new formulae in the final phase.
 
 All sets referenced in the pseudocode are %assumed to be
 finite. Moreover, the algorithm relies on primitives whose implementation depends on the specifics of the grammar and logic used. %They will therefore not be expanded upon.
@@ -469,9 +467,9 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
 \end{figure}
 
 
-The formula monomorphisation algorithm is given in Figure~\ref{mono_step}. It forms the core of the monomorphisation process by computing new type arguments tuples for a single formula. Type argument tuples are matched against each other to obtain a set of substitutions which is iterated over in the outermost loop. 
-The separation of type arguments tuples into old and new maps is put to use to ensure that only combinations involving at least one new map are considered. This avoids re-computing some of the matchings processed in previous iterations. %Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings.
-New type argument tuples are obtained by applying each substitution to each non-monomorphic type argument tuple such that at least one type variable in the tuple is instantiated by the substitution.
+The formula monomorphisation algorithm is given in Figure~\ref{mono_step}. It forms the core of the process by computing new type arguments tuples for a single formula. Type argument tuples are matched against each other to obtain a set of substitutions which is iterated over in the outermost loop. 
+The separation of type arguments tuples into old and new maps is put to use to ensure that only combinations involving at least one new map are considered. This avoids re-computing some matchings processed in previous iterations. %Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings.
+New tuples are obtained by applying each substitution to each non-monomorphic type argument tuple such that at least one tuple component is instantiated by the substitution.
 
 
 The total number of type argument tuples can increase cubicly in the number of type arguments tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We sketch an example of such growth, for a single formula. If we assume that after \(k\) iterations, there are \(N_k\) total type argument tuples divided evenly between monomorphic and non-monomorphic type arguments tuples, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type arguments tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
@@ -660,8 +658,8 @@ A substitution \(\sigma\) is \emph{monomorphising} for a formula \(\varphi\) if 
 The Zipperposition implementation of the \emph{mono\_substs} function uses a map from type variables to substitutions instead of a set to filter the relevant substitutions from \(S\) efficiently. The \textcolor{ourblueviolet}{max\_substs} bound exists for two main reasons:
 \begin{enumerate}
    \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic formula per initial polymorphic formula. Generating an excessive number of new formulae can flood the downstream prover. The final number of output formulae is ensured to be at most \(|\Phi|\cdot \text{\textcolor{ourblueviolet}{max\_substs}}\).
-   \item The \emph{mono\_substs} function is the most explosive part of the algorithm. For a formula \(\varphi\), if \(S(\varphi)\) contains \(n\) substitutions that each instantiate exactly one of \(v\) %different
-type variables, up to \(n^v\) monomorphising substitutions may be generated. Recall that the total number of type argument tuples that are used to generate \(S(\varphi)\) can be doubly exponential in the number of loop iterations.
+   \item The \emph{mono\_substs} function is the algorithm's most explosive part. For a formula \(\varphi\), if \(S(\varphi)\) contains \(n\) substitutions that each instantiate exactly one of \(v\) %different
+type variables, up to \(n^v\) monomorphising substitutions may be generated. Recall that the total number of type argument tuples used to generate \(S(\varphi)\) can be doubly exponential in the number of loop iterations.
 \end{enumerate}
 %[This function can be thought of as exploring the tree of all possible monomorphising substitutions, \(S_{\text{res}}\) would represent the leaves that have already been visited and \(\sigma\) would represent the current node of the tree.]
 
