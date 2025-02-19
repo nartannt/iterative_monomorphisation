@@ -182,6 +182,8 @@ Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(
 To keep the number of generated formulae finite, we limit the number of iterations. After the iterations are completed, the new monomorphic symbol instances are used to instantiate the polymorphic symbols in the problem's formulae, generating new monomorphic formulae. Finally, because monomorphic provers do not support $n$-ary type constructors, types must be `mangled'; for example, the compound type $\ty{list}(\ty{int})$ could be mangled to $\ty{list\_int}$.
 
 We implemented iterative monomorphisation in Zipperposition~\cite{vukmirovic-et-al-2021}, a higher order prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E~\cite{e} as a backend. Thanks to our work, E can now be used with polymorphic problems. Moreover, our implementation can be used as a preprocessor to interface with other stand-alone provers.
+Our source code is available online.%
+\footnote{\url{https://github.com/nartannt/iterative_monomorphisation}}
 
 Our empirical evaluation on TPTP~\cite{tptp} problems attempts to answer three questions (Section~\ref{sec:evaluation}):
 \begin{enumerate}
@@ -192,6 +194,9 @@ problems?
 
 \item Is iterative monomorphisation more effective than the native polymorphism implemented in polymorphic provers?
 \end{enumerate}
+%
+Our raw evaluation data is available online.%
+\footnote{\url{https://zenodo.org/records/14881532}}
 
 %Our findings are as follows:
 %\begin{enumerate}
@@ -665,10 +670,8 @@ type variables, up to \(n^v\) monomorphising substitutions may be generated. Rec
 \label{sec:evaluation}
 
 The monomorphisation algorithm is parametrised by many bounds. The first part of the evaluation process is to find appropriate values for these bounds. The second part compares the performance of Zipperposition with and without E on polymorphic problems. The third part compares the performance of different provers on polymorphic problems and their monomorphised counterparts.
-Our raw evaluation data is available online.%
-\footnote{\url{https://zenodo.org/records/14881532}}
 
-The benchmarks are taken from version 8.2.0 of the TPTP library~\cite{tptp}. The library contains 1765 problems in the TF1 and TH1 grammars, corresponding respectively to first-order and higher-order logic with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems that include them. In total, our benchmark suite contains 1534 polymorphic problems. We chose as a measure of success for a given prover (or prover configuration) the number of problems that could each be solved by the prover in at most 30 seconds with a single thread.
+The benchmarks are taken from version 8.2.0 of the TPTP library~\cite{tptp}. The library contains 1765 problems in the TF1 and TH1 grammars, corresponding respectively to first order and higher order logic with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems that include them. In total, our benchmark suite contains 1534 polymorphic problems. We chose as a measure of success for a given prover (or prover configuration) the number of problems that could each be solved by the prover in at most 30 seconds with a single thread.
 %This corresponds to the default time limit in Sledgehammer.
 
 \subsection{Parameter optimisation}
@@ -900,7 +903,7 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
 \end{tabular}
 \end{table}
 
-To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher-order polymorphic provers were run on the 1034 problem suite. We chose Leo-III and Zipperposition. We unfortunately had to exclude Vampire because of parsing issues.
+To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher order polymorphic provers were run on the 1034 problem suite. We chose Leo-III and Zipperposition. We unfortunately had to exclude Vampire because of parsing issues.
 
 Table~\ref{native_vs_mono_eval} shows the results.
 The monomorphisation approach is evaluated in two steps. First, each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option which is increased to 30~seconds. For 149~problems, monomorphisation times out. Second, each prover is ran on the remaining monomorphised problems, and the results are tallied in the table's `Mono' column. In addition to the polymorphic provers used in the `Native' tests, the monomorphic prover E is run on the monomorphised problems to provide an additional yardstick. Instead of running each prover 30 seconds on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the `Native' column, which does not have a similar preprocessing phase.
