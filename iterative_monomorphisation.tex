@@ -161,13 +161,14 @@ Monomorphisation can be used to extend monomorphic provers to support polymorphi
 % target page number: 2-2.5
 \section{Introduction}
 
-Automatic theorem provers are employed to provide automation to users of proof assistants. Many proof assistants, such as HOL4~\cite{slind-norrish-2008}, HOL Light~\cite{harrison-2009} and Isabelle/HOL~\cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed at the top level of formulae. On the other hand, many automatic provers operate only on monomorphic logics. One approach to close this gap is to extend provers to natively support polymorphism, as has been done for Vampire~\cite{bhayat-reger-2020}. This, however, entails a lot of work that needs to be redone for every prover.
+Automatic theorem provers are employed to provide automation to users of proof assistants. Many proof assistants, such as HOL4~\cite{slind-norrish-2008}, HOL Light~\cite{harrison-2009} and Isabelle/HOL~\cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed at the top level of formulae. By contrast, many automatic provers operate only on monomorphic logics. One approach to closing this gap is to extend provers to natively support polymorphism, as has been done for Vampire~\cite{bhayat-reger-2020}. This, however, entails a lot of work that needs to be redone for every prover.
 
 The alternative is to translate polymorphic problems to monomorphic problems.
-One approach \cite[Section~9]{mono-trans} to achieve this is to encode polymorphism using dedicated function or predicate symbols in a monomorphic logic. Another approach is to encode polymorphism using {iterative monomorphisation}, as described by B\"ohme~\cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
+One approach \cite[Section~9]{mono-trans} is to encode polymorphism using dedicated function or predicate symbols in a monomorphic logic. Another approach is to encode polymorphism using {iterative monomorphisation}, as described by B\"ohme~\cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
 
-By a type version of the compactness theorem, we have that in first order logic, given a polymorphic formula \(\varphi\), there exist an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, such a set cannot be computed~\cite[Theorem 1]{expr-poly-types}. As a result, any monomorphisation method based on instantiation of type variables is
+Any translation method based on instantiation is
 bound to be incomplete.
+By a type version of the compactness theorem, we have that for any first order polymorphic formula \(\varphi\), there exists an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, this set cannot be computed~\cite[Theorem~1]{expr-poly-types}.
 
 B\"ohme's iterative approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,paulson-blanchette-2010} to interface with superposition based automatic theorem provers. However, it is is documented only as a single subsection in B\"ohme's PhD thesis~\cite[Section 2.2.1]{sb-phd}.
 A similar algorithm appears to be implemented in the \texttt{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
@@ -178,7 +179,7 @@ Briefly, the algorithm works as follows. We assume problems to be sets of formul
 
 Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(\alpha)$, where $\alpha$ is a type variable, it may be possible to generate the types $\ty{list}(\ty{int})$, $\ty{list}(\ty{list}(\ty{int}))$, etc. However, because new types emerge through matching, $\ty{list}(\ty{list}(\ty{int}))$ can be obtained only once the $\ty{list}(\ty{int})$ instance has been generated. This example also makes it clear that the set of instances that can be generated is infinite.
 
-To keep the number of generated formulae finite, we limit the number of iterations. After the iterations are completed, the new monomorphic symbol instances are used to instantiate the polymorphic symbols in the problem's formulae, generating new monomorphic formulae. Finally, because monomorphic provers do not support $n$-ary type constructors, types must be `mangled'; for example, the compound type $\ty{list}(\ty{int})$ could be mangled to $\ty{list\_int}$.
+To keep the number of generated formulae finite, we limit the number of iterations. After the iterations are completed, the new monomorphic symbol instances are used to instantiate the polymorphic symbols in the problem's formulae, generating new monomorphic formulae. Finally, because monomorphic provers support only nullary type constructors, types must be `mangled'; for example, the compound type $\ty{list}(\ty{int})$ could be mangled to $\ty{list\_int}$.
 
 We implemented iterative monomorphisation in Zipperposition~\cite{vukmirovic-et-al-2021}, a higher order prover written in OCaml. Although Zipperposition is polymorphic, it uses the monomorphic prover E~\cite{e} as a backend. Thanks to our work, E can now be used with polymorphic problems. Moreover, our implementation can be used as a preprocessor to interface with other stand-alone provers.
 Our source code is available online.%
@@ -217,7 +218,7 @@ Due to this generality, iterative monomorphisation can be used with any reasonab
 Our abstract framework relies on the following basic definitions.
 
 \begin{definition}\rm
-A (\emph{polymorphic}) \emph{type} \(\tau\) can be a type variable (e.g.\ \(\alpha\)) or
+A (\emph{polymorphic}) \emph{type} \(\tau\) is a type variable (e.g.\ \(\alpha\)) or
 the application of an \(n\)-ary type constructor to \(n\) types (e.g.\ \(\ty{list}(\alpha)\), \(\ty{map}(\ty{int},\ty{string})\)).
 If $n = 0$, we omit the parentheses (e.g.\ \(\ty{int}\)).
 A type is \emph{monomorphic} if it contains no type variables.
@@ -238,7 +239,7 @@ Two substitutions \(\{\alpha_1 \mapsto \tau_1, \dots, \alpha_m\mapsto\tau_m\}\) 
 \end{definition}
 
 \begin{definition}\rm
-Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\) will either fail or yield a substitution \(\sigma\) such that \(\sigma(\upsilon) = \tau\).
+Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\) either fails or yields a substitution \(\sigma\) such that \(\sigma(\upsilon) = \tau\).
 \end{definition}
 
 %In the following sections, we will always match a polymorphic type $\upsilon$ against a monomorphic type $\tau$.
@@ -247,18 +248,18 @@ Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\
 \section{High level algorithm}
 \label{sec:high level-algorithm}
 
-The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying a fixed number of iterations, each of which taking a polymorphic problem as argument and returning a problem with additional partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step filters out all non-monomorphic formulae returned by the last iteration.
+The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying a fixed number of iterations, each of which takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step discards all non-monomorphic formulae returned by the last iteration.
 
-The initial phase of each iteration consists of computing two maps, \(M\) and \(N\), from the input problem~$\Phi$.
+The initial phase of each iteration computes two maps, \(M\) and \(N\), from the input problem~$\Phi$.
 %
 \begin{enumerate}
-\item[\labelitemi] Given a symbol \(f\) occurring in \(\Phi\), the set \(M(f)\) consists of all monomorphic type arguments tuples to which \(f\) is applied in \(\Phi\). For example, if \(\sym{foldl}\langle \ty{nat}, \ty{int}\rangle\) occurs in \(\Phi\), then \((\ty{nat}, \ty{int}) \in M(\sym{foldl}) \).
+\item[\labelitemi] Given a symbol \(f\) occurring in \(\Phi\), the set \(M(f)\) consists of all monomorphic type argument tuples to which \(f\) is applied in \(\Phi\). For example, if \(\sym{foldl}\langle \ty{nat}, \ty{int}\rangle\) occurs in \(\Phi\), then \((\ty{nat}, \ty{int}) \in M(\sym{foldl}) \).
 
-\item[\labelitemi] Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(N(\varphi)(f)\) consists of all type arguments tuples to which \(f\) is applied in \(\varphi\) and which contains a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in N(\varphi)(\sym{foldl}) \).
+\item[\labelitemi] Given a formula \(\varphi \in \Phi\) and a symbol \(f\) occurring in \(\varphi\), the set \(N(\varphi)(f)\) consists of all type argument tuples to which \(f\) is applied in \(\varphi\) and which contain a type variable. For example, if \(\sym{foldl}\langle \ty{nat}, \ty{list}(\alpha)\rangle\) occurs in \(\varphi\), then \((\ty{nat}, \ty{list}(\alpha)) \in N(\varphi)(\sym{foldl}) \).
 \end{enumerate}
 
 %These definitions depend on the precise form of the input formulae, which has been left undefined.
-It is important to parametrise \(N\) with \(\varphi\), because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
+\(N\) is parameterised with \(\varphi\) because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
 
 Once the maps \(M\) and \(N\) are initialised, each iteration performs the following steps to create new instances of formulae:
 
@@ -268,7 +269,7 @@ Once the maps \(M\) and \(N\) are initialised, each iteration performs the follo
 
    \item For each formula \(\varphi \in \Phi\) and for each symbol \(f\) occurring in \(\varphi\):
    \begin{enumerate}
-    \item[2.1.] For each tuple \((\tau_1, \dots, \tau_n) \in  M(f)\) and \((\upsilon_1, \dots, \upsilon_n) \in N(\varphi)(f)\),
+    \item[2.1.] For each \((\tau_1, \dots, \tau_n) \in  M(f)\) and \((\upsilon_1, \dots, \upsilon_n) \in N(\varphi)(f)\) and
      for each \(i\), match \(\upsilon_i\) against \(\tau_i\), yielding the substitution \(\sigma_i\) in case of success.
 
     \item[2.2.] If all \(n\) matchings are successful and the substitutions \(\sigma_i\) are pairwise compatible,
@@ -280,7 +281,7 @@ add the formula \((\sigma_1 \circ \dots \circ \sigma_n)(\varphi)\) to \(\Phi'\).
 \end{enumerate}
 
 The algorithm is sound because the newly generated formulae are instances of the initial problem's formulae. %, where type variables have been instantiated with monomorphic types.
-It is, however, not guaranteed to be complete.
+It is, however, not complete.
 
 \begin{examplex}\rm
 Consider the following problem:
@@ -321,10 +322,10 @@ Any reasonable implementation requires bounds limiting the number of new type ar
 \looseness=-1
 The algorithm presented above is too naive for an implementation. In this section, we present a lower level algorithm with the following features.
 First, numeric bounds are introduced to stop explosive enumerations.
-Second, type arguments tuples are separated into an old set and a new set to avoid re-computing some of the same matchings in successive iterations.
+Second, type argument tuples are separated into an old set and a new set to avoid re-computing some of the same matchings in successive iterations.
 Third, substitutions are directly applied to the type arguments instead of the formulae. This dispenses from having to re-extract the type arguments from the formulae at each iteration. New formulae are generated only once all iterations are complete, in a separate, final step.
 
-The data structures used in the pseudocode are based on the ones used in the high level description. Instead of a map \(M\) from symbols to monomorphic\pagebreak[2] type argument tuples, we now have \(M_\text{old}\) and \(M_\text{new}\), which play the same role whilst also distinguishing between type arguments tuples having already been matched against and those that have not. Similarly, \(N_\text{old}\) and \(N_\text{new}\) replace the map \(N\) from formulae to symbols to non-monomorphic type argument tuples. Finally, we keep track of a map \(S\) from formulae to the substitutions generated by the matchings. It is used to generate new formulae in the final phase.
+The data structures used in the pseudocode are based on the ones used in the high level description. Instead of a map \(M\) from symbols to monomorphic\pagebreak[2] type argument tuples, we now have \(M_\text{old}\) and \(M_\text{new}\), which play the same role whilst also distinguishing between type argument tuples having already been matched against and those that have not. Similarly, \(N_\text{old}\) and \(N_\text{new}\) replace the map \(N\) from formulae to symbols to non-monomorphic type argument tuples. Finally, we keep track of a map \(S\) from formulae to the substitutions generated by the matchings. It is used to generate new formulae in the final phase.
 
 All sets referenced in the pseudocode are %assumed to be
 finite. Moreover, the algorithm relies on primitives whose implementation depends on the specifics of the grammar and logic used. %They will therefore not be expanded upon.
@@ -393,7 +394,7 @@ Functions computing the following are assumed to be available:
 \end{figure}
 
 
-The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is done and the substitutions used to create new type arguments tuples are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. The third phase mangles the composite types of the newly monomorphised formulae. This allows targeting a simply typed logic with no general support for $n$-ary type constructors.
+The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is done and the substitutions used to create new type argument tuples are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. The third phase mangles the composite types of the newly monomorphised formulae. This allows targeting a simply typed logic with no general support for $n$-ary type constructors.
 %~\cite[Sections 4 and 5]{mono-trans}.
 % Paper name is gt
 
@@ -467,12 +468,12 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
 \end{figure}
 
 
-The formula monomorphisation algorithm is given in Figure~\ref{mono_step}. It forms the core of the process by computing new type arguments tuples for a single formula. Type argument tuples are matched against each other to obtain a set of substitutions which is iterated over in the outermost loop. 
-The separation of type arguments tuples into old and new maps is put to use to ensure that only combinations involving at least one new map are considered. This avoids re-computing some matchings processed in previous iterations. %Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings.
+The formula monomorphisation algorithm is given in Figure~\ref{mono_step}. It forms the core of the process by computing new type argument tuples for a single formula. Type argument tuples are matched against each other to obtain a set of substitutions which is iterated over in the outermost loop. 
+The separation of type argument tuples into old and new maps is put to use to ensure that only combinations involving at least one new map are considered. This avoids re-computing some matchings processed in previous iterations. %Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings.
 New tuples are obtained by applying each substitution to each non-monomorphic type argument tuple such that at least one tuple component is instantiated by the substitution.
 
 
-The total number of type argument tuples can increase cubicly in the number of type arguments tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We sketch an example of such growth, for a single formula. If we assume that after \(k\) iterations, there are \(N_k\) total type argument tuples divided evenly between monomorphic and non-monomorphic type arguments tuples, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type arguments tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
+The total number of type argument tuples can increase cubicly in the number of type argument tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We sketch an example of such growth, for a single formula. If we assume that after \(k\) iterations, there are \(N_k\) total type argument tuples divided evenly between monomorphic and non-monomorphic type argument tuples, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type argument tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
 
    Depending on the shape and size of the input problem and the number of iterations performed, the doubly exponential growth may be problematic. Introducing bounds addresses this potential issue. The limit on the number of newly generated monomorphic type argument tuples is \(\min(\max(\MonoMult\cdot m, \MonoFloor), \MonoCap)\), where \(m\) is the total number of monomorphic type argument tuples. The components of this limit are
 \begin{enumerate}
@@ -482,7 +483,7 @@ The total number of type argument tuples can increase cubicly in the number of t
    \item \MonoFloor, which balances out \MonoMult, preventing \MonoMult from inhibiting new type argument tuple generation if \(m\) is too low.
 \end{enumerate}
 
-Similar bounds are used for the non-monomorphic type arguments tuples:
+Similar bounds are used for the non-monomorphic type argument tuples:
 The limit on the number of new non-monomorphic type argument tuples is \(\min(\max(\PolyMult\cdot n, \PolyFloor),\allowbreak \PolyCap)\), where \(n\) is the number of non-monomorphic type argument tuples associated with the current formula. An important difference with the monomorphic case is that \(n\) depends on the current formula being processed whilst \(m\) does not.
 Both in the monomorphic and in the non-monomorphic case, the maximum number of newly generated type argument tuples is fixed per formula and per iteration.
 
@@ -596,7 +597,7 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 \end{figure}
 
 
-The various bounds presented here overlap to some extent. For instance, having at most \textcolor{ourblueviolet}{substitution\_limit} substitutions generated by \emph{matches} may be sufficient to curb the number of new type argument tuples, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its uses. For example, problems that lead to few successful matches but many type arguments tuples may benefit from a limit on the number of new type arguments tuples whilst problems for which substitution generation is more explosive may benefit from a limit on the number of generated substitution.
+The various bounds presented here overlap to some extent. For instance, having at most \textcolor{ourblueviolet}{substitution\_limit} substitutions generated by \emph{matches} may be sufficient to curb the number of new type argument tuples, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its uses. For example, problems that lead to few successful matches but many type argument tuples may benefit from a limit on the number of new type argument tuples whilst problems for which substitution generation is more explosive may benefit from a limit on the number of generated substitution.
 
 \begin{figure}[t!]
 %\begin{quote}
@@ -960,7 +961,8 @@ polymorphism to outperform any preprocessor, this is not the case now, therefore
 \begin{credits}
    \subsubsection{Acknowledgements.}
 
-   We thank Sascha Böhme for fruitful discussions.
+   We thank Sascha Böhme for fruitful discussions and
+   Jannis Limperg for suggesting textual improvements.
 
    This research is co-funded by the European Union (ERC, Nekoka, 101083038). Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or the European Research Council. Neither the European Union nor the granting authority can be held responsible for them.
 \end{credits}
