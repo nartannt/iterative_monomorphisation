@@ -161,14 +161,14 @@ Monomorphisation can be used to extend monomorphic provers to support polymorphi
 % target page number: 2-2.5
 \section{Introduction}
 
-Automatic theorem provers are employed to provide automation to users of proof assistants. Many proof assistants, such as HOL4~\cite{slind-norrish-2008}, HOL Light~\cite{harrison-2009} and Isabelle/HOL~\cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed at the top level of formulae. By contrast, many automatic provers operate only on monomorphic logics. One approach to closing this gap is to extend provers to natively support polymorphism, as has been done for Vampire~\cite{bhayat-reger-2020}. This, however, entails a lot of work that needs to be redone for every prover.
+Automatic theorem provers are employed to provide automation to users of proof assistants. Many proof assistants, such as HOL4~\cite{slind-norrish-2008}, HOL Light~\cite{harrison-2009} and Isabelle\slash HOL \cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed at the top level of formulae. By contrast, many automatic provers operate only on monomorphic logics. One approach to closing this gap is to extend provers to natively support polymorphism, as has been done for Vampire~\cite{bhayat-reger-2020}. This, however, entails a lot of work that needs to be redone for every prover.
 
 The alternative is to translate polymorphic problems to monomorphic problems.
 One approach \cite[Section~9]{mono-trans} is to encode polymorphism using dedicated function or predicate symbols in a monomorphic logic. Another approach is to encode polymorphism using {iterative monomorphisation}, as described by B\"ohme~\cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
 
 Any translation method based on instantiation is
 bound to be incomplete.
-By a type version of the compactness theorem, we have that for any first order polymorphic formula \(\varphi\), there exists an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, this set cannot be computed~\cite[Theorem~1]{expr-poly-types}.
+By a type version of the compactness theorem, there exists for any first order polymorphic formula \(\varphi\) an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, this set cannot be computed~\cite[Theorem~1]{expr-poly-types}.
 
 B\"ohme's iterative approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,paulson-blanchette-2010} to interface with superposition based automatic theorem provers. However, it is is documented only as a single subsection in B\"ohme's PhD thesis~\cite[Section 2.2.1]{sb-phd}.
 A similar algorithm appears to be implemented in the \texttt{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
@@ -177,7 +177,7 @@ In this paper, we present an algorithm based on our understanding of Böhme's de
 
 Briefly, the algorithm works as follows. We assume problems to be sets of formulae. All symbols of the problem are collected, and the polymorphic instances of symbols are matched against the monomorphic ones. This yields new symbol instances, both polymorphic and monomorphic. The process is then iterated, making use of the newly generated instances.
 
-Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(\alpha)$, where $\alpha$ is a type variable, it may be possible to generate the types $\ty{list}(\ty{int})$, $\ty{list}(\ty{list}(\ty{int}))$, etc. However, because new types emerge through matching, $\ty{list}(\ty{list}(\ty{int}))$ can be obtained only once the $\ty{list}(\ty{int})$ instance has been generated. This example also makes it clear that the set of instances that can be generated is infinite.
+Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(\alpha)$, where $\alpha$ is a type variable, the types $\ty{list}(\ty{int})$, $\ty{list}(\ty{list}(\ty{int}))$, etc., can be generated. However, because new types emerge through matching, $\ty{list}(\ty{list}(\ty{int}))$ can be obtained only once the $\ty{list}(\ty{int})$ instance has been generated. This example also makes it clear that the set of instances that can be generated is infinite.
 
 To keep the number of generated formulae finite, we limit the number of iterations. After the iterations are completed, the new monomorphic symbol instances are used to instantiate the polymorphic symbols in the problem's formulae, generating new monomorphic formulae. Finally, because monomorphic provers support only nullary type constructors, types must be `mangled'; for example, the compound type $\ty{list}(\ty{int})$ could be mangled to $\ty{list\_int}$.
 
