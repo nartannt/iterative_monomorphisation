@@ -67,9 +67,9 @@
 \SetKwData{PolyFloor}{\textcolor{ourblueviolet}{nonm\_floor}}
 \SetKwData{MaxMono}{\textcolor{ourblueviolet}{max\_mono\_args}}
 \SetKwData{MaxPoly}{\textcolor{ourblueviolet}{max\_nonm\_args}}
-\SetKwData{Limit}{\textcolor{ourblueviolet}{total\_new\_formulae}}
+\SetKwData{Limit}{\textcolor{ourblueviolet}{max\_new\_formulae}}
 \SetKwData{MonoSubstsLimit}{\textcolor{ourblueviolet}{max\_substs}}
-\SetKwData{SubstLimit}{\textcolor{ourblueviolet}{substitution\_limit}}
+\SetKwData{SubstLimit}{\textcolor{ourblueviolet}{substitution\_cap}}
 \SetKwData{Loop}{\textcolor{ourblueviolet}{num\_loops}}
 \SetKwData{TypeVars}{type\_variables}
 \SetKwData{UsedSubst}{\(S\)}
@@ -333,7 +333,7 @@ Functions computing the following are assumed to be available:
 \begin{enumerate}
    \item[\labelitemi] \emph{initialisation\((\Phi)\)}, where \(\Phi\) is a set of (polymorphic) formulae, extracts the initial type argument maps \(M\) and \(N\) from \(\Phi\).
    \item[\labelitemi] \emph{type\_variables\((\tau_1, \dots, \tau_n)\)}, where \(\tau_1, \dots,\tau_n\) are types, gathers all the type variables from each type \(\tau_1, \dots, \tau_n\) into a set.
-   \item[\labelitemi] \emph{match\((\upsilon, \tau)\)}, where \(\upsilon\) and \(\tau\) are types, matches \(\upsilon\) against \(\tau\) and either fails or returns \emph{Success\((\sigma)\)}, where \(\sigma\) results from the matching. The algorithm matches only non-monomorphic types against monomorphic types.
+   \item[\labelitemi] \emph{match\((\upsilon, \tau)\)}, where \(\upsilon\) and \(\tau\) are types, matches \(\upsilon\) against \(\tau\) and either fails or returns \emph{Some\((\sigma)\)}, where \(\sigma\) results from the matching. The algorithm matches only non-monomorphic types against monomorphic types.
    \item[\labelitemi] \emph{domain\((\sigma)\)} %, where \(\sigma\) is a substitution,
    returns the set of type variables \(\alpha\) such that \(\sigma(
    \alpha) \not= \alpha\).
@@ -491,7 +491,66 @@ The limit on the number of new non-monomorphic type argument tuples is \(\min(\m
 Both in the monomorphic and in the non-monomorphic case, the maximum number of newly generated type argument tuples is fixed per formula and iteration.
 
 The \emph{matches} function, which computes the substitutions used for generating new type arguments, is given in Figure~\ref{subst_gen}. Each symbol instance from \(N(\varphi)\) is matched against all corresponding symbol instances from \(M\).
-For two such symbol instances, types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the algorithm, this is checked by making sure the \textbf{while} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant. The total number of substitutions generated is limited by \textcolor{ourblueviolet}{substitution\_limit}.
+For two such symbol instances, types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the algorithm, this is checked by making sure the \textbf{while} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant. The total number of substitutions generated is limited by \textcolor{ourblueviolet}{substitution\_cap}.
+
+%\begin{figure}[t!]
+%%\begin{quote}
+%\begin{algorithm}[H]
+%\SetKwFunction{SubstGen}{matches}
+%\Fn(){\(\SubstGen(M, N(\varphi))\)}{
+%   \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}
+%   \SetKwFunction{Success}{Success}\SetKwFunction{Compatible}{compatible}
+%   \SetKwFunction{Match}{match}
+%   \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+%   \SetKw{Break}{break}
+%
+%   \KwData{\begin{minipage}[t]{.8\textwidth}
+%      \strut monomorphic type argument map \(M\) \\
+%      non-monomorphic type argument map \(N(\varphi)\)\strut
+%      \end{minipage}
+%   }
+%   \KwResult{set of substitutions}
+%   \BlankLine
+%
+%   \(S\leftarrow \emptyset\)\;
+%
+%   \BlankLine
+%
+%   \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in N(\varphi)\)}{
+%      \ForEach{\( (\tau_1, \dots,\tau_n) \in M(f) \)}{
+%         \(\sigma\leftarrow \{\}\)\;
+%         \(i \leftarrow 1\)\;
+%         \While{\(i \leq n\)}{
+%            \eIf{\(\Match(\upsilon_i, \tau_i)\) has the form \(\Success(\sigma_i)\) \And \(\Compatible(\sigma, \sigma_i)\kern-300mm\)}{
+%               \(\strut\sigma\leftarrow\sigma_i\circ\sigma\)
+%            }
+%            {\Break}
+%
+%            \(i\leftarrow i+1\)\;
+%         }
+%         
+%         \If{\(i > n\)}{
+%            \textcolor{ourblueviolet}{
+%               \eIf{\(|S| < \SubstLimit\)}{
+%                  \textcolor{black}{\(S\leftarrow S\cup \{\sigma\}\)\;}
+%               }
+%               {\Return \(S\)}
+%            }
+%         }
+%      }
+%
+%   }
+%
+%   \BlankLine
+%
+%   \Return \(S\)\;
+%
+%}
+%\end{algorithm}
+%%\end{quote}
+%\caption{Algorithm for match generation}
+%\label{subst_gen}
+%\end{figure}
 
 \begin{figure}[t!]
 %\begin{quote}
@@ -499,7 +558,7 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 \SetKwFunction{SubstGen}{matches}
 \Fn(){\(\SubstGen(M, N(\varphi))\)}{
    \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}
-   \SetKwFunction{Success}{Success}\SetKwFunction{Compatible}{compatible}
+   \SetKwFunction{Success}{Some}\SetKwFunction{Compatible}{compatible}
    \SetKwFunction{Match}{match}
    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
    \SetKw{Break}{break}
@@ -518,25 +577,19 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 
    \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in N(\varphi)\)}{
       \ForEach{\( (\tau_1, \dots,\tau_n) \in M(f) \)}{
-         \(\sigma\leftarrow \{\}\)\;
-         \(i \leftarrow 1\)\;
-         \While{\(i \leq n\)}{
-            \eIf{\(\Match(\upsilon_i, \tau_i)\) has the form \(\Success(\sigma_i)\) \And \(\Compatible(\sigma, \sigma_i)\kern-300mm\)}{
-               \(\strut\sigma\leftarrow\sigma_i\circ\sigma\)
-            }
-            {\Break}
+         \If{for all \(i\), \(\Match(\upsilon_i, \tau_i) = \Success(\sigma_i)\) \And all \(\sigma_i\) are compatible}
+            {
+               \(\sigma\leftarrow\sigma_1\circ\dots\circ\sigma_n\)
 
-            \(i\leftarrow i+1\)\;
-         }
+            }
+
          
-         \If{\(i > n\)}{
             \textcolor{ourblueviolet}{
                \eIf{\(|S| < \SubstLimit\)}{
                   \textcolor{black}{\(S\leftarrow S\cup \{\sigma\}\)\;}
                }
                {\Return \(S\)}
             }
-         }
       }
 
    }
@@ -552,17 +605,6 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 \label{subst_gen}
 \end{figure}
 
-%%% @TANGUY: Jannis wrote:
-% "I feel like this pseudocode could be simplified a lot by taking a
-% higher-level view of the while loop. E.g.
-
-% if for all v_i and t_i, match(v_i, t_i) = Success(σ_i) and the σ_i are all 
-% compatible then
-%    σ := σ_1 \comp ... \comp σ_n
-
-% The fact that you break early is imo trivial enough that it doesn't need to be
-% discussed explicitly."
-
 \begin{figure}[t!]
 %\begin{quote}
 \begin{algorithm}[H]
@@ -571,10 +613,8 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 
    \SetKwData{NewFormulae}{\(\Psi\)}
    \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(S\)}
-   \SetKwData{Limit}{total\_new\_formulae}
+   \SetKwData{Limit}{max\_new\_formulae}
 
-%%% @TANGUY: Jannis wrote:
-% "All the other limits are named something like max_x or x_cap."
    \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step} 
    \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{mono\_substs}
    \SetKwFunction{GenFormulae}{generate\_formulae}
@@ -613,7 +653,7 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 \end{figure}
 
 
-The various bounds presented here overlap to some extent. For instance, having at most \textcolor{ourblueviolet}{substitution\_limit} substitutions generated by \emph{matches} may be sufficient to curb the number of new type argument tuples, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its uses. For example, problems that lead to few successful matches but many type argument tuples may benefit from a limit on the number of new type argument tuples whilst problems for which substitution generation is more explosive may benefit from a limit on the number of generated substitutions.
+The various bounds presented here overlap to some extent. For instance, having at most \textcolor{ourblueviolet}{substitution\_cap} substitutions generated by \emph{matches} may be sufficient to curb the number of new type argument tuples, making the \textcolor{ourblueviolet}{\MonoCap}, \textcolor{ourblueviolet}{\MonoMult}, \textcolor{ourblueviolet}{\MonoFloor} triplet superfluous. Each bound nonetheless has its uses. For example, problems that lead to few successful matches but many type argument tuples may benefit from a limit on the number of new type argument tuples whilst problems for which substitution generation is more explosive may benefit from a limit on the number of generated substitutions.
 
 \begin{figure}[t!]
 %\begin{quote}
@@ -668,7 +708,7 @@ Once all monomorphisation iterations have been completed, we are left with a set
 The \emph{generate\_mono\_formulae} function is given in Figure~\ref{gen_formulae}.
 It generates monomorphising substitutions and applies them to the polymorphic formulae of the input problem that they instantiate.
 A substitution \(\sigma\) is \emph{monomorphising} for a formula \(\varphi\) if \(\sigma(\varphi)\) is monomorphic.
-Since the substitutions are monomorphising relative to the formula they are applied to, the resulting formulae will be monomorphic. The \textcolor{ourblueviolet}{total\_new\_formulae} bound is used to control the total number of new formulae. It overlaps with \textcolor{ourblueviolet}{max\_substs} but can be useful to set an absolute limit on the size of the final problem.
+Since the substitutions are monomorphising relative to the formula they are applied to, the resulting formulae will be monomorphic. The \textcolor{ourblueviolet}{max\_new\_formulae} bound is used to control the total number of new formulae. It overlaps with \textcolor{ourblueviolet}{max\_substs} but can be useful to set an absolute limit on the size of the final problem.
 %In the Zipperposition implementation, this bound is one of the more important ones as the performance of the E prover can be significantly affected by the number of formulae it is given.
 
 To monomorphise a polymorphic formula, we first compute its {monomorphising substitutions} using the \emph{mono\_substs} function given in Figure~\ref{mono_substs}.
@@ -678,9 +718,7 @@ The Zipperposition implementation of the \emph{mono\_substs} function uses a map
 \begin{enumerate}
    \item The iterative monomorphisation algorithm can generate up to \textcolor{ourblueviolet}{max\_substs} new monomorphic formulae per initial polymorphic formula. Generating an excessive number of new formulae can overwhelm the downstream prover. The final number of output formulae is limited to at most \(|\Phi|\cdot \text{\textcolor{ourblueviolet}{max\_substs}}\).
    \item The \emph{mono\_substs} function is the algorithm's most explosive part. For a formula \(\varphi\), if \(S(\varphi)\) contains \(n\) substitutions that each instantiate exactly one of \(v\) %different
-type variables, up to \(n^v\) monomorphising substitutions may be generated. Recall that the total number of type argument tuples used to generate \(S(\varphi)\) can be doubly exponential in the number of loop iterations.
-%%% @TANGUY: About the last sentence, Jannis writes:
-%%% "Not immediately clear to me what this entails."
+type variables, up to \(n^v\) monomorphising substitutions may be generated. Recall that the total number of type argument tuples used to generate \(S(\varphi)\) can be doubly exponential in the number of loop iterations. The starting \(n\) may therefore already be very large.
 \end{enumerate}
 %[This function can be thought of as exploring the tree of all possible monomorphising substitutions, \(S_{\text{res}}\) would represent the leaves that have already been visited and \(\sigma\) would represent the current node of the tree.]
 
@@ -691,10 +729,9 @@ type variables, up to \(n^v\) monomorphising substitutions may be generated. Rec
 The monomorphisation algorithm is parametrised by many bounds. The first part of the evaluation process seeks appropriate values for these bounds. The second part compares the performance of Zipperposition without E and with the new monormorphising E backend on polymorphic problems. The third part compares the performance of different provers on polymorphic problems and their monomorphised counterparts.
 
 The benchmarks are taken from version 8.2.0 of the TPTP library~\cite{tptp}. The library contains 1765 problems in the TF1 and TH1 grammars, corresponding respectively to first order and higher order logic with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems that include them. In total, our benchmark suite contains 1534 polymorphic problems. We chose as a measure of success for a given prover (or prover configuration) the number of problems
-that could be solved by the prover in at most 30 seconds per problem with a single thread.
+that could be solved by the prover in at most 30 seconds%(including monomorphisation when relevant)
+per problem with a single thread.
 
-%%% @TANGUY: Jannis writes:
-% "Also, does the 30-sec timeout include the monomorphisation pass itself?"
 
 %This corresponds to the default time limit in Sledgehammer.
 
