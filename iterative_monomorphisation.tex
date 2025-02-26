@@ -631,7 +631,7 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
 
    \BlankLine
 
-   \ForEach{\(\varphi\in\Phi\) \ST $\varphi$ is non-monomorphic}{
+   \ForEach{\(\varphi\in\Phi\) \textbf{s.t.} $\varphi$ is non-monomorphic}{
       \ForEach{\(\sigma\in \MonoSubst(\AllSubst(\varphi), \TyVars{\(\varphi\)}, \emptyset, \{\})\)}{
          \textcolor{ourblueviolet}{
          \eIf{\(|\NewFormulae|<\Limit\)}{
@@ -683,8 +683,8 @@ The various bounds presented here overlap to some extent. For instance, having a
     \Return \(S_{\text{res}}\cup\{\sigma\}\)\;%}
    }
    {
-      \Let \(\alpha \) \ST \(\alpha\in V\)\;
-      \ForEach{\(\sigma_{\negvthinspace\Delta}\in S\) \ST \(\alpha\in\Domain(\sigma_{\negvthinspace\Delta})\) \And \(\Compatible(\sigma,\sigma_{\negvthinspace\Delta})\)}{
+      \Let \(\alpha \) \textbf{s.t.} \(\alpha\in V\)\;
+      \ForEach{\(\sigma_{\negvthinspace\Delta}\in S\) \textbf{s.t.} \(\alpha\in\Domain(\sigma_{\negvthinspace\Delta})\) \And \(\Compatible(\sigma,\sigma_{\negvthinspace\Delta})\)}{
          \textcolor{ourblueviolet}{
          \eIf{\(|S_{\text{res}}|<\MonoSubstsLimit\)}{
             \textcolor{black}{
