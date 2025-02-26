@@ -491,7 +491,7 @@ The limit on the number of new non-monomorphic type argument tuples is \(\min(\m
 Both in the monomorphic and in the non-monomorphic case, the maximum number of newly generated type argument tuples is fixed per formula and iteration.
 
 The \emph{matches} function, which computes the substitutions used for generating new type arguments, is given in Figure~\ref{subst_gen}. Each symbol instance from \(N(\varphi)\) is matched against all corresponding symbol instances from \(M\).
-For two such symbol instances, types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the algorithm, this is checked by making sure the \textbf{while} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant. The total number of substitutions generated is limited by \textcolor{ourblueviolet}{substitution\_cap}.
+For two such symbol instances, types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the algorithm, compatibility is checked by making sure the \textbf{while} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant. The total number of substitutions generated is limited by \textcolor{ourblueviolet}{substitution\_cap}.
 
 %\begin{figure}[t!]
 %%\begin{quote}
@@ -729,7 +729,8 @@ type variables, up to \(n^v\) monomorphising substitutions may be generated. Rec
 The monomorphisation algorithm is parametrised by many bounds. The first part of the evaluation process seeks appropriate values for these bounds. The second part compares the performance of Zipperposition without E and with the new monormorphising E backend on polymorphic problems. The third part compares the performance of different provers on polymorphic problems and their monomorphised counterparts.
 
 The benchmarks are taken from version 8.2.0 of the TPTP library~\cite{tptp}. The library contains 1765 problems in the TF1 and TH1 grammars, corresponding respectively to first order and higher order logic with rank-1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems that include them. In total, our benchmark suite contains 1534 polymorphic problems. We chose as a measure of success for a given prover (or prover configuration) the number of problems
-that could be solved by the prover in at most 30 seconds%(including monomorphisation when relevant)
+that could be solved by the prover in at most 30 seconds
+%(including monomorphisation when relevant)
 per problem with a single thread.
 
 
