@@ -491,7 +491,7 @@ The limit on the number of new non-monomorphic type argument tuples is \(\min(\m
 Both in the monomorphic and in the non-monomorphic case, the maximum number of newly generated type argument tuples is fixed per formula and iteration.
 
 The \emph{matches} function, which computes the substitutions used for generating new type arguments, is given in Figure~\ref{subst_gen}. Each symbol instance from \(N(\varphi)\) is matched against all corresponding symbol instances from \(M\).
-For two such symbol instances, types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the algorithm, compatibility is checked by making sure the \textbf{while} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant. The total number of substitutions generated is limited by \textcolor{ourblueviolet}{substitution\_cap}.
+For two such symbol instances, the types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the algorithm, compatibility is checked by making sure the \textbf{while} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant. The total number of substitutions generated is limited by \textcolor{ourblueviolet}{substitution\_cap}.
 
 %\begin{figure}[t!]
 %%\begin{quote}
@@ -574,22 +574,25 @@ For two such symbol instances, types from the non-monomorphic type argument tupl
    \(S\leftarrow \emptyset\)\;
 
    \BlankLine
-
    \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in N(\varphi)\)}{
       \ForEach{\( (\tau_1, \dots,\tau_n) \in M(f) \)}{
-         \If{for all \(i\), \(\Match(\upsilon_i, \tau_i) = \Success(\sigma_i)\) \And all \(\sigma_i\) are compatible}
+         \If{for all \(0 \leq i\leq n\), \(\Match(\upsilon_i, \tau_i) = \Success(\sigma_i)\)}
             {
-               \(\sigma\leftarrow\sigma_1\circ\dots\circ\sigma_n\)
+               \If {\(\sigma_1,\dots,\sigma_n\) are compatible}{
+
+                  \(\sigma\leftarrow\sigma_1\circ\dots\circ\sigma_n\) \phantom{\big S}
+
+               \textcolor{ourblueviolet}{
+                  \eIf{\(|S| < \SubstLimit\)}{
+                     \textcolor{black}{\(S\leftarrow S\cup \{\sigma\}\)\;}
+                  }
+                  {\Return \(S\)}
+            }
+            }
 
             }
 
          
-            \textcolor{ourblueviolet}{
-               \eIf{\(|S| < \SubstLimit\)}{
-                  \textcolor{black}{\(S\leftarrow S\cup \{\sigma\}\)\;}
-               }
-               {\Return \(S\)}
-            }
       }
 
    }
