@@ -1,0 +1,7 @@
+The answer is structured in 4 parts, one for the common concerns and 3 specific ones for the unique questions.
+
+The main issue with our paper is that of novelty. To make things worse, this paper: https://www.verit-solver.org/papers/smt2014.pdf which came out in 2014 has a section presenting the same monomorphisation method that we base our paper on (although not quite in as much detail). Whatever claim to novelty we may previously have had is quite heavily undermined by this.
+
+To second significant issue is the exclusion of Vampire as a prover in the evaluation. This decision was made because of parsing bugs concerning mostly polymorphic problems. Because Vampire has a separate HOL branch, the parser fixes had not been pushed to the HOL branch at the time of testing (and maybe have still not been pushed). We did not contact the Vampire team.
+
+I am not sure of how rebuttals and paper edits work. Especially when it comes to review 3, a lot of the comments are specific technical issues, it would not be interesting to list them off and say "yep that's a typo / mistake", but it seems strange to just say something like "the algorithms have been edited to take into account the mistakes and imprecisions pointed out in the questions" without really having anything else to say.
