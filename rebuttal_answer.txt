@@ -1,30 +1,41 @@
+We first want to thank the reviewers for their comments and suggestions. We first address the main concerns and questions shared by multiple reviewers, then we answer more specific questions.
 
-Common concerns and questions:
 
-Novelty:
-The main issue with this paper is that of novelty. We felt that an overview of this monomorphisation technique deserved its own paper for three reasons:
-   - Genericity, we made an effort to avoid imposing conditions on the underlying logic, whereas other implementations or discussions often do so within a specific (albeit often generalisable) framework.
-   - Possible applications, to the best of our knowledge, monomorphisation has not been used to enhance the performance of polymorphic provers. This is valuable as an indication of the benefits of re-evaluating the performance of native polymorphic provers.
-   - Reference, this kind of algorithm is relatively widespread. It seemed necessary to provide a baseline reference of this algorithm against which future improvements or alternative methods could be compared.
+## Reviewer 1
 
-Vampire does not feature among the evaluated provers. This decision was made because at the time of testing, Vampire could not parse a significant number of our problem set. Although this issue was adressed in the `master` branch, this was not the case in the `hol` branch, which featured the required higher-order reasoning. Regretfully, we did not contact the Vampire team.
+Concerning novelty, we felt that an overview of this monomorphisation technique deserved its own paper for these reasons:
 
-Specific questions and comments:
+  - Reference: this kind of algorithm is relatively widespread. It seemed necessary to provide a baseline reference of this algorithm against which future improvements or alternative methods could be compared.
 
-Review 1 (the mean one):
-Comparison with other implementations: [Not sure what to say, it is a lot of work to go through and understand other implementations for relatively little benefit, we know this algorithm is out there in some form and used in various provers]
+  - Evaluation goes here TODO
 
-Logic: The type system required to apply the monomorphisation algorithm is explicitely defined in the preliminairies. The underlying logic, is left purposefully vague because we need very few hypotheses for the algorithm to be applicable. The TF1 and TH1 logics are cited as being compatible with our work. Extensions to subtyping or typeclasses were not considered.
+Kill, use as source for canibalization:
 
-Minor:
- - The questions on pages 2 and 3 are adressed in example 6 (page 4).
- - Figure 2: [not successful in finding the relevant code so far, does he want me to compare them in the rebuttal or in the paper]
- - The complexities are not formal bounds on the algorithm but give an idea of the explosiveness of the procedure. Any systematic enumerations of all monomorphic types will encounter the same issue.
- - Figure 4: [There are two nested for loops for 8 lines of pseudo code]
- - Results: An important potential application of iterative monomorphisation would be extending monomorphic provers. Performance on problems that can already be solved by polymorphic provers is still relevant in this usecase.
- - page 14: The previous version of Zipperposition made use of E as a backend, because it is a very efficient prover. Zipperposition's strength was its implementation of novel algorithms. Delegating to E when the subproblems required optimised implementation of well-known procedures proved to be a successfull. This technique is used elsewhere in theorem proving, for instance Leo-III can be run with E or CVC4 as backend.
+  - Genericity, we made an effort to avoid imposing conditions on the underlying logic, whereas other implementations or discussions often do so within a specific (albeit often generalisable) framework.
 
-Review 2 (the nice one):
+  - Possible applications, to the best of our knowledge, monomorphisation has not been used to enhance the performance of polymorphic provers. This is valuable as an indication of the benefits of re-evaluating the performance of native polymorphic provers.
+
+Concerning comparison with other implementations, this would be an interesting research project, but we consider it beyond the scope of the present paper. The algorithms are quite cryptic and poorly documented, so it would take quite some engineering to get them running and to understand their inner workings. In fact, we attempted to understand one of these algorithms, the one by Sascha Böhme, and we gave up after several hours of study.
+
+Concerning the logic, the type system required to apply the monomorphisation algorithm is explicitly defined in the preliminairies. The underlying logic is left purposefully vague because we need very few hypotheses for the algorithm to be applicable. The TF1 and TH1 logics are cited as being compatible with our work. The algorithm does not support subtyping and type classes, but it could likely be extended to support them. By contrast, higher-rank polymorphism would not be compatible. We will clarify this in the text.
+
+Concerning the question about page 2, Example 6 on page 4 shows that monomorphisation can be infinite.
+
+Concerning the question about page 3, "fixed" is perhaps not the best word. The algorithm applies a *bounded* number of iterations. The bound is necessary to avoid divergence in cases such as Example 6.
+
+Concerning the question "Why are the complexities useful?": The complexities are not formal bounds on the algorithm but give an idea of the explosiveness of the procedure. Any systematic enumerations of all monomorphic types will encounter the same issue.
+
+Concerning Figure 4, we do not understand the criticism. Tbe code is very short, and a few lines of it are instrumentalisation for the bounds.
+
+Concerning "just an idea", an important potential application of iterative monomorphisation would be extending monomorphic provers. Performance on problems that can already be solved by polymorphic provers is still relevant in this usecase.
+
+Concerning the question about page 14, the previous version of Zipperposition made use of E as a backend, because it is a very efficient prover. Zipperposition's strength was its implementation of novel algorithms. Delegating to E when the subproblems required optimised implementation of well-known procedures proved to be a successfull. This technique is used elsewhere in theorem proving, for instance Leo-III can be run with E or CVC4 as backend. See Section 8 of Vukmirovic et al., "Making Higher-Order Superposition Work". We will briefly explain this in the next version of the text.
+
+Concerning Vampire's parser, we excluded Vampire because at the time of testing, Vampire could not parse a significant number of our problem set. Although this issue was addressed in the `master` branch, this was not the case in the `hol` branch, which featured the required higher-order reasoning. In retrospect, we should have contacted the Vampire team.
+
+
+## Reviewer 2
+
  - Microscoping: [it seems that this would be unsound, but if it can be done it would be more efficient]
  - Overfitting: The goal was to limit any overfitting to the 500 problems and ensure that resulting bound values still performed well on the fresh 1043 remaining problems. We estimated this to be successfull because the ration of solved problems was similar in both cases.
  - Timeout:
@@ -32,6 +43,7 @@ Review 2 (the nice one):
    + E call point is the fraction of the overall timeout of Zipperposition after which we call the E prover
    + ex: For E timeout = 5s, E call point = 0.2 and Zippperposition timeout = 30s, we call the E prover for 5 seconds after having had Zipperposition run for 6 seconds
 
-Review 3 (the technical one):
+
+## Reviewer 3
 
 [Not much to say, mostly fixes to do, haven't had time to dig into the algos proper, but it is straightforward]
