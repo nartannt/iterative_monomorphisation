@@ -1,0 +1,296 @@
+Dear Jasmin,
+
+Thank you for your submission to CADE-30. The CADE-30 rebuttal period
+has now started. The reviews on your paper are attached to this e-mail.
+You have the opportunity to respond to them until April 18, midnight
+(AoE). To submit your response please log on the EasyChair Web page
+for CADE-30 and select your submission on the menu.
+
+Please keep in mind the following during this process:
+
+* We are not enforcing any upper bound on the length of your response
+ but please try to limit it to 1000 words. Anything over that will
+ be optional for the reviewers to read.
+
+* The response must focus on factual errors in the reviews and the
+ questions posed by the reviewers, if any. Please do not provide new
+ research or reformulate the presentation. Try to be as concise and
+ to the point as possible.
+
+* The response period is an opportunity to react to the reviews but
+ there is no requirement to do so. Thus, if you feel the reviews are
+ accurate and the reviewers have not asked any questions, you do not
+ have to respond. On the other hand, reviewers may not look favorably
+ on a paper if authors fail to answer their questions.
+
+* The reviews are as submitted by the PC members. Please keep in mind
+ that this is not their final version and no coordination among the
+ PC members was required at this stage. The reviews may later be
+ updated to take into account your response and the discussions among
+ the PC members. Moreover, we may find it necessary to solicit other
+ outside reviews after the rebuttal period.
+
+* While the program committee will read your response carefully and
+ take it into account during the discussions, it will not directly
+ respond to your response, either through the PC chairs or in the
+ final versions of the reviews.
+
+* Your response will be seen by all PC members who have access to the
+ discussion of your paper, so please be polite and constructive.
+
+Best wishes,
+ Clark and Uwe
+
+
+----------------------- REVIEW 1 ---------------------
+SUBMISSION: 17
+TITLE: Iterative Monomorphisation
+AUTHORS: Tanguy Bozec and Jasmin Blanchette
+
+----------- Overall evaluation -----------
+The paper discusses the process of monomorphisation, that is
+heuristic instantiation of a polymorphic automated reasoning
+problem and then using a monomorphic prover on it. The authors
+re-implement the procedure in Zipperposition and evaluate it.
+
+I have two main concerns about the paper:
+
+First, the novelty. The authors admit that algorithms
+doing the same task in a similar way already existed in HOL
+Light since the ninties and later in Sledgehammer. A more
+detailed comparison of these would be needed. Apart from the
+already mentioned monomorhpisation is also needed in many
+other contexts, for example interation of ITPs with Metis and
+leancop or in HOLyHammer in
+HOL4. I do not know if some of these algorithms are the same,
+but in any case I would really need to see a comparison of
+the current work with the existing ones. What do other tools
+that call monomorhpic ATPs like Why3 do? Even if some tools
+might fail it should be discussed.
+
+Second, it is not clear what logic does the work support.
+Quote: "any reasonable rank-1 polymorphic logic", what is
+reasonable? In the second definition the authors define a
+"type arity" of a symbol and actually it is based on this
+definition that I infer some things that are possible.
+But does the logic have subtyping or even just type classes
+(as Isabelle/HOL's does)? Things should be defined more
+precisely.
+
+Minor:
+Page 1 'there exists, for any ... ' can we do it in the normal
+order as in 'for any ... there exists ...'
+
+'appears to be implemented' please look at what is implemented
+and describe what things do what in HOL Light, HOL4, and other
+logic transformation tools, say what does why3 or leo's
+transformation preprocessor do with polymorphic problems.
+
+Page 2: 'instances can be generated is infinite' it would be
+good to show an example problem where more iterations are
+needed to solve.
+
+Page 3: 'applying a fixed number of iterations' why fixed?
+
+Fig 2: The algorithm in MESON looks much simpler in code. Can you
+compare them?
+
+Page 7: 'we sketch an example' this is not really an example.
+
+Why are the complexities useful? Are the complexities of the
+Sledgehammer / MESON / ... algorithms different?
+
+Fig 4: This does not bring much, the actual code would look
+shorter than this algorithmization... Could we write these
+algorithms more compactly?
+
+Results (mostly table 1 on page 11):
+Just an idea, as monomorphisation is supposed to add most to the
+already existing polymorphic procedure, maybe rather than optimize
+it on its own it is better to optimize it on problems that
+polymorhpism cannot solve?
+
+Page 14/Sec 5.2: I am a bit surprised about the way E is used and
+the reasons it is used. Isn't Zipperposition an already fully
+capable monomorphic superposition prover? Can you justify this?
+
+"exclude Vampire because of parsing issues". Vampire should be fully
+capable of parsing any compliant TPTP files and its parser is one
+of the most efficient TPTP parsers.
+
+
+----------------------- REVIEW 2 ---------------------
+SUBMISSION: 17
+TITLE: Iterative Monomorphisation
+AUTHORS: Tanguy Bozec and Jasmin Blanchette
+
+----------- Overall evaluation -----------
+The paper describes an incremental monomorphisation algorithm, which can be
+used to translate away rank-1 polymorphism from HOL/FOL problems by iteratively
+instantiating the formulae’s type variables with concrete types. These problems
+thus become accessible to reasoning systems that do not support polymorphism.
+This necessarily incomplete but pragmatic approach has been briefly described
+in Boehme's PhD thesis [5] and implemented as part of Isabelle/HOL’s SMT
+integration and also used by the Sledgehammer system. The authors expand what
+can be derived from these sources into a detailed description and suggest
+guidelines for efficient implementation. They also implemented the algorithm in
+the Zipperposition prover and report on its empirical evaluation on polymorphic
+TPTP problems.
+
+I am glad for a paper like this, as the topic clearly deserves a canonical
+reference. At the same time, the question whether such format brings enough
+contribution for a full conference paper cannot be avoided.
+
+I was glad to see the exposition split into the "High level" and "Low level"
+algorithm. The High level is already presented in a formally precise way and
+accompanied by a small example, so what's left for the Low level are some
+optimizations (make sure you don't repeat work of previous iterations; store
+substitutions instead of formulas and only apply them in the end) and the
+introduction of various numeric bounds that prevent the run from exploding (in
+various dimensions). While establishing (maybe one could even say inventing)
+these bounds seems important for practice, the optimizations, on the other
+hand, look quite routine and their appearance in the pseudocode, which drives
+the Low level section, make it (perhaps unnecessarily?) quite hard to penetrate
+to a casual reader.
+
+The evaluation part uses the new Zipperposition implementation of the
+monomorphisation algorithm and describes how the authors decided on some
+reasonable default values for the various numeric bounds to optimize
+performance of the prover on the monomorphised versions of the polymorphic
+problems from the TPTP library. Given the large number of these bounds, this
+was a rather tedious process and the numbers reported in the numerous tables
+are perhaps a bit uninteresting in the grand scheme of things. This again gives
+the paper a bit of a workshop-ish flavor, but could arguably help future
+implementors for the algorithm guide their way of tuning the bounds. I was also
+not entirely convinced by the arguments for/against overfitting to the problem
+set (details below).
+
+Overall, however, given also how clearly the paper is written, I think it's
+worth considering its acceptance!
+
+Particulars:
+
+- Could miniscoping help (or change the output to begin with)? It seems
+  important what the individual formulas \varphi are in the input. What if we
+  get \forall \alpha \in $tType. (\varphi_1 \land \varphi_2), could the
+  algorithm benefit from instead considering? (\forall \alpha \in $tType.
+  \varphi_1) \land (\forall \alpha \in $tType. \varphi_2)?
+
+- "As a precaution against overfitting" - I don't see how this in itself
+  could work as a precaution. Couldn't you still simply have overfitted to the
+  500 random problems?
+
+- Table 6 + the corresponding paragraph - so the "E timeout" is in seconds?
+  And the "E call point" is a fraction of the overall timeout? "The longer
+  Zipperposition runs before E is invoked, the more formulae are generated, and
+  the more explosive iterative monomorphisation is." - how long does it run for
+  a fraction value 0?
+
+- "The results of these evaluations do not suggest that any overfitting took
+  place during the option optimisation phase." - What's the justification for
+  this? Could you please spell it out?
+
+- "We unfortunately had to exclude Vampire because of parsing issues." - Did
+  you try contacting the Vampire team about the issue or how to best mitigate
+  it? They generally respond quite quickly these days.
+
+
+----------------------- REVIEW 3 ---------------------
+SUBMISSION: 17
+TITLE: Iterative Monomorphisation
+AUTHORS: Tanguy Bozec and Jasmin Blanchette
+
+----------- Overall evaluation -----------
+Paper summary
+-------------
+
+The paper introduces a method to generate monomorphic formulae out of
+polymorphic formulae by substituting type variables by monomorphic types. This
+is interesting in cases where an automatic theorem prover is to be invoked
+which does not offer native support for polymorphism. In order to limit the
+number of newly created formulae due to the instantiation of type variables,
+several bounds are adopted. The approach is implemented in Zipperposition, a
+polymorphic higher order prover. Zipperposition uses the E prover as a backend
+and to date it could use E exclusively for monomorphic problems. This work
+enables solving polymorphic problems in Zipperposition using E. An experimental
+evaluation was carried out to determine the parameter combination on which
+Zipperposition performed best on polymorphic formulae.
+
+
+
+Overall evaluation
+------------------
+
+Applying the low level algorithm to Example 6 was hard. The notation is unclear
+in parts and assumptions had to be made which might be incorrect (see also
+questions to the authors), e.g.,:
+- Function iterative_monomorphisation: S ← \emptyset, but S is never updated,
+  instead S(\phi) is computed; similarly for N_old and N_old(\phi), N_new and
+  N_new(\phi). I assume S is defined as the union of the S(\phi), same for
+  N_old and N_new
+- Function formula_mono_step: "(f |→ (υ_1,...,υ_n)) \in N_old(\phi) \union
+  N_new(\phi)". I assume f is called on the non-monomorphic argument
+  (υ_1,...,υ_n).
+- Function formula_mono_step: M_next and N_next(\phi) are referenced, but they
+  are defined in the main function iterative_monomorphisation and not known in
+  formula_mono_step. I assume they are implicitly considered global variables.
+- Function formula_mono_step: N_next and N_next(\phi). I assume N_next is the
+  union of all N_next(\phi).
+- p.7: "limit on the number of newly generated monomorphic type argument
+  tupes". I assume this is max_mono_args in formula_mono_steps; "Similar bounds
+  are used for the non-monomorphic type argument tuples". I assume this is
+  max_nonm_args. However, their definitions do not coincide with the ones in
+  formula_mono_steps.
+
+The presentation need be more careful/consistent in some parts: 
+- Function iterative_monomorphisation: the call of formula_mono_step does not
+  match its definition (one parameter is missing, the parameter are ordered
+  differently
+- p.5: "match(v, \tau), where v and \tau are types"; from my understanding, v
+  is a type variable
+- Function formula_mono_step: type_variables is never used again (left hand
+  side of "type_variables ← type_variables(\phi)"
+- Function formula_mono_step: type_variables(\phi) vs.
+  type_variables(v_1,...,v_n): argument type does not fit
+- p.7: "limit on the number of newly generated non-/monomorphic type argument
+  tupes". If these are max_mono_args/max_nonm_args, their definitions do not
+  coincide with the ones in formula_mono_steps.
+- p.7, second-to-last line: while loop -> foreach loop?
+
+Adding more textual explanations and some examples would further enhance clarity.
+
+The repository on Github seems not to be public, so I could not reproduce the
+experiments.
+
+I consider this work relevant. The presented approach leads to a significantly
+better performance of Zipperposition with E compared to Zipperposition without
+E. However, in my opinion the presentation need be enhanced significantly for
+the paper to be accepted.
+
+
+Questions to the authors
+------------------------
+
+- Function iterative_monomorphisation: how are S and S(\phi) related, and N_old
+  and N_old(\phi), N_new and N_new(\phi)?
+- p. 5: "match(v, \tau), where v and \tau are types"; isn't v a type variable
+  instead of a type?
+- Function formula_mono_step: what do mean bey "(f |→ (υ_1,...,υ_n))"?
+- M_next and N_next(\phi): are these global variables?
+- Which limits for generating argument tuples are you referring to on p. 7?
+- p.7, 2nd par.: As far as I understood, no new formulae containing
+  non-monomorphic type arguments are generated. However, your explanations
+  suggest otherwise. What am I missing? Can you give an example?
+- Function matches: wouldn't it be more efficient to check |S| before executing
+  match(v_i, \tau_i) and to save the execution of match in case |S| is already
+  to large?
+
+
+Minor comments
+--------------
+
+- On a black and white printout, the blue text is barely distinguishable from
+  the black text. I suggest to use a lighter shade.
+
+
+------------------------------------------------------
