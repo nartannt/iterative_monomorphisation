@@ -25,25 +25,56 @@ Concerning the question about page 3, "fixed" is perhaps not the best word. The 
 
 Concerning the question "Why are the complexities useful?": The complexities are not formal bounds on the algorithm but give an idea of the explosiveness of the procedure. Any systematic enumerations of all monomorphic types will encounter the same issue.
 
-Concerning Figure 4, we do not understand the criticism. Tbe code is very short, and a few lines of it are instrumentalisation for the bounds.
+Concerning Figure 4, we do not understand the criticism. Tbe code is very short, and a few lines of it are for enforcing the bounds.
 
-Concerning "just an idea", an important potential application of iterative monomorphisation would be extending monomorphic provers. Performance on problems that can already be solved by polymorphic provers is still relevant in this usecase.
+Concerning "just an idea", an important potential application of iterative monomorphisation would be extending monomorphic provers. Performance on problems that can already be solved by polymorphic provers is still relevant in this use case.
 
-Concerning the question about page 14, the previous version of Zipperposition made use of E as a backend, because it is a very efficient prover. Zipperposition's strength was its implementation of novel algorithms. Delegating to E when the subproblems required optimised implementation of well-known procedures proved to be a successfull. This technique is used elsewhere in theorem proving, for instance Leo-III can be run with E or CVC4 as backend. See Section 8 of Vukmirovic et al., "Making Higher-Order Superposition Work". We will briefly explain this in the next version of the text.
+Concerning the question about page 14, the previous version of Zipperposition made use of E as a backend, because it is a very efficient prover. Zipperposition's strength was its implementation of novel algorithms. Delegating to E when the subproblems required optimised implementation of well-known procedures proved to be a successful. This technique is used elsewhere in theorem proving, for instance, Leo-III can be run with E or CVC4 as backend. See Section 8 of Vukmirovic et al., "Making Higher-Order Superposition Work". We will briefly explain this in the next version of the text.
 
-Concerning Vampire's parser, we excluded Vampire because at the time of testing, Vampire could not parse a significant number of our problem set. Although this issue was addressed in the `master` branch, this was not the case in the `hol` branch, which featured the required higher-order reasoning. In retrospect, we should have contacted the Vampire team.
+Concerning Vampire's parser, we excluded Vampire because at the time of testing, Vampire could not parse a significant number of our problem set. Although this issue was addressed in the "master" branch, this was not the case in the "hol" branch, which featured the required higher-order reasoning. In retrospect, we should have contacted the Vampire team.
 
 
 ## Reviewer 2
 
- - Microscoping: [it seems that this would be unsound, but if it can be done it would be more efficient]
- - Overfitting: The goal was to limit any overfitting to the 500 problems and ensure that resulting bound values still performed well on the fresh 1043 remaining problems. We estimated this to be successfull because the ration of solved problems was similar in both cases.
- - Timeout:
-   + E timeout is in seconds and dictates how long does the E prover run for
-   + E call point is the fraction of the overall timeout of Zipperposition after which we call the E prover
-   + ex: For E timeout = 5s, E call point = 0.2 and Zippperposition timeout = 30s, we call the E prover for 5 seconds after having had Zipperposition run for 6 seconds
+Miniscoping could indeed help on some formulas, although top-level conjunctions tend to arise seldom in practice. This could easily be achieved by a preprocessor and would require no changes to our algorithm.
+
+Concerning overfitting, the goal was to limit any overfitting to the 500 problems and ensure that resulting bound values still performed well on the fresh 1043 remaining problems. We estimated this to be successfull because the ration of solved problems was similar in both cases. We will clarify the text.
+
+Concerning the E timeout, the "E timeout" is in seconds and dictates how long does the E prover run for. The "E call point" is the fraction of the overall timeout of Zipperposition after which we call the E prover. For example, for E timeout = 5 s, E call point = 0.2 and Zippperposition timeout = 30 s, we call the E prover for 5 seconds after having had Zipperposition run for 6 seconds. We will clarify this in the text.
+
+Concerning novelty and Vampire's parser, see our answers to reviewer 1 above.
 
 
 ## Reviewer 3
 
-[Not much to say, mostly fixes to do, haven't had time to dig into the algos proper, but it is straightforward]
+We thank this reviewer for the extensive comments on the presentation and the code. We will consider their comments when revising the text. We will also use a slightly lighter shade of blue for the bound-related code.
+
+We answer the "questions for the authors" below. In each case, we will also clarify the text accordingly.
+
+> Function iterative_monomorphisation: how are S and S(\phi) related, and N_old and N_old(\phi), N_new and N_new(\phi)?
+
+TODO
+
+> p. 5: "match(v, \tau), where v and \tau are types"; isn't v a type variable instead of a type?
+
+TODO
+
+> Function formula_mono_step: what do mean bey "(f |→ (υ_1,...,υ_n))"?
+
+TODO
+
+> M_next and N_next(\phi): are these global variables?
+
+TODO
+
+> Which limits for generating argument tuples are you referring to on p. 7?
+
+TODO
+
+> p.7, 2nd par.: As far as I understood, no new formulae containing non-monomorphic type arguments are generated. However, your explanations suggest otherwise. What am I missing? Can you give an example?
+
+TODO
+
+> Function matches: wouldn't it be more efficient to check |S| before executing match(v_i, \tau_i) and to save the execution of match in case |S| is already to large?
+
+TODO
