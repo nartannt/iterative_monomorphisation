@@ -1,41 +1,43 @@
-We first want to thank the reviewers for their comments and suggestions. We answered the questions and comments in separate part for each reviewer.
+We first want to thank the reviewers for their comments and suggestions. We answered the questions and comments separately for each reviewer.
 
 ## Reviewer 1
 
 Concerning novelty, we felt that an overview of this monomorphisation technique deserved its own paper for two main reasons:
 
-  - This algorithm and its variants have several implementations. It seemed necessary to provide a baseline reference of this algorithm against which improvements or alternatives can be compared. To this end, the paper takes a generic approach, wheras other implementations and discussions of iterative monomorphisation often operate within a specific framework. 
+  - This algorithm and its variants have several implementations. It seemed necessary to provide a baseline reference of this algorithm against which improvements or alternatives can be compared. To this end, the paper takes a generic approach, whereas other implementations and discussions of iterative monomorphisation often operate within a specific framework. 
 
-  - We conducted an evaluation of the applicability of this algorithm to extending monomorphic provers. Its possible application in increasing the perfomance of native polymorphic provers is to the best of our knowledge a novel one.
+  - We conducted an evaluation of the applicability of this algorithm to extending monomorphic provers. Its possible application in increasing the performance of native polymorphic provers is, we believe, novel.
 
-Concerning comparison with other implementations, this would be an interesting research project, but we consider it beyond the scope of the present paper. These algorithms are often quite cryptic and can be poorly documented, so it would take quite some engineering to understand their inner workings. In fact, we attempted to understand Sascha Böhme's implementation, and gave up after several hours.
+Concerning comparison with other implementations, this would be an interesting research project, but we consider it beyond the scope of the present paper. These algorithms are often quite cryptic and can be poorly documented, so it would take quite some engineering to understand their inner workings. Indeed, we attempted to understand Sascha Böhme's code and gave up after several hours.
 
-Concerning the logic, the type system required to apply the monomorphisation algorithm is explicitly defined in the preliminairies. The underlying logic is left purposefully vague because we need very few hypotheses for the algorithm to be applicable. The TF1 and TH1 logics are cited as being compatible with our work. The algorithm does not support subtyping and type classes, but it could likely be extended to support them. By contrast, higher-rank polymorphism would not be compatible. We will clarify this in the text.
+Concerning the logic, the type system required to apply the monomorphisation algorithm is explicitly defined in the preliminaries. The underlying logic is left purposefully vague because we need very few hypotheses for the algorithm to be applicable. The TF1 and TH1 logics are cited as being compatible with our work. The algorithm does not support subtyping and type classes, but it could likely be extended to support them. By contrast, higher-rank polymorphism would not be compatible. We will clarify this in the text.
 
 Concerning the question about page 2, Example 6 on page 4 shows that monomorphisation can run for infinitely many iterations.
 
 Concerning the question about page 3, "fixed" is perhaps not the best word. The algorithm applies a *bounded* number of iterations. The bound is necessary to avoid divergence in cases such as Example 6.
 
-Concerning the question "Why are the complexities useful?": The complexities are not formal bounds on the algorithm but give an idea of the explosiveness of the procedure. Any systematic enumerations of all monomorphic instances of non-monomorphic types will encounter the same issue.
+Concerning the question of the usefulness of complexities, they are not formal bounds on the algorithm but give an idea of the explosiveness of the procedure. Any systematic enumerations of all monomorphic instances of non-monomorphic types will encounter the same issue.
 
 Concerning Figure 4, we do not understand the criticism. The code is short, and several lines of it are for enforcing the bounds.
 
-Concerning the idea on table 1 page 11, an important potential application of iterative monomorphisation would be extending monomorphic provers. Performance on problems that can already be solved by polymorphic provers is still relevant in this use case.
+Concerning the idea in Table 1 on page 11, an important potential application of iterative monomorphisation would be extending monomorphic provers. Performance on problems that can already be solved by polymorphic provers is still relevant in this use case.
 
-Concerning the question about page 14, the previous version of Zipperposition made use of E as a backend because it is a very efficient prover. Zipperposition's strength was its implementation of novel algorithms. Delegating to E when the subproblems required optimised implementation of well-known procedures proved to be successful. This technique is used elsewhere in theorem proving, for instance, Leo-III can be run with E or CVC4 as backend. See Section 8 of Vukmirovic et al., "Making Higher-Order Superposition Work". We will briefly explain this in the next version of the text.
+Concerning the question about page 14, the previous version of Zipperposition made use of E as a backend because it is a very efficient prover. Zipperposition's strength was its implementation of higher-orderness. Delegating to E when the subproblems required optimised implementation of well-known procedures proved to be successful. This technique is used elsewhere in theorem proving, for instance, Leo-III can be run with E or CVC4 as a backend. See Section 8 of Vukmirovic et al., "Making Higher-Order Superposition Work" for details. We will briefly explain this in the next version of the text.
 
 Concerning Vampire's parser, we excluded Vampire because at the time of testing, Vampire could not parse a significant number of our problem set. Although this issue was addressed in the "master" branch, this was not the case in the "hol" branch, which featured the required higher-order reasoning. In retrospect, we should have contacted the Vampire team.
 
 
 ## Reviewer 2
 
-Miniscoping could indeed help on some formulas, although top-level conjunctions tend to arise seldom in practice. This could easily be achieved by a preprocessor and would require no changes to our algorithm.
+Miniscoping could indeed help on some formulas, although top-level conjunctions
+tend to arise seldom in practice. Miniscoping could easily be achieved by a
+preprocessor and would require no changes to our algorithm.
 
-Concerning overfitting, the goal was to limit any overfitting to the 500 problems and ensure that resulting bound values still performed well on the fresh 1043 remaining problems. We estimated this to be successfull because the ratio of solved problems was similar in both cases. We will clarify the text.
+Concerning overfitting, the goal was to limit any overfitting to the 500 problems and ensure that resulting bound values still performed well on the fresh 1043 remaining problems. We estimated this to be successful because the ratio of solved problems was similar in both cases. We will clarify the text.
 
-Concerning the E timeout, the "E timeout" is in seconds and dictates how long does the E prover run for. The "E call point" is the fraction of the overall timeout of Zipperposition after which we call the E prover. For example, for E timeout = 5 s, E call point = 0.2 and Zippperposition timeout = 30 s, we call the E prover for 5 seconds after having had Zipperposition run for 6 seconds. We will clarify this in the text.
+Concerning the E backend, the "E timeout" is in seconds and dictates how long does the E prover run for. The "E call point" is the fraction of the overall timeout of Zipperposition after which we call the E prover. For example, for E timeout = 5 s, E call point = 0.2 and Zippperposition timeout = 30 s, we call the E prover for 5 seconds after having had Zipperposition run for 6 seconds. We will clarify this in the text.
 
-Concerning novelty and Vampire's parser, see our answers to reviewer 1 above (respectively the first and last paragraph).
+Concerning novelty and Vampire's parser, see our answers to reviewer 1 above (respectively the first and the last paragraph).
 
 
 ## Reviewer 3
@@ -46,15 +48,15 @@ We answer the "questions for the authors" below. In each case, we will also clar
 
 > Function iterative_monomorphisation: how are S and S(\phi) related, and N_old and N_old(\phi), N_new and N_new(\phi)?
 
-S is the collection of all S(\phi), the same goes for N_old and N_new
+S is the collection of all S(\phi). The same applies for N_old and N_new.
 
 > p. 5: "match(v, \tau), where v and \tau are types"; isn't v a type variable instead of a type?
 
-The v is an \upsilon and is a type not a type variable, the match would not be usefull if it were a type variable.
+The v is an \upsilon and is a type not a type variable, the match would not be useful if it were a type variable.
 
 > Function formula_mono_step: what do mean bey "(f |→ (υ_1,...,υ_n))"?
 
-This notation was used in an attempt to concisely enumerate all the assignments of the form:
+This notation was used in an attempt to concisely enumerate all the assignments of the form
 N_old(\phi)(f) = (u_1, ..., u_n) (similarly for N_new)
 
 > M_next and N_next(\phi): are these global variables?
@@ -63,12 +65,12 @@ They should have been defined at the function's initialisation. M_next and N_nex
 
 > Which limits for generating argument tuples are you referring to on p. 7?
 
-These limits refers to max_mono_args and max_nmon_args at the beginning of fig. 2.
+These limits refer to max_mono_args and max_nmon_args at the beginning of Figure 2.
 
 > p.7, 2nd par.: As far as I understood, no new formulae containing non-monomorphic type arguments are generated. However, your explanations suggest otherwise. What am I missing? Can you give an example?
 
-The algorithm can be split into the type argument tuple generation phase and the formula instantiation phase. In the first phase, we generate non-monomorphic type arguments, which can grow doubly-exponentially. This is what is discussed in the second paragraph. In the formula instantiation phase (generate_mono_formulae in the algorithm), we ensure that all type variables have been instantiated. We are not subject to the same explosion as in the previous phase.
+The algorithm can be split into the type argument tuple generation phase and the formula instantiation phase. In the first phase, we generate non-monomorphic type arguments, which can grow doubly exponentially. This is what is discussed in the second paragraph. In the formula instantiation phase (generate_mono_formulae in the algorithm), we ensure that all type variables have been instantiated. We are not subject to the same explosion as in the previous phase.
 
 > Function matches: wouldn't it be more efficient to check |S| before executing match(v_i, \tau_i) and to save the execution of match in case |S| is already to large?
 
-This is correct, the check should be performed before computing the match.
+This is correct. The check should be performed before computing the match.
