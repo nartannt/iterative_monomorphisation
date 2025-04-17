@@ -29,9 +29,7 @@ Concerning Vampire's parser, we excluded Vampire because at the time of testing,
 
 ## Reviewer 2
 
-Miniscoping could indeed help on some formulas, although top-level conjunctions
-tend to arise seldom in practice. Miniscoping could easily be achieved by a
-preprocessor and would require no changes to our algorithm.
+Miniscoping could indeed help on some formulas, although top-level conjunctions tend to arise seldom in practice. Miniscoping could easily be achieved by a preprocessor and would require no changes to our algorithm.
 
 Concerning overfitting, the goal was to limit any overfitting to the 500 problems and ensure that resulting bound values still performed well on the fresh 1043 remaining problems. We estimated this to be successful because the ratio of solved problems was similar in both cases. We will clarify the text.
 
