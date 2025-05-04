@@ -167,10 +167,11 @@ The alternative is to translate polymorphic problems to monomorphic problems.
 One approach \cite[Section~9]{mono-trans} is to encode polymorphism using dedicated function or predicate symbols in a monomorphic logic. Another approach is to encode polymorphism using {iterative monomorphisation}, as described by B\"ohme~\cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
 
 Any translation method based on instantiation will inevitably be incomplete.
-By a type version of the compactness theorem, there exists for any first order polymorphic formula \(\varphi\) an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, this set cannot be computed~\cite[Theorem~1]{expr-poly-types}.
+By a type version of the compactness theorem, for any first order polymorphic formula \(\varphi\), there exists an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, this set cannot be computed~\cite[Theorem~1]{expr-poly-types}.
 
 B\"ohme's iterative approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,paulson-blanchette-2010} to interface with superposition based automatic theorem provers. However, it is documented only as a single subsection in B\"ohme's PhD thesis~\cite[Section 2.2.1]{sb-phd}.
-A similar algorithm appears to be implemented in the \texttt{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
+\texttt{SMT-LIB} makes use of this monomorphisation approach \cite{smt-lib-mono}.
+A similar algorithm also appears to be implemented in the \texttt{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
 
 In this paper, we present an algorithm based on our understanding of Böhme's description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed description to help future implementers. In addition, our description shows some of the ways in which an implementation can be made more efficient and avoid combinatorial explosions (Section~\ref{sec:low-level-algorithm}).
 
@@ -212,7 +213,7 @@ Our raw evaluation data is available online.%
 \label{sec:preliminaries}
 
 Our algorithm works independently of the structure of the problem's formulae. It relies exclusively on the formulae's monomorphic and polymorphic symbol instances. Type variables are assumed to be implicitly universally quantified at a formula's top level. The precise form of formulae is left unspecified.
-Due to this generality, iterative monomorphisation can be used with any reasonable rank-1 polymorphic logic. In particular, it can work with the polymorphic first and higher order logics embodied by TPTP's TF1 and TH1 syntaxes~\cite{blanchette-paskevich-2013,th1}.
+Due to this generality, iterative monomorphisation can be used with any standard variant of rank-1 polymorphic logic. In particular, it can work with the polymorphic first and higher order logics embodied by TPTP's TF1 and TH1 syntaxes~\cite{blanchette-paskevich-2013,th1}.
 % implemented by several automatic provers.
 
 Our abstract framework relies on the following basic definitions.
@@ -248,7 +249,7 @@ Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\
 \section{High level algorithm}
 \label{sec:high level-algorithm}
 
-The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying a fixed number of iterations, each of which takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step discards all non-monomorphic formulae returned by the last iteration.
+The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying a bounded number of iterations, each of which takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step discards all non-monomorphic formulae returned by the last iteration.
 
 The initial phase of each iteration computes two maps, \(M\) and \(N\), from the input problem~$\Phi$.
 %
@@ -331,7 +332,7 @@ finite. Moreover, the algorithm relies on primitives whose implementation depend
 Functions computing the following are assumed to be available: 
 \begin{enumerate}
    \item[\labelitemi] \emph{initialisation\((\Phi)\)}, where \(\Phi\) is a set of (polymorphic) formulae, extracts the initial type argument maps \(M\) and \(N\) from \(\Phi\).
-   \item[\labelitemi] \emph{type\_variables\((\tau_1, \dots, \tau_n)\)}, where \(\tau_1, \dots,\tau_n\) are types, gathers all the type variables from each type \(\tau_1, \dots, \tau_n\) into a set.
+   \item[\labelitemi] \emph{type\_variables\((\tau_1, \dots, \tau_n)\)}, where \(\tau_1, \dots,\tau_n\) are types, gathers all the type variables from each type \(\tau_1, \dots, \tau_n\) into a set. This function is overloaded to accept a formula \(\varphi\) as input in which case it returns the set of all type variables which occur in the formula.
    \item[\labelitemi] \emph{match\((\upsilon, \tau)\)}, where \(\upsilon\) and \(\tau\) are types, matches \(\upsilon\) against \(\tau\) and either fails or returns \emph{Some\((\sigma)\)}, where \(\sigma\) results from the matching. The algorithm matches only non-monomorphic types against monomorphic types.
    \item[\labelitemi] \emph{domain\((\sigma)\)} %, where \(\sigma\) is a substitution,
    returns the set of type variables \(\alpha\) such that \(\sigma(
@@ -371,7 +372,7 @@ Functions computing the following are assumed to be available:
    \For{\(i = 1\) \To \textcolor{ourblueviolet}{\Loop}}{
       \((M_{\text{next}}, N_{\text{next}})\leftarrow(\emptyset,\emptyset)\)\;
       \ForEach{\(\varphi \in \Problem\)} {
-         \((M_{\Delta}, N_{\Delta}, S_{\Delta})\leftarrow \FStep(M_{\text{old}}, N_{\text{old}}(\varphi), M_{\text{new}}, N_{\text{new}}(\varphi))\)\;
+         \((M_{\Delta}, N_{\Delta}, S_{\Delta})\leftarrow \FStep(\varphi, M_{\text{old}}, M_{\text{new}}, N_{\text{old}}(\varphi), N_{\text{new}}(\varphi))\)\;
          \(\AllSubst(\varphi)\leftarrow\AllSubst(\varphi)\cup S_{\Delta}\)\;
          \(M_{\text{next}}\leftarrow M_{\text{next}}\cup M_{\Delta}\)\;
          \(N_{\text{next}}(\varphi)\leftarrow N_{\text{next}}(\varphi)\cup N_{\Delta}\)\;
@@ -419,11 +420,11 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
    }
    \BlankLine
 
-   \(\TypeVars \leftarrow \TyVars(\varphi)\)\;
+   %\(\TypeVars \leftarrow \TyVars(\varphi)\)\;
 
    \textcolor{ourblueviolet}{
-   \(\MaxMono \leftarrow \Max(\Min(\MonoFloor, |M_{\text{old}}\cup M_{\text{new}}| \cdot \MonoMult), \MonoCap)\)\;
-   \(\MaxPoly \leftarrow \Max(\Min(\PolyFloor, |N_{\text{old}}(\varphi)\cup N_{\text{new}}(\varphi)| \cdot \PolyMult), \PolyCap)\)\;
+   \(\MaxMono \leftarrow \Min(\Max(\MonoFloor, |M_{\text{old}}\cup M_{\text{new}}| \cdot \MonoMult), \MonoCap)\)\;
+   \(\MaxPoly \leftarrow \Min(\Max(\PolyFloor, |N_{\text{old}}(\varphi)\cup N_{\text{new}}(\varphi)| \cdot \PolyMult), \PolyCap)\)\;
    }
 
    \BlankLine
@@ -432,7 +433,7 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
 
    \BlankLine
 
-   \Let $S' = \SubstGen(M_{\text{new}}, N_{\text{new}}(\varphi))
+   $S' \leftarrow \SubstGen(M_{\text{new}}, N_{\text{new}}(\varphi))
    \cup \SubstGen(M_{\text{new}}, N_{\text{old}}(\varphi))
    \cup \SubstGen(M_{\text{old}}, N_{\text{new}}(\varphi))$\;
    \ForEach{\(\sigma\in S'\)}{
@@ -475,7 +476,7 @@ The separation of type argument tuples into old and new maps is used to ensure t
 New tuples are obtained by applying each substitution to each non-monomorphic type argument tuple such that at least one tuple component is instantiated by the substitution.
 
 
-The total number of type argument tuples can increase cubically in the number of type argument tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We sketch an example of such growth, for a single formula. If we assume that after \(k\) iterations, there are \(N_k\) total type argument tuples divided evenly between monomorphic and non-monomorphic type argument tuples, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type argument tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
+The total number of type argument tuples can increase cubically in the number of type argument tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We give a sketch of how such growth can occur for a single formula. If we assume that after \(k\) iterations, there are \(N_k\) total type argument tuples divided evenly between monomorphic and non-monomorphic type argument tuples, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type argument tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
 
    Depending on the shape and size of the input problem and the number of iterations performed, the doubly exponential growth may be problematic. Introducing bounds addresses this potential issue. The limit on the number of newly generated monomorphic type argument tuples is \(\min(\max(\MonoMult\cdot m, \MonoFloor), \MonoCap)\), where \(m\) is the total number of monomorphic type argument tuples. The components of this limit are
 \begin{enumerate}
@@ -490,7 +491,7 @@ The limit on the number of new non-monomorphic type argument tuples is \(\min(\m
 Both in the monomorphic and in the non-monomorphic case, the maximum number of newly generated type argument tuples is fixed per formula and per iteration.
 
 The \emph{matches} function, which computes the substitutions used for generating new type arguments, is given in Figure~\ref{subst_gen}. Each symbol instance from \(N(\varphi)\) is matched against all corresponding symbol instances from \(M\).
-For two such symbol instances, the types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the algorithm, compatibility is checked by making sure the \textbf{while} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant. The total number of substitutions generated is limited by \textcolor{ourblueviolet}{substitution\_cap}.
+For two such symbol instances, the types from the non-monomorphic type argument tuple are matched component-wise against the types from the monomorphic type argument tuple. The resulting substitutions are composed if they are compatible. In the algorithm, compatibility is checked by making sure the \textbf{foreach} loop has successfully iterated over all elements of the type argument tuple. If any substitutions are incompatible, the matchings are discarded. Since the composition of two compatible substitutions is commutative, the order of composition is irrelevant. The total number of substitutions generated is limited by \textcolor{ourblueviolet}{substitution\_cap}.
 
 %\begin{figure}[t!]
 %%\begin{quote}
@@ -744,7 +745,7 @@ per problem with a single thread.
 Each bound of the monomorphisation process represents a tradeoff: a higher bound allows for a more exhaustive instantiation of type variables but takes more time. Since we cannot test all possible combinations of values for all bounds to find the best compromise between completeness and speed,
 we group closely related bounds together and test combinations of values for the bounds in these groups. Once we find the best performing set of values for a group, we assign these values to the corresponding bounds as we begin the search for the next group. If several groups result in the same number of proved problems, we select the most constraining values. Winning entries are shown in bold in Tables \ref{mono_ty_args} to \ref{e_settings}.
 
-As a precaution against overfitting, we carried out the part of the evaluation related to parameter optimisation and all preliminary evaluations on 500 randomly chosen problems out of the 1534 selected problems. We carried out the rest of the evaluations on the remaining 1034 problems.
+To detect if overfitting took place, we carried out the part of the evaluation related to parameter optimisation and all preliminary evaluations on 500 randomly chosen problems out of the 1534 selected problems. We carried out the rest of the evaluations on the remaining 1034 problems.
 
 Before finding values to assign to the bounds of the monomorphisation algorithm, we must choose which base options to run Zipperposition with. The prover has a portfolio mode with several configurations. Because the space of possible base configurations is too large to evaluate exhaustively, we evaluated, in a preliminary experiment, all portfolio configurations that called E against our benchmark suite of 500 problems, but we disabled E.
 Our preliminary evaluation found that the so-called \verb|40_b.comb| configuration performed best by proving 131 problems.
@@ -899,7 +900,9 @@ For larger problems, the monomorphisation algorithm may time out despite the bou
 \label{mono_time}
 \end{table}
 
-Table \ref{e_settings} shows the impact of the options with which we call the E prover. The call point corresponds to the fraction of the total timeout of Zipperposition's timeout after which the normal operation of Zipperposition is interrupted to begin the monomorphisation process. The E timeout limits how long E is run before being interrupted, at which point Zipperposition resumes normal operation. The longer Zipperposition runs before E is invoked, the more formulae are generated, and the more combinatorially explosive iterative monomorphisation is. This likely explains the poor performance for greater values of the E call point.
+Table \ref{e_settings} shows the impact of the options with which we call the E prover.
+The point at which Zipperposition interupts its normal operation and begins the monomorphisation process is determined by the `E call point' parameter. It is expressed as a fraction of the total time alloted to Zipperposition.
+The E timeout (in seconds) limits how long E is run before being interrupted, at which point Zipperposition resumes normal operation. The longer Zipperposition runs before E is invoked, the more formulae are generated, and the more combinatorially explosive iterative monomorphisation is. This likely explains the poor performance for greater values of the E call point.
 
 \begin{table}[t!]
 \caption{Evaluation of parameters related to the E prover}
@@ -940,8 +943,8 @@ Table \ref{e_settings} shows the impact of the options with which we call the E 
 \label{zipp_eval}
 \end{table}
 
-We compare the performance of two instances of Zipperposition. The first instance is run in the portfolio mode \verb|portfolio.sequential.py|, which attempts to prove the problem with various configurations tried in succession. Of these configurations, some may attempt to call E as a backend when the given problem is monomorphic, but because all given problems are non-monomorphic, this instance is labeled `without E'. The second instance is a modification of the \verb|portfolio.sequential.py| file where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
-Each of the two instances is evaluated on the set of the 500 previously used problems, and the set of the remaining 1034 problems is evaluated separately. The results of these evaluations do not suggest that any overfitting took place during the option optimisation phase.
+We compare the performance of two instances of Zipperposition. By default, Zipperposition may call E as a backend when given a monomorphic problem~\cite{vukmirovic-et-al-2021}. The first instance is run in the portfolio mode \verb|portfolio.sequential.py|, which attempts to prove the problem with various configurations tried in succession. Since all given problems are non-monomorphic, these configurations can never invoke E as a backend, this instance is therefore labeled `without E'. The second instance is a modification of the \verb|portfolio.sequential.py| file where each configuration is modified analogously to \verb|40_b.comb| with the options obtained in the previous evaluation phase. This instance can successfully call E as a backend because it is able to provide E with a monomorphised problem.
+Each of the two instances is evaluated on the set of the 500 previously used problems, and the set of the remaining 1034 problems is evaluated separately. The proportion of problems successfully solved on the 500 and 1034 problem suites are similar, suggesting that no overfitting took place during the option optimisation phase.
 
 Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the performance of Zipperposition. It is not a strict improvement, since some problems are solved without E and not with E.
 
@@ -969,7 +972,7 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
 \end{tabular}
 \end{table}
 
-To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher order polymorphic provers were run on the 1034 problem suite. We chose Leo-III and Zipperposition. Unfortunately we needed to exclude Vampire because of parsing issues.
+To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher order polymorphic provers were run on the 1034 problem suite. We chose Leo-III and Zipperposition. Unfortunately we needed to exclude Vampire because of parsing issues\footnote{Specifically, Vampire failed to parse a significant number of the benchmarks problems. The fix for this issue was not available for the higher-order branch of Vampire at the time of the evaluation.}.
 
 Table~\ref{native_vs_mono_eval} shows the results.
 The monomorphisation approach is evaluated in two steps. First, each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option, which is increased to 30~seconds. For 149~problems, monomorphisation times out. Second, each prover is run on the remaining monomorphised problems, and the results are tallied in the table's `Mono' column. In addition to the polymorphic provers used in the `Native' tests, the monomorphic prover E is run on the monomorphised problems to provide an additional point of comparison. Instead of running each prover for 30 seconds on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the `Native' column, which does not have a similar preprocessing phase.
