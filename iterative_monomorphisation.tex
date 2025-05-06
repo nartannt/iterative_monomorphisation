@@ -71,19 +71,19 @@
 \SetKwData{MonoSubstsLimit}{\textcolor{ourblueviolet}{max\_substs}}
 \SetKwData{SubstLimit}{\textcolor{ourblueviolet}{substitution\_cap}}
 \SetKwData{Loop}{\textcolor{ourblueviolet}{num\_loops}}
-\SetKwData{TypeVars}{type\_variables}
+\SetKwData{TypeVars}{type\_vars}
 \SetKwData{UsedSubst}{\(S\)}
 
 \SetKw{And}{and}\SetKw{True}{true}\SetKw{False}{false}\SetKw{Stop}{stop}
 
 \SetKwFunction{Max}{max}\SetKwFunction{Min}{min}
-\SetKwFunction{Domain}{subst\_domain}\SetKwFunction{Len}{len}
-\SetKwFunction{SubstGen}{matches}\SetKwFunction{TyVars}{type\_variables}
+\SetKwFunction{Domain}{subst\_dom}\SetKwFunction{Len}{len}
+\SetKwFunction{SubstGen}{matches}\SetKwFunction{TyVars}{type\_vars}
 \SetKwFunction{FMonoStep}{formula\_mono\_step}
 \SetKwProg{Fn}{Function}{}{end}\SetKwFunction{FRecurs}{FnRecursive}%
 \newcommand{\forcond}{$i=0$ \KwTo $n$}
 
-\definecolor{ourblueviolet}{HTML}{0071BC}
+\definecolor{ourblueviolet}{rgb}{0.1, 0.5, 0.9}
 \definecolor{grey}{rgb}{0.8,0.8,0.8}
 \definecolor{algoColorKeyword}{named}{grey}
 \makeatletter
@@ -332,7 +332,7 @@ finite. Moreover, the algorithm relies on primitives whose implementation depend
 Functions computing the following are assumed to be available: 
 \begin{enumerate}
    \item[\labelitemi] \emph{initialisation\((\Phi)\)}, where \(\Phi\) is a set of (polymorphic) formulae, extracts the initial type argument maps \(M\) and \(N\) from \(\Phi\).
-   \item[\labelitemi] \emph{type\_variables\((\tau_1, \dots, \tau_n)\)}, where \(\tau_1, \dots,\tau_n\) are types, gathers all the type variables from each type \(\tau_1, \dots, \tau_n\) into a set. This function is overloaded to accept a formula \(\varphi\) as input in which case it returns the set of all type variables which occur in the formula.
+   \item[\labelitemi] \emph{type\_vars\((\tau_1, \dots, \tau_n)\)}, where \(\tau_1, \dots,\tau_n\) are types, gathers all the type variables from each type \(\tau_1, \dots, \tau_n\) into a set. This function is overloaded to accept a formula \(\varphi\) as input in which case it returns the set of all type variables which occur in the formula.
    \item[\labelitemi] \emph{match\((\upsilon, \tau)\)}, where \(\upsilon\) and \(\tau\) are types, matches \(\upsilon\) against \(\tau\) and either fails or returns \emph{Some\((\sigma)\)}, where \(\sigma\) results from the matching. The algorithm matches only non-monomorphic types against monomorphic types.
    \item[\labelitemi] \emph{domain\((\sigma)\)} %, where \(\sigma\) is a substitution,
    returns the set of type variables \(\alpha\) such that \(\sigma(
@@ -353,7 +353,7 @@ Functions computing the following are assumed to be available:
    \SetKwData{Problem}{\(\Phi\)}\SetKwData{AllSubst}{\(S\)}
 
    \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step} 
-   \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{mono\_substs}
+   \SetKwFunction{TyVars}{type\_vars}\SetKwFunction{MonoSubst}{mono\_substs}
    \SetKwFunction{GenFormulae}{generate\_mono\_formulae}
    \SetKwFunction{Mangle}{mangle}
 
@@ -431,13 +431,13 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
 
    \UsedSubst \(\leftarrow\emptyset\)\;
 
-   \BlankLine
-
    $S' \leftarrow \SubstGen(M_{\text{new}}, N_{\text{new}}(\varphi))
    \cup \SubstGen(M_{\text{new}}, N_{\text{old}}(\varphi))
    \cup \SubstGen(M_{\text{old}}, N_{\text{new}}(\varphi))$\;
+   \((M_\text{next}, N_\text{next}(\varphi)) \leftarrow (\emptyset, \emptyset)\)\;
    \ForEach{\(\sigma\in S'\)}{
-   \ForEach{\((f\mapsto (\upsilon_1, \dots,\upsilon_n))\in N_{\text{old}}(\varphi)\cup N_{\text{new}}(\varphi)\)}{
+   \ForEach{\(f \in \text{dom}(N_\text{old}(\varphi)\cup N_\text{new}(\varphi))\)}{
+   \ForEach{\((\upsilon_1, \dots,\upsilon_n)\in N_{\text{old}}(\varphi)(f)\cup N_{\text{new}}(\varphi)(f)\)}{
             \eIf{\(\TyVars(\upsilon_1, \dots, \upsilon_n) \subseteq \Domain(\sigma)\)}{
                \textcolor{ourblueviolet}{
                \uIf{\(|M_{\text{next}}| < \MaxMono\)}{
@@ -457,6 +457,7 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
                }}
             }}
       }
+   }
    }
 
    \BlankLine
@@ -619,7 +620,7 @@ For two such symbol instances, the types from the non-monomorphic type argument 
    \SetKwData{Limit}{max\_new\_formulae}
 
    \SetKwFunction{Init}{initialisation}\SetKwFunction{FStep}{formula\_mono\_step} 
-   \SetKwFunction{TyVars}{type\_variables}\SetKwFunction{MonoSubst}{mono\_substs}
+   \SetKwFunction{TyVars}{type\_vars}\SetKwFunction{MonoSubst}{mono\_substs}
    \SetKwFunction{GenFormulae}{generate\_formulae}
 
    \KwData{\begin{minipage}[t]{.8\textwidth}
@@ -972,7 +973,7 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
 \end{tabular}
 \end{table}
 
-To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher order polymorphic provers were run on the 1034 problem suite. We chose Leo-III and Zipperposition. Unfortunately we needed to exclude Vampire because of parsing issues\footnote{Specifically, Vampire failed to parse a significant number of the benchmarks problems. The fix for this issue was not available for the higher-order branch of Vampire at the time of the evaluation.}.
+To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher order polymorphic provers were run on the 1034 problem suite. We chose Leo-III and Zipperposition. Unfortunately we needed to exclude Vampire because of parsing issues\footnote{Vampire failed to parse a significant number of the benchmarks problems. The fix was unavailable for the higher-order branch of Vampire at the time of the evaluation.}.
 
 Table~\ref{native_vs_mono_eval} shows the results.
 The monomorphisation approach is evaluated in two steps. First, each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option, which is increased to 30~seconds. For 149~problems, monomorphisation times out. Second, each prover is run on the remaining monomorphised problems, and the results are tallied in the table's `Mono' column. In addition to the polymorphic provers used in the `Native' tests, the monomorphic prover E is run on the monomorphised problems to provide an additional point of comparison. Instead of running each prover for 30 seconds on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the `Native' column, which does not have a similar preprocessing phase.
