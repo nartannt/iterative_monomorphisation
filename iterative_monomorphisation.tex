@@ -394,7 +394,7 @@ Functions computing the following are assumed to be available:
 \end{figure}
 
 
-The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. Once these iterations are completed, the first phase is complete and the substitutions used to create new type argument tuples are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. The third phase mangles the composite types of the newly monomorphised formulae. This allows targeting a simply typed logic with no support for $n$-ary type constructors.
+The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. No new formulae are generated at this stage, only new type arguments and substitutions. Once these iterations are completed, the first phase is complete and the substitutions used to create new type argument tuples are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. This is when the new formulae are generated. The third phase mangles the composite types of the newly monomorphised formulae. This allows targeting a simply typed logic with no support for $n$-ary type constructors.
 %~\cite[Sections 4 and 5]{mono-trans}.
 % Paper name is gt
 
@@ -436,8 +436,8 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
    \cup \SubstGen(M_{\text{old}}, N_{\text{new}}(\varphi))$\;
    \((M_\text{next}, N_\text{next}(\varphi)) \leftarrow (\emptyset, \emptyset)\)\;
    \ForEach{\(\sigma\in S'\)}{
-   \ForEach{\(f \in \text{dom}(N_\text{old}(\varphi)\cup N_\text{new}(\varphi))\)}{
-   \ForEach{\((\upsilon_1, \dots,\upsilon_n)\in N_{\text{old}}(\varphi)(f)\cup N_{\text{new}}(\varphi)(f)\)}{
+   %\ForEach{\(f \in \text{dom}(N_\text{old}(\varphi)\cup N_\text{new}(\varphi))\)}{
+   \ForEach{\((f \mapsto (\upsilon_1, \dots,\upsilon_n))\in N_{\text{old}}(\varphi)\cup N_{\text{new}}(\varphi)\)}{
             \eIf{\(\TyVars(\upsilon_1, \dots, \upsilon_n) \subseteq \Domain(\sigma)\)}{
                \textcolor{ourblueviolet}{
                \uIf{\(|M_{\text{next}}| < \MaxMono\)}{
@@ -457,7 +457,7 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
                }}
             }}
       }
-   }
+   %}
    }
 
    \BlankLine
@@ -577,18 +577,17 @@ For two such symbol instances, the types from the non-monomorphic type argument 
    \BlankLine
    \ForEach{\(f\mapsto (\upsilon_1, \dots,\upsilon_n)\in N(\varphi)\)}{
       \ForEach{\( (\tau_1, \dots,\tau_n) \in M(f) \)}{
+               \textcolor{ourblueviolet}{
+                  \If{\(|S| > \SubstLimit\)}
+                     {\Return \(S\)}}
          \If{for all \(0 \leq i\leq n\), \(\Match(\upsilon_i, \tau_i) = \Success(\sigma_i)\)}
             {
+
                \If {\(\sigma_1,\dots,\sigma_n\) are compatible}{
 
                   \(\sigma\leftarrow\sigma_1\circ\dots\circ\sigma_n\)\strut
 
-               \textcolor{ourblueviolet}{
-                  \eIf{\(|S| < \SubstLimit\)}{
                      \textcolor{black}{\(S\leftarrow S\cup \{\sigma\}\)\;}
-                  }
-                  {\Return \(S\)}
-            }
             }
 
             }
@@ -1035,6 +1034,58 @@ polymorphism to outperform any preprocessor, currently this is not the case, sug
 
    This research is co-funded by the European Union (ERC, Nekoka, 101083038). Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or the European Research Council. Neither the European Union nor the granting authority can be held responsible for them.
 \end{credits}
+
+\section{Appendix}
+
+\begin{examplex}
+This example runs an example through the detailed version of the iterative algorithm works. Consider the following initial problem:
+\begin{itemize}
+   \item[\(\langle1\rangle\)] \(\sym{f}\langle \ty{int}, \ty{nat}\rangle(-1, 3) \land \sym{f}\langle \ty{int}, \ty{int}\rangle(-1, -2)\)
+   \item[\(\langle 2\rangle\)] \(\forall x: \alpha{,}\; y:\ty{list}(\alpha){,}\; z: \beta{,}\; \sym{f}\langle \ty{list}(\alpha), \alpha\rangle(y, x) \land \sym{f}\langle \alpha, \alpha \rangle(x, x) \land \sym{f}\langle \alpha, \beta\rangle(x, z)\)
+\end{itemize}
+%
+\(M_{\text{new}}\) is initialised with \(\{f\mapsto (\ty{int}, \ty{nat}); f\mapsto (\ty{int}, \ty{int})\}\) and \(N_{\text{new}}\) with \(\{\langle 2\rangle\mapsto \{f\mapsto (\ty{list}(\alpha), \alpha); f\mapsto (\alpha, \alpha); f\mapsto (\alpha, \beta)\}\}\). Then we enter the main loop (assuming \Loop is at least 1). We iterate over each formula and call \FStep for each of them. Nothing happens for formula \(\langle1\rangle\) because it contains no type variables. For formula \(\langle2\rangle\), \(M_{\text{new}}\) and \(N_{\text{new}}(\langle2\rangle)\) are passed as argument to \SubstGen.
+
+The three non-monomorphic type argument tuples are matched against their monomorphic counterparts in \(M_{\text{new}}\):
+\begin{itemize}
+   \item \((\ty{list}(\alpha), \alpha)\) fails in both cases because \(\ty{list}(\alpha)\) fails to match against \ty{int}.
+   \item \((\alpha, \alpha)\) fails to match against \((\ty{int}, \ty{nat})\) because the substitutions resulting from the match of the first and second element of the tuple are incompatible. The second match is successful and yields the substitution \(\sigma_1 = \{\alpha \mapsto \ty{int}\}\)
+   \item \((\alpha, \beta)\) succeeds in both cases and generates the substitutions \(\sigma_2 = \{\alpha \mapsto \ty{int}, \beta \mapsto \ty{int}\}\) and \(\sigma_3 = \{\alpha \mapsto \ty{int}, \beta \mapsto \ty{nat}\}\).
+\end{itemize}
+
+\SubstGen returns and the substitutions are used to generate new type argument tuples. Each substitution is applied to the type arguments of the function symbols of formula \(\langle2\rangle\) because they are the only function symbols with non-monomorphic type arguments.
+\begin{table}
+\centering\begin{tabular}{@{}l*{3}{>{\centering\arraybackslash}p{6em}}@{}}
+   \toprule
+   & \(\sigma_1\) &\(\sigma_2\)&\(\sigma_3\)\\
+   \cmidrule(lr){2-2} \cmidrule(lr){3-3} \cmidrule(l){4-4} 
+   \((\ty{list}(\alpha), \alpha)\)&\((\ty{list}(\ty{int}), \ty{int})\)& \((\ty{list}(\ty{int}), \ty{int})\) & \((\ty{list}(\ty{int}), \ty{int})\) \\
+   \((\alpha, \alpha)\) &\((\ty{int}, \ty{int})\)&\((\ty{int}, \ty{int})\) &\((\ty{int}, \ty{int})\)\\
+   \((\alpha, \beta)\)  &\((\ty{int}, \beta)\)&\((\ty{int}, \ty{int})\) &\((\ty{int}, \ty{nat})\)\\
+    \bottomrule
+\end{tabular}
+\end{table}
+\vspace{-0.5em}
+
+With a very small and simple initial problem, there are already up to nine new type arguments tuples generated at this step in the first iteration alone, though only four are unique. Once the new type argument tuples are added to their respective maps, a new iteration is begun. We only consider one iteration and continue to the next phase of the algorithm.
+
+\GenFormulae is the next function to be called. This function iterates over all non-monomorphic formulae of the initial problem, in our case this will only be \(\langle2\rangle\). The set of type variable tuples of \(\langle2\rangle\) is passed to \MonoSubst along with the set of all previously generated substitutions.
+
+First, we instantiate \(\alpha\), the first type variable of \(\langle2\rangle\). If \(\sigma_1\) is selected to instantiate \(\alpha\), both \(\sigma_2\) and \(\sigma_3\) will in turn be selected to instantiate \(\beta\). This will generate two monomorphising substitutions: \(\sigma_1 \circ \sigma_2 = \sigma_2\) and \(\sigma_1 \circ \sigma_3 = \sigma_3\) which are added to the set of monomorphising substitutions \(S_{\text{res}}\). Now \(\sigma_2\) is selected, it instantiates both \(\alpha\) and \(\beta\) at once. In our case, \(\sigma_2\) is already in the set of monomorphising substitutions and is therefore ignored. \(\sigma_3\) is treated similarly. No more than \SubstLimit monomorphising substitutions can be generated this way.
+
+Our monomorphising substitutions have been generated. We only need to apply them to the formula they monomorphises. This is repeated for all non-monomorphic formulae or until \Limit is reached. The ordering of formulae will impact the output problem in the latter case. For some larger input problems, \MonoSubst could be sufficiently explosive to only allow a handful of different formulae to be monomorphised. The ability to determine \SubstLimit independently can help avoid this issue. 
+
+Finally, all monomorphic formulae, both new and old, are mangled. This step is unecessary if the target language allows type constructors. In our example two new monomorphic formulae are generated. The algorithm outputs:
+\vspace{-0.5em}
+\begin{enumerate}
+   \item \(\sym{f}\langle \ty{int}, \ty{nat}\rangle(-1, 3) \land \sym{f}\langle \ty{int}, \ty{int}\rangle(-1, -2)\)
+   \item[3.] \(\forall x: \ty{int}{,}\; y:\ty{list}(\ty{int}){,}\; z: \ty{int}{,}\; \sym{f}\langle \ty{list}(\ty{int}), \ty{int}\rangle(y, x) \land \sym{f}\langle \ty{int}, \ty{int} \rangle(x, x) \land \sym{f}\langle \ty{int}, \ty{int}\rangle(x, z)\)
+   \item[4.] \(\forall x: \ty{int}{,}\; y:\ty{list}(\ty{int}){,}\; z: \ty{nat}{,}\; \sym{f}\langle \ty{list}(\ty{int}), \ty{int}\rangle(y, x) \land \sym{f}\langle \ty{int}, \ty{int} \rangle(x, x) \land \sym{f}\langle \ty{int}, \ty{nat}\rangle(x, z)\)
+\end{enumerate}
+
+\end{examplex}
+
+
 
 \bibliographystyle{splncs04}
 \bibliography{citations}
