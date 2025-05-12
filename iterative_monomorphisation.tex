@@ -7,7 +7,6 @@
 %
 \usepackage{graphicx}
 
-
 \usepackage{soul}
 \usepackage{multicol}
 \usepackage[dvipsnames]{xcolor}
@@ -39,6 +38,10 @@
 
 \def\negvthinspace{\kern-0.083333em}
 \def\vthinspace{\kern+0.083333em}
+
+\hyphenation{mono-mor-phisa-tion}
+\hyphenation{mono-mor-phic}
+\hyphenation{non-mono-mor-phic}
 
 %\newtheorem{definition}{Definition}
 \newtheorem{examplex}[definition]{Example}
@@ -152,7 +155,7 @@ Ludwig-Maximilians-Universität München, Germany}
 
 \begin{sloppy}
 \begin{abstract}
-Monomorphisation can be used to extend monomorphic provers to support polymorphic logics. We propose an iterative approach that is incomplete but pragmatic. We implemented it in the Zipperposition prover, where it can be used to translate away polymorphism before invoking the monomorphic prover E as a backend. Our evaluation demonstrates that this approach increases Zipperposition's success rate. Moreover, we find that iterative monomorphisation outperforms native implementations of polymorphism.
+Monomorphisation can be used to extend monomorphic provers to support polymorphic logics. We propose a pragmatic iterative approach. We implemented it in the Zipperposition prover, where it is used to translate away polymorphism before invoking the monomorphic prover E as a backend. Our evaluation shows that this approach increases Zipperposition's success rate. Moreover, we find that iterative monomorphisation outperforms native implementations of polymorphism.
 
 \keywords{Polymorphism  \and monomorphism \and automated reasoning}
 \end{abstract}
@@ -173,7 +176,7 @@ B\"ohme's iterative approach is implemented as part of Isabelle/HOL's SMT (satis
 \texttt{SMT-LIB} makes use of this monomorphisation approach \cite{smt-lib-mono}.
 A similar algorithm also appears to be implemented in the \texttt{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
 
-In this paper, we present an algorithm based on our understanding of Böhme's description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed description to help future implementers. In addition, our description shows some of the ways in which an implementation can be made more efficient and avoid combinatorial explosions (Section~\ref{sec:low-level-algorithm}).
+In this paper, we present an algorithm based on our understanding of Böhme's description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed\pagebreak[2] \hbox{description} to help future implementers. In addition, our paper shows some of the ways in which an implementation can be made more efficient and avoid combinatorial explosions (Section~\ref{sec:low-level-algorithm}).
 
 Briefly, the algorithm works as follows. We assume problems to be sets of formulae. All the problem's symbols are collected, and the polymorphic symbol instances are matched against the monomorphic ones. This yields new symbol instances, both polymorphic and monomorphic. The process is then iterated, making use of the newly generated instances.
 
@@ -208,6 +211,8 @@ Our raw evaluation data is available online.%
 %\item For Leo-III~\cite{leo-iii} and Vampire~\cite{vamp}, we find that monomorphisation is indeed more effective than native polymorphism.
 %\end{enumerate}
 
+\kern-1pt %%% TYPESETTING: Hack
+
 % target page number: 0.5-1.5
 \section{Preliminaries}
 \label{sec:preliminaries}
@@ -215,6 +220,8 @@ Our raw evaluation data is available online.%
 Our algorithm works independently of the structure of the problem's formulae. It relies exclusively on the formulae's monomorphic and polymorphic symbol instances. Type variables are assumed to be implicitly universally quantified at a formula's top level. The precise form of formulae is left unspecified.
 Due to this generality, iterative monomorphisation can be used with any standard variant of rank-1 polymorphic logic. In particular, it can work with the polymorphic first and higher order logics embodied by TPTP's TF1 and TH1 syntaxes~\cite{blanchette-paskevich-2013,th1}.
 % implemented by several automatic provers.
+
+\pagebreak[2]
 
 Our abstract framework relies on the following basic definitions.
 
@@ -249,7 +256,7 @@ Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\
 \section{High level algorithm}
 \label{sec:high level-algorithm}
 
-The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It operates by applying a bounded number of iterations, each of which takes a polymorphic problem as argument and returns a problem with additional partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step discards all non-monomorphic formulae returned by the last iteration.
+The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It works by applying a bounded number of iterations, each taking a polymorphic problem as argument and returning a problem with new partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step discards all non-monomorphic formulae returned by the last iteration.
 
 The initial phase of each iteration computes two maps, \(M\) and \(N\), from the input problem~$\Phi$.
 %
@@ -267,6 +274,8 @@ Once the maps \(M\) and \(N\) are initialised, each iteration performs the follo
 \begin{enumerate}
 
    \item Create an empty set of formulae \(\Phi'\).
+
+\pagebreak[2]
 
    \item For each formula \(\varphi \in \Phi\) and for each symbol \(f\) occurring in \(\varphi\):
    \begin{enumerate}
@@ -323,7 +332,8 @@ the program chairs give use an extra page or two, as is customary.}
 \section{Low level algorithm}
 \label{sec:low-level-algorithm}
 
-The algorithm presented above is too naïve for a practical implementation. In this section, we present a lower level algorithm with the following features.
+\looseness=-1
+The algorithm presented above is too naïve in practice. In this section, we present a lower level algorithm with the following features.
 First, numeric bounds are introduced to stop combinatorially explosive enumerations.
 Second, type argument tuples are separated into an old set and a new set to avoid re-computing some of the same matchings in successive iterations.
 Third, substitutions are directly applied to the type arguments instead of the formulae. This avoids having to re-extract the type arguments from the formulae at each iteration. New formulae are generated only once all iterations are completed, in a separate, final step.
@@ -397,7 +407,8 @@ Functions computing the following are assumed to be available:
 \end{figure}
 
 
-The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations, the old and new type argument maps are updated with newly generated types. No new formulae are generated at this stage, only new type arguments and substitutions. Once these iterations are completed, the first phase is complete and the substitutions used to create new type argument tuples are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. This is when the new formulae are generated. The third phase mangles the composite types of the newly monomorphised formulae. This allows targeting a simply typed logic with no support for $n$-ary type constructors.
+The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It has three phases. The first phase applies a \emph{monomorphisation step} to each formula in \(\Phi\) until the user-set limit, \textcolor{ourblueviolet}{num\_loops}, is reached. This limit is the only bound necessary for the algorithm to terminate. We use the colour blue to identify bounds and code related to bounds. At the end of each of these iterations,\pagebreak[2]
+the old and new type argument maps are updated with newly generated types. No new formulae are generated at this stage, only new type arguments and substitutions. Once these iterations are completed, the first phase is complete and the substitutions used to create new type argument tuples are passed to $\mathit{generate\_mono\_formulae}$ for the second phase. This is when the new formulae are generated. The third phase mangles the composite types of the newly monomorphised formulae. This allows targeting a simply typed logic with no support for $n$-ary type constructors.
 %~\cite[Sections 4 and 5]{mono-trans}.
 % Paper name is gt
 
@@ -477,7 +488,8 @@ The iterative monomorphisation algorithm is given in Figure~\ref{iter_mono}. It 
 
 The formula monomorphisation algorithm is given in Figure~\ref{mono_step}. It forms the core of the process by computing new type argument tuples for a single formula. Type argument tuples are matched against each other to obtain a set of substitutions which is iterated over in the outermost loop. 
 The separation of type argument tuples into old and new maps is used to ensure that only combinations involving at least one new map are considered. This avoids re-computing some matchings processed in previous iterations. %Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings.
-New tuples are obtained by applying each substitution to each non-monomorphic type argument tuple such that at least one tuple component is instantiated by the substitution.
+New tuples are obtained by applying
+each substitution to each non-monomorphic type argument tuple such that at least one tuple component is instantiated by the substitution.
 
 
 The total number of type argument tuples can increase cubically in the number of type argument tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We give a sketch of how such growth can occur for a single formula. If we assume that after \(k\) iterations, there are \(N_k\) total type argument tuples divided evenly between monomorphic and non-monomorphic type argument tuples, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type argument tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
@@ -746,7 +758,7 @@ per problem with a single thread.
 \label{param_opti}
 
 Each bound of the monomorphisation process represents a tradeoff: a higher bound allows for a more exhaustive instantiation of type variables but takes more time. Since we cannot test all possible combinations of values for all bounds to find the best compromise between completeness and speed,
-we group closely related bounds together and test combinations of values for the bounds in these groups. Once we find the best performing set of values for a group, we assign these values to the corresponding bounds as we begin the search for the next group. If several groups result in the same number of proved problems, we select the most constraining values. Winning entries are shown in bold in Tables \ref{mono_ty_args} to \ref{e_settings}.
+we group closely related bounds together and test combinations of values for the bounds in these groups. Once we find the best performing set of values for a group, we assign these values to the corresponding bounds as we begin the search for the next group. If several groups result in the same number of proved problems, we select the most constraining values. Winning entries are shown in bold in Tables \ref{mono_ty_args}~to~\ref{e_settings}.
 
 To detect if overfitting took place, we carried out the part of the evaluation related to parameter optimisation and all preliminary evaluations on 500 randomly chosen problems out of the 1534 selected problems. We carried out the rest of the evaluations on the remaining 1034 problems.
 
@@ -811,7 +823,7 @@ Table~\ref{mono_ty_args} groups bounds that control the maximum number of newly 
 \end{table}
 
 \looseness=-1
-Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except that it evaluates the bounds limiting the number of new \emph{non-}monomorphic type arguments. The bound values are lower because we found non-monomorphic type arguments to be combinatorially explosive in preliminary evaluations. The table confirms that non-monomorphic type argument generation drives the creation of useful non-monomorphic formulae. This is indicated by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Performance of the monomorphisation algorithm seems to plateau for some ranges of values and drops off beyond.
+Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except that it evaluates the bounds limiting the number of new \emph{non-}monomorphic type arguments. The bound values are lower because we found non-monomorphic type arguments to be combinatorially explosive in preliminary evaluations. The table confirms that non-monomorphic type argument generation drives the creation of useful non-mono\-morphic formulae. This is indicated by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Performance of the monomorphisation algorithm seems to plateau for some ranges of values and drops off beyond.
 %TODO check that 125 is what we get if we just run Zipperposition for 10 seconds (maybe with all additional problems that are easily monomorphised)
 
 \begin{table}[t!]
@@ -1033,7 +1045,7 @@ polymorphism to outperform any preprocessor, currently this is not the case, sug
    \subsubsection{Acknowledgements.}
 
    We thank Sascha Böhme for fruitful discussions.
-   We thank Jannis Limperg and Mark Summerfield for suggesting textual improvements.
+   We thank Jannis Limperg, Mark Summerfield, and three anonymous reviewers for suggesting textual improvements.
 
    This research is co-funded by the European Union (ERC, Nekoka, 101083038). Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or the European Research Council. Neither the European Union nor the granting authority can be held responsible for them.
 \end{credits}
