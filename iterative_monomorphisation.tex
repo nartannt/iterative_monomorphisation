@@ -314,7 +314,10 @@ Similarly the third iteration adds
 
 This example illustrates how an infinite number of new formulae can be generated from a simple initial problem.
 %Although the example may seem contrived, similar problems frequently arise in practice. For example, the \sym{concat} function of Isabelle/HOL, which is characterised in the base case by the equation \(\sym{concat}\langle\alpha\rangle\; \sym{Nil}\langle\ty{list}(\alpha)\rangle = \sym{Nil}\langle\alpha\rangle\), exhibits the same behavior.
-/Any reasonable implementation must limit the number of new type arguments, substitutions and formulae.
+Any reasonable implementation must limit the number of new type arguments, substitutions and formulae.
+A more elaborate example is provided in Appendix~\ref{app}.%
+\footnote{The appendix example will be included here in the camera-ready version if
+the program chairs give use an extra page or two, as is customary.}
 
 % target page number: 2-4
 \section{Low level algorithm}
@@ -1041,6 +1044,7 @@ polymorphism to outperform any preprocessor, currently this is not the case, sug
 \appendix
 
 \section{Detailed Example}
+\label{app}
 
 \begin{examplex}\rm
 This example runs an example through the detailed version of the iterative algorithm works. Consider the following initial problem:
