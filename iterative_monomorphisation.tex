@@ -164,17 +164,17 @@ Monomorphisation can be used to extend monomorphic provers to support polymorphi
 % target page number: 2-2.5
 \section{Introduction}
 
-Automatic theorem provers provide automation for proof assistant users. Many proof assistants, such as HOL4~\cite{slind-norrish-2008}, HOL Light~\cite{harrison-2009} and Isabelle\slash HOL \cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed at the top level of formulae. By contrast, many automatic provers operate only on monomorphic logics. One approach to closing this gap is to extend provers to natively support polymorphism, as has been done in Vampire~\cite{bhayat-reger-2020}. However, this entails a lot of work that must be redone for every prover.
+Automatic theorem provers provide automation for proof assistant users. Many proof assistants, such as HOL4~\cite{slind-norrish-2008}, HOL Light~\cite{harrison-2009} and Isabelle\slash HOL \cite{nipkow-et-al-2002}, support rank-1 polymorphism, where type quantification is allowed at the top level of formulae. By contrast, many automatic provers operate only on monomorphic logics. One way to closing this gap is to extend provers to natively support polymorphism, as has been done in Vampire~\cite{bhayat-reger-2020}. However, this entails a lot of work that must be redone for every prover.
 
 The alternative is to translate polymorphic problems to monomorphic problems.
 One approach \cite[Section~9]{mono-trans} is to encode polymorphism using dedicated function or predicate symbols in a monomorphic logic. Another approach is to encode polymorphism using {iterative monomorphisation}, as described by B\"ohme~\cite[Section 2.2.1]{sb-phd}. This method relies on heuristically instantiating the formulae's type variables with concrete types.
 
 Any translation method based on instantiation will inevitably be incomplete.
-By a type version of the compactness theorem, for any first order polymorphic formula \(\varphi\), there exists an equisatisfiable finite set of monomorphic instances of \(\varphi\). However, this set cannot be computed~\cite[Theorem~1]{expr-poly-types}.
+By a type version of the compactness theorem, for any first order polymorphic formula \(\varphi\), there exists an equisatisfiable finite set of monomorphic instances of~\(\varphi\). However, this set cannot be computed in general~\cite[Theorem~1]{expr-poly-types}.
 
 B\"ohme's iterative approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,paulson-blanchette-2010} to interface with superposition based automatic theorem provers. However, it is documented only as a single subsection in B\"ohme's PhD thesis~\cite[Section 2.2.1]{sb-phd}.
-\texttt{SMT-LIB} makes use of this monomorphisation approach \cite{smt-lib-mono}.
-A similar algorithm also appears to be implemented in the \texttt{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
+\relax{SMT-LIB} makes use of this monomorphisation approach \cite{smt-lib-mono}.
+A similar algorithm also appears to be implemented in the \relax{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
 
 In this paper, we present an algorithm based on our understanding of Böhme's description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed\pagebreak[2] \hbox{description} to help future implementers. In addition, our paper shows some of the ways in which an implementation can be made more efficient and avoid combinatorial explosions (Section~\ref{sec:low-level-algorithm}).
 
