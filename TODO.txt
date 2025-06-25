@@ -1,6 +1,12 @@
 # To do
 
-  * (JB+TB) move Example 7 to body (and shorten somewhere)
+  * (JB) Reference clean up
+
+  * (JB) Ph.D. vs. PhD (uniformise to PhD)
+
+  * (JB+TB) Shorten
+
+  * (JB) Edit Section 5
 
   * (TB) "it's not clear why we need both monomorphic type argument maps and
     non-monomorphic type argument maps." Clarify why not just one map.
@@ -12,10 +18,6 @@
     function or predicate symbols in a monomorphic logic" - It is unclear which
     work they are referring to, since this section in the paper cited points to
     a "related works" section, which refers to other works.
-
-  * (JB+TB) The related works could be improved by citing relevant works in
-    quantifier instantiation. For example, Instantiation using e-matching is an
-    appropriate contribution, and it is quite pertinent to the algorithm.
 
   * (JB) Check Nipkow et al. 2002, subtitle.
 
@@ -51,6 +53,11 @@
     Isabelle/Hol, while I am not sure why the authors decided not to evaluate
     against Isabelle. I recommend writing the motivation behind this choice.
     >>> Too late, weird idea anyway? --JB
+
+  * (JB+TB) The related works could be improved by citing relevant works in
+    quantifier instantiation. For example, Instantiation using e-matching is an
+    appropriate contribution, and it is quite pertinent to the algorithm.
+    >>> Good idea, but doesn't really fit anywhere, and no space. --JB
 
 
 # Kind of Done
