@@ -738,7 +738,7 @@ type variables, up to \(n^v\) monomorphising substitutions may be generated. Rec
 
 \section{Detailed example}
 
-To illustrate the low level version of the iterative algorithm, we consider the following initial problem:
+To illustrate the low level version of the iterative algorithm, we consider the following (admittedly contrived) initial problem:
 \begin{itemize}
    \item[\(\langle1\rangle\)] \(\sym{p}\langle \ty{int}, \ty{nat}\rangle(-1, 3) \land \sym{p}\langle \ty{int}, \ty{int}\rangle(-1, -2)\)
    \item[\(\langle 2\rangle\)] \(\forall x: \alpha{,}\; y:\ty{list}(\alpha){,}\; z: \beta{,}\; \sym{p}\langle \ty{list}(\alpha), \alpha\rangle(y, x) \land \sym{p}\langle \alpha, \alpha \rangle(x, x) \land \sym{p}\langle \alpha, \beta\rangle(x, z)\)

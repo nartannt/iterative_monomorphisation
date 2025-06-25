@@ -4,8 +4,6 @@
     {p í¯¿í°ƒâ†’ (int,nat);p í¯¿í°ƒâ†’ (int,int)}
     in detailed example.
 
-  * (JB) Clean up references.
-
   * (TB) "it's not clear why we need both monomorphic type argument maps and
     non-monomorphic type argument maps." Clarify why not just one map.
 
@@ -64,3 +62,5 @@
     a "related works" section, which refers to other works.
 
   * (JB) Check Nipkow et al. 2002, subtitle.
+
+  * (JB) Clean up references.
