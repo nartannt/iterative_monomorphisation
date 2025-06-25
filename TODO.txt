@@ -1,5 +1,7 @@
 # To do
 
+  * (JB) Clean up references.
+
   * (JB) Ph.D. vs. PhD (uniformise to PhD)
 
   * (JB) Edit Section 5
