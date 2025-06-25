@@ -1,0 +1,59 @@
+# To do
+
+  * (JB+TB) move Example 7 to body (and shorten somewhere)
+
+  * (TB) "it's not clear why we need both monomorphic type argument maps and
+    non-monomorphic type argument maps." Clarify why not just one map.
+
+  * (TB) page 11: you tested "all portfolio configurations that called E against
+    our benchmark suite of 500 problems, but we disabled E". Why?
+
+  * (JB) "One approach [2, Section 9] is to encode polymorphism using dedicated
+    function or predicate symbols in a monomorphic logic" - It is unclear which
+    work they are referring to, since this section in the paper cited points to
+    a "related works" section, which refers to other works.
+
+  * (JB+TB) The related works could be improved by citing relevant works in
+    quantifier instantiation. For example, Instantiation using e-matching is an
+    appropriate contribution, and it is quite pertinent to the algorithm.
+
+  * (JB) Check Nipkow et al. 2002, subtitle.
+
+
+# Maybe
+
+  * (JB) page 2: the word "mangled" implies destruction. Alternative words could
+    be flattened, conjoined, atomised.
+    e.g. "(the name is inspired by name mangling in C++)"
+
+
+# Ignored
+
+  * Where can one find the actual implementation? It does not seem to be
+    available in the linked repositories.
+    >>> There is a link in the paper. --JB
+
+  * "We are sure about the algorithm's incompleteness; however, little was
+    discussed about the algorithm's soundness, relying entirely upon Böhme’s
+    description and the authors' successful implementation of Böhme’s idea. It
+    does not seem to be the case of formal proofs; however, a comparison with
+    Böhme’s section would increase the reliability."
+    >>> We already mention soundness and its triviality. --JB
+
+  * Introducing a review of polymorphic higher-order logic into preliminaries
+    would be helpful to familiarize the reader with the logic fragment and the
+    difference between the translation to a monomorphic version. A good start
+    would be starting with monomorphic higher-order logic and later introducing
+    the definitions to extend to a polymorphic one.
+    >>> No space. For journal version. --JB
+
+  * It seems that using the TPTP library is possible to test against
+    Isabelle/Hol, while I am not sure why the authors decided not to evaluate
+    against Isabelle. I recommend writing the motivation behind this choice.
+    >>> Too late, weird idea anyway? --JB
+
+
+# Kind of Done
+
+
+# Done
