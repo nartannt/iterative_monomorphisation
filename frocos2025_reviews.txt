@@ -1,0 +1,49 @@
+# Review 1
+
+Overall evaluation	
+2: accept
+
+Monomorphisation is an effective method for "translating away" polymorphism, allowing polymorphically-typed theorems to be proved by an ATP that does not support polymorphism. Such algorithms are necessarily ad-hoc because of the need to control exponential blowup while preserving soundness. This paper present is a new approach, accompanied by extensive empirical evidence that it can improve outcomes.
+
+The paper is clearly and carefully written, although the material is technically challenging. The experimental evidence is also strong. On the other hand, the algorithm really does look very ad hoc and it's not clear why we need both monomorphic type argument maps and non-monomorphic type argument maps.
+
+Comments
+
+page 2: the word "mangled" implies destruction. Alternative words could be flattened, conjoined, atomised.
+
+page 11: you tested "all portfolio configurations that called E against our benchmark suite of 500 problems, but we disabled E". Why?
+
+
+# Review 2
+Overall evaluation	
+2: accept
+
+The paper describes an incremental monomorphisation algorithm, which can be used to translate away rank-1 polymorphism from HOL/FOL problems by iteratively instantiating the formulae’s type variables with concrete types. These problems thus become accessible to reasoning systems that do not support polymorphism. This necessarily incomplete but pragmatic approach has been briefly described in Boehme's PhD thesis [5] and implemented as part of Isabelle/HOL’s SMT integration and also used by the Sledgehammer system. The authors expand what can be derived from these sources into a detailed description and suggest guidelines for efficient implementation. (The described algorithm introduces many cutoff parameters to prevent in-the-worst-case doubly exponential blowup and the authors provide some empirically successful values for these parameters.) They also implemented the algorithm in the Zipperposition prover and report on its empirical evaluation on polymorphic TPTP problems.
+
+The paper is quite technical, but relatively easy to follow. The algorithm appears useful and, although the general idea might not an original contribution of the paper in the strict sense, the details already are and overall, the algorithm deserves an easy to access reference, which this paper will provide.
+
+
+# Review 3
+
+Overall evaluation	
+1: weak accept
+
+This paper describes an algorithm to address the problem of rank-1 polymorphism in superposition automated theorem provers that do not support any polymorphism. The algorithm iteratively instantiates polymorphic types based on a monomorphisation approach by seeking candidates from monomorphic types inside the input problem. The problem is highly relevant since advanced theorem provers like Isabelle/Hol and Leo-III rely upon polymorphic higher-order logic or some fragment of it.
+
+The paper, in general, is well written. There are many examples (example 7 is a big plus), and the algorithm is fully represented in a comprehensive pseudo-code. Also, the evaluation compares with the state of the art of high-order automated theorem provers and concludes with a success rate using their approach.
+
+However, there are some remarks:
+1-"One approach [2, Section 9] is to encode polymorphism using dedicated
+function or predicate symbols in a monomorphic logic" - It is unclear which work they are referring to, since this section in the paper cited points to a "related works" section, which refers to other works.
+
+2—The related works could be improved by citing relevant works in quantifier instantiation. For example, Instantiation using e-matching is an appropriate contribution, and it is quite pertinent to the algorithm.
+
+3—Where can one find the actual implementation? It does not seem to be available in the linked repositories.
+
+4—We are sure about the algorithm's incompleteness; however, little was discussed about the algorithm's soundness, relying entirely upon Böhme’s description and the authors' successful implementation of Böhme’s idea. It does not seem to be the case of formal proofs; however, a comparison with Böhme’s section would increase the reliability.
+
+5-Introducing a review of polymorphic higher-order logic into preliminaries would be helpful to familiarize the reader with the logic fragment and the difference between the translation to a monomorphic version. A good start would be starting with monomorphic higher-order logic and later introducing the definitions to extend to a polymorphic one.
+
+6-It seems that using the TPTP library is possible to test against Isabelle/Hol, while I am not sure why the authors decided not to evaluate against Isabelle. I recommend writing the motivation behind this choice.
+
+Despite some remarks, the algorithm presented is relevant and introduces a well-documented approach (the major contribution): it builds on Böhme’s earlier work by providing theorem-prover developers with a tested and evaluated tool, since their evaluation shows it performs well against ATPs that already support polymorphic logics. The paper also examines different bounds for the parameterized algorithm to help prevent the combinatorial explosion inherent in this method, which is an important contribution since no such algorithm had been documented previously. Furthermore, since the implementation is available and can be used as a preprocessor, other stand-alone provers can use it. This ad-hoc approach is very appealing: not only can Zipperposition benefit, but other provers can too.
