@@ -1,23 +1,16 @@
 # To do
 
+  * (JB+TB) Do something about nonstandard (and for me incomprehensible) notation
+    {p í¯¿í°ƒâ†’ (int,nat);p í¯¿í°ƒâ†’ (int,int)}
+    in detailed example.
+
   * (JB) Clean up references.
-
-  * (JB) Ph.D. vs. PhD (uniformise to PhD)
-
-  * (JB) Edit Section 5
 
   * (TB) "it's not clear why we need both monomorphic type argument maps and
     non-monomorphic type argument maps." Clarify why not just one map.
 
   * (TB) page 11: you tested "all portfolio configurations that called E against
     our benchmark suite of 500 problems, but we disabled E". Why?
-
-  * (JB) "One approach [2, Section 9] is to encode polymorphism using dedicated
-    function or predicate symbols in a monomorphic logic" - It is unclear which
-    work they are referring to, since this section in the paper cited points to
-    a "related works" section, which refers to other works.
-
-  * (JB) Check Nipkow et al. 2002, subtitle.
 
 
 # Maybe
@@ -62,3 +55,12 @@
 
 
 # Done
+
+  * (JB) Ph.D. vs. PhD (uniformise to PhD)
+
+  * (JB) "One approach [2, Section 9] is to encode polymorphism using dedicated
+    function or predicate symbols in a monomorphic logic" - It is unclear which
+    work they are referring to, since this section in the paper cited points to
+    a "related works" section, which refers to other works.
+
+  * (JB) Check Nipkow et al. 2002, subtitle.
