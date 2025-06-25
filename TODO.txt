@@ -1,10 +1,6 @@
 # To do
 
-  * (JB) Reference clean up
-
   * (JB) Ph.D. vs. PhD (uniformise to PhD)
-
-  * (JB+TB) Shorten
 
   * (JB) Edit Section 5
 

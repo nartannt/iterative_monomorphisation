@@ -770,7 +770,7 @@ With a very small and simple initial problem, there are already up to nine new t
 
 \GenFormulae is the next function to be called. This function iterates over all non-monomorphic formulae of the initial problem, in our case this will only be \(\langle2\rangle\). The set of type variable tuples of \(\langle2\rangle\) is passed to \MonoSubst along with the set of all previously generated substitutions.
 
-First, we instantiate \(\alpha\), the first type variable of \(\langle2\rangle\). If \(\sigma_1\) is selected to instantiate \(\alpha\), both \(\sigma_2\) and \(\sigma_3\) will in turn be selected to instantiate \(\beta\). This will generate two monomorphising substitutions: \(\sigma_1 \circ \sigma_2 = \sigma_2\) and \(\sigma_1 \circ \sigma_3 = \sigma_3\) which are added to the set of monomorphising substitutions \(S_{\text{res}}\). Now \(\sigma_2\) is selected, it instantiates both \(\alpha\) and \(\beta\) at once. In our case, \(\sigma_2\) is already in the set of monomorphising substitutions and is therefore ignored. \(\sigma_3\) is treated similarly. No more than \SubstLimit monomorphising substitutions can be generated in this way.
+First, we instantiate \(\alpha\), the first type variable of \(\langle2\rangle\). If \(\sigma_1\) is selected to instantiate \(\alpha\), both \(\sigma_2\) and \(\sigma_3\) will in turn be selected to instantiate \(\beta\). This will generate two monomorphising substitutions: \(\sigma_1 \circ \sigma_2 = \sigma_2\) and \(\sigma_1 \circ \sigma_3 = \sigma_3\) which are added to the set of monomorphising substitutions \(S_{\text{res}}\). Now \(\sigma_2\) is selected. It instantiates both \(\alpha\) and \(\beta\) at once. Here, \(\sigma_2\) is already in \(S_{\text{res}}\) and is therefore ignored, and \(\sigma_3\) is treated similarly. No more than \SubstLimit monomorphising substitutions can be generated in this way.
 
 Our monomorphising substitutions have been generated. We only need to apply them to the formula they monomorphises. This is repeated for all non-monomorphic formulae or until \Limit is reached. The ordering of formulae will impact the output problem in the latter case. For some larger input problems, \MonoSubst could be sufficiently explosive to only allow a handful of different formulae to be monomorphised. The ability to determine \SubstLimit independently can help avoid this issue. 
 
@@ -788,7 +788,7 @@ Finally, all monomorphic formulae, both new and old, are mangled. This step is u
 The monomorphisation algorithm is parametrised by many bounds. The first part of the evaluation process seeks appropriate values for these bounds. The second part compares the performance of Zipperposition without E and with the new monormorphising E backend on polymorphic problems. The third part compares the performance of different provers on polymorphic problems and their monomorphised counterparts.
 
 The benchmarks are taken from version 8.2.0 of the TPTP library~\cite{tptp}. The library contains 1765 problems in TF1 and TH1, corresponding respectively to first and higher order logic with rank~1 polymorphism. Because Zipperposition does not support reasoning with real numbers, we removed all problems that include them. In total, our benchmark suite contains 1534 polymorphic problems. We chose as a measure of success for a given prover (or prover configuration) the number of problems
-that could be solved by the prover in at most 30 seconds
+that could be solved by the prover in at most 30~s
 %(including monomorphisation when relevant)
 per problem with a single thread.
 Our raw evaluation data is available online.%
@@ -865,7 +865,7 @@ Table~\ref{mono_ty_args} groups bounds that control the maximum number of newly 
 
 \looseness=-1
 Table~\ref{nmon_ty_args} plays the same role as Table~\ref{mono_ty_args} except that it evaluates the bounds limiting the number of new \emph{non-}monomorphic type arguments. The bound values are lower because we found non-monomorphic type arguments to be combinatorially explosive in preliminary evaluations. The table confirms that non-monomorphic type argument generation drives the creation of useful non-mono\-morphic formulae. This is indicated by the very low number of problems solved when no new non-monomorphic type arguments are allowed. Performance of the monomorphisation algorithm seems to plateau for some ranges of values and drops off beyond.
-%TODO check that 125 is what we get if we just run Zipperposition for 10 seconds (maybe with all additional problems that are easily monomorphised)
+%TODO check that 125 is what we get if we just run Zipperposition for 10~s (maybe with all additional problems that are easily monomorphised)
 
 \begin{table}[t!]
 \caption{Evaluation of bounds for non-monomorphic type argument generation}
@@ -1027,10 +1027,12 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
 \end{tabular}
 \end{table}
 
-To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher order polymorphic provers were run on the 1034 problem suite. We chose Leo-III and Zipperposition. Unfortunately we needed to exclude Vampire because of parsing issues\footnote{Vampire failed to parse a significant number of the benchmarks problems. The fix was unavailable for the higher order branch of Vampire at the time of the evaluation.}.
+To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher order polymorphic provers were run on the 1034 problem suite. We chose Leo-III and Zipperposition. Unfortunately we needed to exclude Vampire because of parsing issues.
+%Vampire failed to parse a significant number of the benchmarks problems.
+The fix was unavailable for Vampire's higher order branch at the time of the evaluation.
 
 Table~\ref{native_vs_mono_eval} shows the results.
-The monomorphisation approach is evaluated in two steps. First, each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option, which is increased to 30~seconds. For 149~problems, monomorphisation times out. Second, each prover is run on the remaining monomorphised problems, and the results are tallied in the table's `Mono' column. In addition to the polymorphic provers used in the `Native' tests, the monomorphic prover E is run on the monomorphised problems to provide an additional point of comparison. Instead of running each prover for 30 seconds on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the `Native' column, which does not have a similar preprocessing phase.
+The monomorphisation approach is evaluated in two steps. First, each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option, which is increased to 30~s. For 149~problems, monomorphisation times out. Second, each prover is run on the remaining monomorphised problems, and the results are tallied in the `Mono' column. In addition to the polymorphic provers used in the `Native' tests, the monomorphic prover E is run on the monomorphised problems to provide an additional point of comparison. Instead of running each prover for 30~s on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the `Native' column, which does not have a similar preprocessing phase.
 
 Despite the monomorphisation timeouts, monomorphisation is more effective than Leo-III's and Zipperposition's native polymorphism on the benchmarks.
 
