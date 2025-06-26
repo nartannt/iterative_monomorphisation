@@ -817,10 +817,10 @@ Our raw evaluation data is available online.%
 Each bound of the monomorphisation process represents a tradeoff: a higher bound allows for a more exhaustive instantiation of type variables but takes more time. Since we cannot test all possible combinations of values for all bounds to find the best compromise between completeness and speed,
 we group closely related bounds together and test combinations of values for the bounds in these groups. Once we find the best performing set of values for a group, we assign these values to the corresponding bounds as we begin the search for the next group. If several groups result in the same number of proved problems, we select the most constraining values. Winning entries are shown in bold in Tables \ref{mono_ty_args}~to~\ref{e_settings}.
 
-To detect if overfitting took place, we carried out the part of the evaluation related to parameter optimisation and all preliminary evaluations on 500 randomly chosen problems out of the 1534 selected problems. We carried out the rest of the evaluations on the remaining 1034 problems.
+To guard against overfitting took place, we carried out the part of the evaluation related to parameter optimisation and all preliminary evaluations on 500 randomly chosen problems out of the 1534 selected problems. We carried out the rest of the evaluations on the remaining 1034 problems.
 
 Before finding values to assign to the bounds of the monomorphisation algorithm, we must choose which base options to run Zipperposition with. The prover has a portfolio mode with several configurations. Because the space of possible base configurations is too large to evaluate exhaustively, we evaluated, in a preliminary experiment, all portfolio configurations that called E against our benchmark suite of 500 problems, but we disabled E.
-Our preliminary evaluation found that the so-called \verb|40_b.comb| configuration performed best by proving 131 problems.
+The preliminary evaluation found that the so-called \verb|40_b.comb| configuration performed best by proving 131 problems.
 This configuration became the base configuration, which we used as a basis to evaluate the monomorphisation options.
 
 We conducted additional informal evaluations on the 500 problems to find appropriate default values and test ranges for the monomorphisation bounds. We started the option evaluation process with the base configuration and the following default values for monomorphisation bounds and parameters for E:
@@ -832,7 +832,7 @@ We conducted additional informal evaluations on the 500 problems to find appropr
    \item \PolyCap: \(\infty\)
    \item \PolyMult: \(1\)
    \item \PolyFloor: \(50\)
-   \item substitution ordering: separation
+   \item substitution order: separation
    \item \SubstLimit: \(\infty\)
    \item \MonoSubstsLimit: \(10\)
 \end{itemize}
@@ -855,7 +855,9 @@ We conducted additional informal evaluations on the 500 problems to find appropr
 %
 The initial values for the \MonoCap, \MonoMult and \MonoFloor options are irrelevant because the options' values are set when computing Table~\ref{mono_ty_args}.% and used for subsequent tables.
 
-Table~\ref{mono_ty_args} groups bounds that control the maximum number of newly generated monomorphic type arguments per formula and per iteration. The limit on newly generated type arguments is determined by three components that form a natural group of bounds. The table shows that generating no new monomorphic type arguments seems to be the best approach. This result may seem counterintuitive, but it is possible to monomorphise formulae without generating monomorphic type arguments. This is because non-monomorphic type argument generation can generate substitutions that instantiate one or more type variables, and it is these substitutions that are used to monomorphise formulae.
+Table~\ref{mono_ty_args} groups bounds that control the maximum number of newly generated monomorphic type arguments per formula and per iteration. The limit on newly generated type arguments is determined by three components that form a natural group of bounds.
+
+The table shows that generating no new monomorphic type arguments seems to be the best approach. This result may seem counterintuitive, but it is possible to monomorphise formulae without generating monomorphic type arguments. This is because non-monomorphic type argument generation can produce substitutions that instantiate one or more type variables, and it is these substitutions that are used to monomorphise formulae.
 
 \begin{table}[t!]
 \caption{Evaluation of bounds for monomorphic type argument generation}
@@ -905,9 +907,9 @@ Table~\ref{nmon_ty_args} is similar to Table~\ref{mono_ty_args} except that it e
 \label{nmon_ty_args}
 \end{table}
 
-%The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related through the role they play in the construction of monomorphising substitutions. The substitution ordering heuristic has a significant impact on monomorphising substitution generation. The ``age'' ordering of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' ordering randomly shuffles substitutions. Finally, the ``separation'' ordering separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of substitutions generated has very little impact on overall performance contrary to the ordering heuristic.
-The substitution generation phase occurs once all type arguments have been generated. The bound limiting the number of monomorphising substitutions per formula is directly related to the ordering which dictates how such monomorphising substitutions are generated. The %substitution ordering
-heuristic greatly affects monomorphising substitution generation. The `age' ordering of substitution orders substitutions generated in earlier iterations first. The `random' ordering randomly shuffles substitutions. Finally, the `separation' ordering separates the substitutions into groups of substitutions generated in the same iteration and generates monomorphising substitutions from each of these groups independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of monomorphising substitutions only seem to affect performance when the `separation' heuristic is used.
+%The substitution generation phase occurs once all type arguments have been generated. The bounds limiting the number of new substitutions and the number of monomorphising substitutions per formula are directly related through the role they play in the construction of monomorphising substitutions. The substitution order heuristic has a significant impact on monomorphising substitution generation. The ``age'' order of substitution orders substitutions generated in earlier iterations are ordered first. The ``random'' order randomly shuffles substitutions. Finally, the ``separation'' order separates the substitutions into different sets depending on which iteration they were generated in and generates monomorphising substitutions from each of these sets independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of substitutions generated has very little impact on overall performance contrary to the order heuristic.
+The substitution generation phase occurs once all type arguments have been generated. The bound limiting the number of monomorphising substitutions per formula is directly related to the order which dictates how such monomorphising substitutions are generated. The %substitution order
+heuristic greatly affects monomorphising substitution generation. The `age' order of substitution orders substitutions generated in earlier iterations first. The `random' order randomly shuffles substitutions. Finally, the `separation' order separates the substitutions into groups of substitutions generated in the same iteration and generates monomorphising substitutions from each of these groups independently. Table \ref{subst_gen_table} shows that the values of bounds limiting the number of monomorphising substitutions seem to affect performance only when the `separation' heuristic is used.
 % TODO find a better term than "separation heuristic" maybe separation ?
 
 \begin{table}[t!]
@@ -917,7 +919,7 @@ heuristic greatly affects monomorphising substitution generation. The `age' orde
 
 \centering\begin{tabular}{@{}l*{3}{>{\centering\arraybackslash}p{6em}}@{}}
    \toprule
-   & \multicolumn{3}{c}{substitution ordering} \\
+   & \multicolumn{3}{c}{substitution order} \\
    \multirow{1}{6em}{mono subst} & age & random & separation\\
    \cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(l){4-4}
    2  & 161 & 178 & 175 \\
@@ -950,7 +952,7 @@ Table \ref{pb_size} groups the bounds related to the size of the output problem 
 \label{pb_size}
 \end{table}
 
-For larger problems, the monomorphisation algorithm may time out despite the bounds. In these cases neither Zipperposition nor E will have had a chance to try to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table~\ref{mono_time} tests the amount of time that is allocated to monomorphisation against the number of iterations of the monomorphisation algorithm. Neither parameter seems to substantially affect the algorithm's performance.
+For larger problems, the monomorphisation algorithm may time out despite the bounds. In these cases, neither Zipperposition nor E will have had a chance to try to solve the problem. To avoid this, a timer can interrupt the monomorphisation algorithm, after which Zipperposition resumes normal operation. Table~\ref{mono_time} tests the amount of time that is allocated to monomorphisation against the number of iterations of the monomorphisation algorithm. Neither parameter seems to substantially affect the algorithm's performance.
 
 \begin{table}[t!]
 \caption{Evaluation of parameters related to the depth of monomorphisation}
@@ -1045,7 +1047,7 @@ Table \ref{zipp_eval} shows that the use of E as a backend markedly improves the
 
 To evaluate the usefulness of iterative monomorphisation as an alternative to native polymorphism, two competitive higher order polymorphic provers were run on the 1034 problem suite. We chose Leo-III and Zipperposition. Unfortunately we needed to exclude Vampire because of parsing issues.
 %Vampire failed to parse a significant number of the benchmarks problems.
-The fix was unavailable for Vampire's higher order branch at the time of the evaluation.
+The fix for these issues was unavailable for Vampire's higher order branch at the time of the evaluation.
 
 Table~\ref{native_vs_mono_eval} shows the results.
 The monomorphisation approach is evaluated in two steps. First, each problem is monomorphised using the options obtained from the first evaluation phase except for the monomorphisation timeout option, which is increased to 30~s. For 149~problems, monomorphisation times out. Second, each prover is run on the remaining monomorphised problems, and the results are tallied in the `Mono' column. In addition to the polymorphic provers used in the `Native' tests, the monomorphic prover E is run on the monomorphised problems to provide an additional point of comparison. Instead of running each prover for 30~s on the monomorphised problems, the monomorphisation time (rounded up to the nearest second) is subtracted to compare fairly against the `Native' column, which does not have a similar preprocessing phase.
@@ -1079,12 +1081,12 @@ Despite the monomorphisation timeouts, monomorphisation is more effective than L
 \section{Conclusion}
 \label{sec:conclusion}
 
-We described an algorithm for iteratively instantiating polymorphic types to
-produce monomorphic problems as a preprocessor. Our primary motivation was to
-improve the success rate of Zipperposition and its monomorphic E backend, and
-indeed our evaluation shows a clear improvement. We also saw that even with
-automatic provers that support polymorphism, iterative monomorphisation is a
-better alternative in practice.
+We described a translation algorithm that iteratively instantiates polymorphic types to
+produce monomorphic problems. Our primary motivation was to improve the success
+rate of Zipperposition and its monomorphic E backend, and indeed our evaluation
+shows a clear improvement. We also saw that even with automatic provers that
+support polymorphism, iterative monomorphisation is a better alternative in
+practice.
 
 \looseness=-1
 We see the following avenues for future work. First, iterative monomorphisation
