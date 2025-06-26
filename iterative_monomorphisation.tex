@@ -3,7 +3,7 @@
 \usepackage[T1]{fontenc}
 % T1 fonts will be used to generate the final print and online PDFs,
 % so please use T1 fonts in your manuscript whenever possible.
-% Other font encondings may result in incorrect characters.
+% Other font encodings may result in incorrect characters.
 %
 \usepackage{graphicx}
 
@@ -265,7 +265,7 @@ The initial phase of each iteration computes two maps, \(M\) and \(N\), from the
 \end{enumerate}
 
 %These definitions depend on the precise form of the input formulae, which has been left undefined.
-\(N\) is parameterised with \(\varphi\) because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
+\(N\) is parametrised with \(\varphi\) because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
 
 Once the maps \(M\) and \(N\) are initialised, each iteration performs the following steps to create new instances of formulae:
 
@@ -776,7 +776,7 @@ First, we instantiate \(\alpha\), the first type variable of \(\langle2\rangle\)
 The monomorphising substitutions have been generated. We only need to apply them to the formula they monomorphise. This is repeated for all non-monomorphic formulae or until \Limit is reached. The ordering of formulae will impact the output problem in the latter case. For some larger input problems, \MonoSubst could be sufficiently explosive to only allow a handful of different formulae to be monomorphised. The ability to set \SubstLimit independently can help avoid this issue. 
 
 Finally, if the target language supports only nullary type construtors, the types of all monomorphic formulae, both new and old, are mangled.
-%This step is unecessary if the target language allows type constructors.
+%This step is unnecessary if the target language allows type constructors.
 In our example, two new monomorphic formulae are generated. The algorithm outputs
 \begin{enumerate}
    \item[\(\langle1\rangle\)] \(\sym{p}\langle \ty{int}, \ty{nat}\rangle(-1, 3) \land \sym{p}\langle \ty{int}, \ty{int}\rangle(-1, -2)\)
@@ -964,7 +964,7 @@ For larger problems, the monomorphisation algorithm may time out despite the bou
 \end{table}
 
 Table \ref{e_settings} shows the impact of the options with which we call the E prover.
-The point at which Zipperposition interupts its normal operation and begins the monomorphisation process is determined by the `E call point' parameter. It is expressed as a fraction of the total time alloted to Zipperposition.
+The point at which Zipperposition interrupts its normal operation and begins the monomorphisation process is determined by the `E call point' parameter. It is expressed as a fraction of the total time allotted to Zipperposition.
 The E timeout (in seconds) limits how long E is run before being interrupted, at which point Zipperposition resumes normal operation. The longer Zipperposition runs before E is invoked, the more formulae are generated, and the more combinatorially explosive iterative monomorphisation is. This likely explains the poor performance for greater values of the E call point.
 
 \begin{table}[t!]
