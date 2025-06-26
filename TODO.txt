@@ -1,5 +1,7 @@
 # To do
 
+  * (JB+TB) Revisit "SMT-LIB also uses iterative monomorphisation [7]"
+
   * (JB+TB) Do something about nonstandard (and for me incomprehensible) notation
     {p í¯¿í°ƒâ†’ (int,nat);p í¯¿í°ƒâ†’ (int,int)}
     in detailed example.

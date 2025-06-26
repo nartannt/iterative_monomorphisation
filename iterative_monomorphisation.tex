@@ -155,7 +155,7 @@ Ludwig-Maximilians-Universität München, Germany}
 
 \begin{sloppy}
 \begin{abstract}
-Monomorphisation can be used to extend monomorphic provers to support polymorphic logics. We describe a pragmatic iterative approach. We implemented it in the Zipperposition prover, where it is used to translate away polymorphism before invoking the monomorphic prover E as a backend. Our evaluation shows that this approach increases Zipperposition's success rate. Moreover, we find that iterative monomorphisation outperforms native implementations of polymorphism.
+Monomorphisation can be used to extend monomorphic provers to support polymorphic logics. We describe a pragmatic iterative approach. We implemented it in the Zipperposition prover, where it is used to translate away polymorphism before invoking the monomorphic prover E as a backend. Our evaluation shows that this approach increases Zipperposition's success rate. Moreover, we find that iterative monomorphisation outperforms some native implementations of polymorphism.
 
 \keywords{Polymorphism  \and monomorphism \and automated reasoning}
 \end{abstract}
@@ -167,23 +167,30 @@ Monomorphisation can be used to extend monomorphic provers to support polymorphi
 Automatic theorem provers provide automation for proof assistant users. Many proof assistants, such as HOL4~\cite{slind-norrish-2008}, HOL Light~\cite{harrison-2009} and Isabelle\slash HOL \cite{nipkow-et-al-2002}, support rank~1 polymorphism, where type quantification is allowed at the top level of formulae. By contrast, many automatic provers only work with monomorphic logics. One way to close this gap is to extend provers to natively support polymorphism, as has been done in Vampire~\cite{bhayat-reger-2020}. However, this entails a lot of work that must be redone for every prover.
 %
 The alternative is to translate polymorphic problems to monomorphic problems.
-One approach \cite{mono-trans} is to encode a polymorphic type system using dedicated function or predicate symbols in a monomorphic logic. Another approach is to encode polymorphism using {iterative monomorphisation}, as described by B\"ohme~\cite[Section 2.2.1]{sb-phd}. This method heuristically instantiates the formulae's type variables with concrete types.
 
-Any translation method based on instantiation will inevitably be incomplete.
-By a type version of the compactness theorem, for any first order polymorphic formula \(\varphi\), there exists an equisatisfiable finite set of monomorphic instances of~\(\varphi\). However, this set cannot be computed in general~\cite[Theorem~1]{expr-poly-types}.
+One approach \cite{mono-trans} is to encode a complete polymorphic type system, %using dedicated function or predicate symbols in a monomorphic logic,
+but this increases the size of the input problem substantially and slows down provers \cite{mono-trans}.
+%
+Another approach to encode polymorphism is based on {iterative monomorphisation}, as described by B\"ohme~\cite[Section 2.2.1]{sb-phd}.
+%
+Iterative monomorphisation heuristically instantiates the formulae's type variables with concrete types.
+%
+However, any translation relying on a finite number of instantiations is inevitably incomplete.
+By a typed version of the compactness theorem, for any first order polymorphic formula \(\varphi\), there exists an equisatisfiable finite set of monomorphic instances of~\(\varphi\), but
+it cannot be computed in general~\cite[Theorem~1]{expr-poly-types}.
 
-B\"ohme's iterative approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,paulson-blanchette-2010} to interface with superposition based automatic theorem provers. However, it is documented only as a single subsection in B\"ohme's PhD thesis~\cite[Section 2.2.1]{sb-phd}.
-\relax{SMT-LIB} makes use of this monomorphisation approach \cite{smt-lib-mono}.
-A similar algorithm also appears to be implemented in the \relax{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
+B\"ohme's approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,paulson-blanchette-2010} to interface with superposition based automatic theorem provers. However, it is documented only as a single subsection in B\"ohme's PhD thesis~\cite[Section 2.2.1]{sb-phd}.
+\relax{SMT-LIB} also uses iterative monomorphisation \cite{smt-lib-mono}.
+Moreover, a similar algorithm appears to be implemented in the \relax{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
 
 In this paper, we present an algorithm based on our understanding of Böhme's description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed\pagebreak[2] \hbox{description} to help future implementers. In addition, we present some optimisations
 to curb the combinatorial explosions (Section~\ref{sec:low-level-algorithm}).
 % some of the ways in which an implementation can be made more efficient and avoid combinatorial explosions (Section~\ref{sec:low-level-algorithm}).
 
-The algorithm works as follows. We assume problems to be sets of formulae. All the problem's symbols are collected, and the polymorphic symbol instances are matched against the monomorphic ones. This yields new symbol instances, both polymorphic and monomorphic. The process is then iterated, making use of the newly generated instances.
+The algorithm works as follows. The input problem is a set of formulae. All the problem's symbols are collected, and the polymorphic symbol instances are matched against the monomorphic ones. This yields new symbol instances, both polymorphic and monomorphic. The process is then iterated, making use of the newly generated instances.
 %
 Consider the unary type constructor \ty{list}. If a formula contains $\ty{list}(\alpha)$, where $\alpha$ is a type variable, the types $\ty{list}(\ty{int})$, $\ty{list}(\ty{list}(\ty{int}))$, etc., can be generated. However, because new types emerge through matching, $\ty{list}(\ty{list}(\ty{int}))$ can be obtained only once the $\ty{list}(\ty{int})$ instance has been generated.
-This example also shows that an infinite set of instances can be generated.
+%This example also shows that an infinite set of instances could be produced if the algorithm kept going for ever.
 
 To keep the number of generated formulae finite, we limit the number of iterations. After the iterations are completed, the new monomorphic symbol instances are used to instantiate the polymorphic symbols in the problem's formulae, generating new monomorphic formulae. Finally, because monomorphic provers support only nullary type constructors, types must be `mangled'; for example, the compound type $\ty{list}(\ty{int})$ might be mangled to $\ty{list\_int}$.
 
