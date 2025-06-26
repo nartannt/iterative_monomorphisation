@@ -14,6 +14,7 @@
 \usepackage{booktabs}
 \usepackage{listings}
 \usepackage{array}
+\usepackage[misc]{ifsym}
 \usepackage{multirow}
 \usepackage[noend]{algorithm2e}
 \usepackage{amsmath}
@@ -24,6 +25,8 @@
 \SetNlSty{bfseries}{\color{black}}{}
 
 \lstset{breaklines=true}
+
+\newcommand\CORR{(\Letter)}
 
 \newcommand\ty[1]{\textsf{#1}}
 \newcommand\sym[1]{\textsf{#1}}
@@ -141,7 +144,7 @@
 
 \def\orcid#1{{\href{http://orcid.org/#1}{\protect\raisebox{-1.25pt}{\protect\includegraphics{orcid.pdf}}}}}
 
-\author{Tanguy Bozec\inst{1,2}\orcid{0009-0005-9497-4168} \and
+\author{Tanguy Bozec\inst{1,2}\textsuperscript{\CORR}\orcid{0009-0005-9497-4168} \and
 Jasmin Blanchette\inst{2}\orcid{0000-0002-8367-0936}}
 
 \authorrunning{T. Bozec and J. Blanchette}
