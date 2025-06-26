@@ -1,10 +1,11 @@
 # To do
 
-  * (JB+TB) Revisit "SMT-LIB also uses iterative monomorphisation [7]"
+  * (JB+TB) Revisit "SMT-LIB also uses iterative monomorphisation [7]". Is this
+    accurate?
 
-  * (JB+TB) Do something about nonstandard (and for me incomprehensible) notation
+  * (TB) This is a nonstandard (and for me incomprehensible) notation
     {p í¯¿í°ƒâ†’ (int,nat);p í¯¿í°ƒâ†’ (int,int)}
-    in detailed example.
+    in detailed example. I've tried to fix this. Double-check. --JB
 
   * (TB) "it's not clear why we need both monomorphic type argument maps and
     non-monomorphic type argument maps." Clarify why not just one map.

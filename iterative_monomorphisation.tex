@@ -295,32 +295,32 @@ add the formula \((\sigma_1 \circ \dots \circ \sigma_n)(\varphi)\) to \(\Phi'\).
 
 \end{enumerate}
 
-The algorithm is sound because the newly generated formulae are instances of the initial problem's formulae. %, where type variables have been instantiated with monomorphic types.
+The algorithm is trivially sound because the newly generated formulae are instances of the initial problem's formulae. %, where type variables have been instantiated with monomorphic types.
 However, it is not complete.
 
 \begin{examplex}\rm
 Consider the following problem:
 \begin{enumerate}
-   \item \(\sym{p}\langle \ty{int}\rangle(0)\)
-   \item \(\forall a: \alpha{,}\; \mathit{as}:\ty{list}(\alpha){.}\; \sym{p}\langle\alpha\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\alpha)\rangle(\mathit{as})\)
+   \item[$\langle1\rangle$] \(\sym{p}\langle \ty{int}\rangle(0)\)
+   \item[$\langle2\rangle$] \(\forall a: \alpha{,}\; \mathit{as}:\ty{list}(\alpha){.}\; \sym{p}\langle\alpha\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\alpha)\rangle(\mathit{as})\)
 \end{enumerate}
 %
 The first iteration matches \(\alpha\) against \(\ty{int}\) for $\sym{p}$, generating the formula
 %
 \begin{enumerate}
-   \item[3.] \(\forall a: \ty{int}{,}\; \mathit{as}:\ty{list}(\ty{int}){.}\; \sym{p}\langle\ty{int}\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
+   \item[$\langle3\rangle$] \(\forall a: \ty{int}{,}\; \mathit{as}:\ty{list}(\ty{int}){.}\; \sym{p}\langle\ty{int}\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{int})\rangle(\mathit{as})\)
 \end{enumerate}
 %
 The second iteration matches \(\alpha\) against \(\ty{list}(\ty{int})\), leading to the formula
 %
 \begin{enumerate}
-   \item[4.] \(\forall a: \ty{list}(\ty{int}){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{int})){.}\; \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
+   \item[$\langle4\rangle$] \(\forall a: \ty{list}(\ty{int}){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{int})){.}\; \sym{p}\langle\ty{list}(\ty{int})\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{int}))\rangle(\mathit{as})\)
 \end{enumerate}
 %
 Similarly the third iteration adds
 %
 \begin{enumerate}
-   \item[5.] 
+   \item[$\langle5\rangle$]
          \( \forall a: \ty{list}(\ty{list}(\ty{int})){,}\; \mathit{as}:\ty{list}(\ty{list}(\ty{list}(\ty{int}))){.} \\ \sym{p}\langle\ty{list}(\ty{list}(\ty{int}))\rangle(a) \rightarrow \sym{p}\langle \ty{list}(\ty{list}(\ty{list}(\ty{int})))\rangle(\mathit{as})\)
 \end{enumerate}
 
@@ -348,7 +348,7 @@ finite. Moreover, the algorithm relies on primitives whose implementation depend
 Functions computing the following are assumed to be available: 
 \begin{enumerate}
    \item[\labelitemi] \emph{initialisation\((\Phi)\)}, where \(\Phi\) is a set of (polymorphic) formulae, extracts the initial type argument maps \(M\) and \(N\) from \(\Phi\).
-   \item[\labelitemi] \emph{type\_vars\((\tau_1, \dots, \tau_n)\)}, where \(\tau_1, \dots,\tau_n\) are types, gathers all the type variables from each type \(\tau_1, \dots, \tau_n\) into a set. This function is overloaded to accept a formula \(\varphi\) as input in which case it returns the set of all type variables which occur in the formula.
+   \item[\labelitemi] \emph{type\_vars\((\tau_1, \dots, \tau_n)\)}, where \(\tau_1, \dots,\tau_n\) are types, gathers all the type variables from each type \(\tau_1, \dots, \tau_n\) into a set. This function is overloaded to accept a formula \(\varphi\) as input, in which case it returns the set of all type variables which occur in the formula.
    \item[\labelitemi] \emph{match\((\upsilon, \tau)\)}, where \(\upsilon\) and \(\tau\) are types, matches \(\upsilon\) against \(\tau\) and either fails or returns \emph{Some\((\sigma)\)}, where \(\sigma\) results from the matching. The algorithm matches only non-monomorphic types against monomorphic types.
    \item[\labelitemi] \emph{domain\((\sigma)\)} %, where \(\sigma\) is a substitution,
    returns the set of type variables \(\alpha\) such that \(\sigma(
@@ -489,13 +489,13 @@ the old and new type argument maps are updated with newly generated types. No ne
 \end{figure}
 
 
-The formula monomorphisation algorithm is given in Figure~\ref{mono_step}. It forms the core of the process by computing new type argument tuples for a single formula. Type argument tuples are matched against each other to obtain a set of substitutions which is iterated over in the outermost loop. 
+The formula monomorphisation algorithm is given in Figure~\ref{mono_step}. It forms the core of the process. Essentially, it computes new type argument tuples for a single formula. Type argument tuples are matched against each other to obtain a set of substitutions which is iterated over in the outermost loop. 
 The separation of type argument tuples into old and new maps is used to ensure that only combinations involving at least one new map are considered. This avoids re-computing some matchings processed in previous iterations. %Not all such redundant computations can be avoided because the same substitution can be obtained from different matchings.
 New tuples are obtained by applying
 each substitution to each non-monomorphic type argument tuple such that at least one tuple component is instantiated by the substitution.
 
 
-The total number of type argument tuples can increase cubically in the number of type argument tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We give a sketch of how such growth can occur for a single formula. If we assume that after \(k\) iterations, there are \(N_k\) total type argument tuples divided evenly between monomorphic and non-monomorphic type argument tuples, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type argument tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
+The total number of type argument tuples can increase cubically in the number of type argument tuples at each iteration and can therefore grow doubly exponentially in the number of iterations. We give a sketch of how such growth can occur for a single formula. If we assume that after \(k\) iterations, there are \(N_k\) type argument tuples in total divided evenly between monomorphic and non-monomorphic type argument tuples, then there can be up to \(\bigl(\frac{N_k}{2}\bigr)^2\) successful matches, yielding as many substitutions. Each substitution is then applied to each non-monomorphic type argument for a total of \(\bigl(\frac{N_k}{2}\bigr)^3\) possible new type argument tuples. If half of these new type argument tuples are monomorphic and the other half are non-monomorphic, then the next iteration will begin with \(N_{k+1} = N_k^3 \cdot 2^{-3}\) evenly split type argument tuples. Therefore, the total number of type argument tuples on the \(k\)th iteration can reach \(N_k = N_0^{3^k} \cdot 2^{\frac{-3^{k+2}+3}{2}}\).
 
    Depending on the shape and size of the input problem and the number of iterations performed, the doubly exponential growth may be problematic. Introducing bounds addresses this potential issue. The limit on the number of newly generated monomorphic type argument tuples is \(\min(\max(\MonoMult\cdot m, \MonoFloor), \MonoCap)\), where \(m\) is the total number of monomorphic type argument tuples. The components of this limit are
 \begin{enumerate}
@@ -748,7 +748,7 @@ type variables, up to \(n^v\) monomorphising substitutions may be generated. Rec
 To illustrate the low level version of the iterative algorithm, we consider the following (admittedly contrived) initial problem:
 \begin{itemize}
    \item[\(\langle1\rangle\)] \(\sym{p}\langle \ty{int}, \ty{nat}\rangle(-1, 3) \land \sym{p}\langle \ty{int}, \ty{int}\rangle(-1, -2)\)
-   \item[\(\langle 2\rangle\)] \(\forall x: \alpha{,}\; y:\ty{list}(\alpha){,}\; z: \beta{,}\; \sym{p}\langle \ty{list}(\alpha), \alpha\rangle(y, x) \land \sym{p}\langle \alpha, \alpha \rangle(x, x) \land \sym{p}\langle \alpha, \beta\rangle(x, z)\)
+   \item[\(\langle 2\rangle\)] \(\forall x: \alpha{,}\; y:\ty{list}(\alpha){,}\; z: \beta{.}\; \sym{p}\langle \ty{list}(\alpha), \alpha\rangle(y, x) \land \sym{p}\langle \alpha, \alpha \rangle(x, x) \land \sym{p}\langle \alpha, \beta\rangle(x, z)\)
 \end{itemize}
 %
 \(M_{\text{new}}\) is initialised with \(\{\sym p\mapsto (\ty{int}, \ty{nat}); \sym p\mapsto (\ty{int}, \ty{int})\}\) and \(N_{\text{new}}\) with \(\{\langle 2\rangle\mapsto \{\sym p\mapsto (\ty{list}(\alpha), \alpha); \sym p\mapsto (\alpha, \alpha); \sym p\mapsto (\alpha, \beta)\}\}\). Then we enter the main loop (assuming \Loop is at least 1). We iterate over each formula and call \FStep for each of them. Nothing happens for formula \(\langle1\rangle\) because it contains no type variables. For formula \(\langle2\rangle\), \(M_{\text{new}}\) and \(N_{\text{new}}(\langle2\rangle)\) are passed as argument to \SubstGen.
@@ -787,10 +787,10 @@ Finally, if the target language supports only nullary type construtors, the type
 In our example, two new monomorphic formulae are generated. The algorithm outputs
 \begin{enumerate}
    \item[\(\langle1\rangle\)] \(\sym{p}\langle \ty{int}, \ty{nat}\rangle(-1, 3) \land \sym{p}\langle \ty{int}, \ty{int}\rangle(-1, -2)\)
-   \item[\(\langle3\rangle\)] \(\forall x: \ty{int}{,}\; y:\ty{list}(\ty{int}){,}\; z: \ty{int}{,}\; \begin{aligned}[t]
+   \item[\(\langle3\rangle\)] \(\forall x: \ty{int}{,}\; y:\ty{list}(\ty{int}){,}\; z: \ty{int}{.}\; \begin{aligned}[t]
      & \sym{p}\langle \ty{list}(\ty{int}), \ty{int}\rangle(y, x) \land \sym{p}\langle \ty{int}, \ty{int} \rangle(x, x) \land {} \\[-\jot]
      & \sym{p}\langle \ty{int}, \ty{int}\rangle(x, z)\end{aligned}\)
-   \item[\(\langle4\rangle\)] \(\forall x: \ty{int}{,}\; y:\ty{list}(\ty{int}){,}\; z: \ty{nat}{,}\; \begin{aligned}[t]
+   \item[\(\langle4\rangle\)] \(\forall x: \ty{int}{,}\; y:\ty{list}(\ty{int}){,}\; z: \ty{nat}{.}\; \begin{aligned}[t]
      & \sym{p}\langle \ty{list}(\ty{int}), \ty{int}\rangle(y, x) \land \sym{p}\langle \ty{int}, \ty{int} \rangle(x, x) \land {} \\[-\jot]
      & \sym{p}\langle \ty{int}, \ty{nat}\rangle(x, z)\end{aligned}\)
 \end{enumerate}
