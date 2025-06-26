@@ -751,7 +751,7 @@ To illustrate the low level version of the iterative algorithm, we consider the 
    \item[\(\langle 2\rangle\)] \(\forall x: \alpha{,}\; y:\ty{list}(\alpha){,}\; z: \beta{.}\; \sym{p}\langle \ty{list}(\alpha), \alpha\rangle(y, x) \land \sym{p}\langle \alpha, \alpha \rangle(x, x) \land \sym{p}\langle \alpha, \beta\rangle(x, z)\)
 \end{itemize}
 %
-\(M_{\text{new}}\) is initialised with \(\{\sym p\mapsto (\ty{int}, \ty{nat}); \sym p\mapsto (\ty{int}, \ty{int})\}\) and \(N_{\text{new}}\) with \(\{\langle 2\rangle\mapsto \{\sym p\mapsto (\ty{list}(\alpha), \alpha); \sym p\mapsto (\alpha, \alpha); \sym p\mapsto (\alpha, \beta)\}\}\). Then we enter the main loop (assuming \Loop is at least 1). We iterate over each formula and call \FStep for each of them. Nothing happens for formula \(\langle1\rangle\) because it contains no type variables. For formula \(\langle2\rangle\), \(M_{\text{new}}\) and \(N_{\text{new}}(\langle2\rangle)\) are passed as argument to \SubstGen.
+\(M_{\text{new}}\) is initialised with \(\{\sym p\mapsto \{(\ty{int}, \ty{nat}), (\ty{int}, \ty{int})\}\) and \(N_{\text{new}}\) with \(\{\langle 2\rangle\mapsto \{\sym p\mapsto \{(\ty{list}(\alpha), \alpha), (\alpha, \alpha), (\alpha, \beta)\}\}\}\). Then we enter the main loop (assuming \Loop is at least 1). We iterate over each formula and call \FStep for each of them. Nothing happens for formula \(\langle1\rangle\) because it contains no type variables. For formula \(\langle2\rangle\), \(M_{\text{new}}\) and \(N_{\text{new}}(\langle2\rangle)\) are passed as arguments to \SubstGen.
 
 The three non-monomorphic type argument tuples are matched against their monomorphic counterparts in \(M_{\text{new}}\):
 \begin{itemize}
@@ -762,8 +762,9 @@ The three non-monomorphic type argument tuples are matched against their monomor
 
 Then \SubstGen returns, and the substitutions are used to generate new type argument tuples. Each substitution is applied to the type arguments of the function symbols of formula \(\langle2\rangle\) because they are the only function symbols with non-monomorphic type arguments.
 The table below summarises the situation:
-\begin{table}
-\centering\begin{tabular}{@{}l*{3}{>{\centering\arraybackslash}p{6em}}@{}}
+%
+\begin{center}
+\begin{tabular}{@{}l*{3}{>{\centering\arraybackslash}p{6em}}@{}}
    \toprule
    & \(\sigma_1\) &\(\sigma_2\)&\(\sigma_3\)\\
    \cmidrule(lr){2-2} \cmidrule(lr){3-3} \cmidrule(l){4-4} 
@@ -772,19 +773,19 @@ The table below summarises the situation:
    \((\alpha, \beta)\)  &\((\ty{int}, \beta)\)&\((\ty{int}, \ty{int})\) &\((\ty{int}, \ty{nat})\)\\
     \bottomrule
 \end{tabular}
-\end{table}
-
-With a very small and simple initial problem, there are already up to nine new type arguments tuples generated at this step in the first iteration alone, although only four are unique. Once the new type argument tuples are added to their respective maps, a new iteration is begun. We only consider one iteration and continue to the next phase of the algorithm.
+\end{center}
+%
+With a simple two-formula initial problem, there are already up to nine new type arguments tuples generated at this step in the first iteration alone, although only four are unique. Once the new type argument tuples are added to their respective maps, a new iteration is begun. We only consider one iteration and continue to the next phase of the algorithm.
 
 The next function to be called is \GenFormulae. It iterates over all non-monomorphic formulae of the initial problem; in our case, this will only be \(\langle2\rangle\). The set of type variable tuples of \(\langle2\rangle\) is passed to \MonoSubst along with the set of all previously generated substitutions.
 
 First, we instantiate \(\alpha\), the first type variable of \(\langle2\rangle\). If \(\sigma_1\) is selected to instantiate \(\alpha\), both \(\sigma_2\) and \(\sigma_3\) will in turn be selected to instantiate \(\beta\). This will generate two monomorphising substitutions, \(\sigma_1 \circ \sigma_2 = \sigma_2\) and \(\sigma_1 \circ \sigma_3 = \sigma_3\), which are added to the set of monomorphising substitutions \(S_{\text{res}}\). Now \(\sigma_2\) is selected. It simultaneously instantiates \(\alpha\) and \(\beta\). Here, \(\sigma_2\) is already in \(S_{\text{res}}\) and is therefore ignored, and \(\sigma_3\) is treated similarly. No more than \SubstLimit monomorphising substitutions can be generated in this way.
 
-The monomorphising substitutions have been generated. We only need to apply them to the formula they monomorphise. This is repeated for all non-monomorphic formulae or until \Limit is reached. The ordering of formulae will impact the output problem in the latter case. For some larger input problems, \MonoSubst could be sufficiently explosive to only allow a handful of different formulae to be monomorphised. The ability to set \SubstLimit independently can help avoid this issue. 
+Now, the monomorphising substitutions have been generated. We only need to apply them to the formula they monomorphise. This is repeated for all non-monomorphic formulae or until \Limit is reached. The order of formulae will impact the output problem in the latter case. For some larger input problems, \MonoSubst could be sufficiently explosive to only allow a handful of different formulae to be monomorphised. The ability to set \SubstLimit independently can help avoid this issue. 
 
 Finally, if the target language supports only nullary type construtors, the types of all monomorphic formulae, both new and old, are mangled.
 %This step is unnecessary if the target language allows type constructors.
-In our example, two new monomorphic formulae are generated. The algorithm outputs
+Assuming that mangling is not necessary, the algorithm outputs
 \begin{enumerate}
    \item[\(\langle1\rangle\)] \(\sym{p}\langle \ty{int}, \ty{nat}\rangle(-1, 3) \land \sym{p}\langle \ty{int}, \ty{int}\rangle(-1, -2)\)
    \item[\(\langle3\rangle\)] \(\forall x: \ty{int}{,}\; y:\ty{list}(\ty{int}){,}\; z: \ty{int}{.}\; \begin{aligned}[t]
@@ -794,6 +795,7 @@ In our example, two new monomorphic formulae are generated. The algorithm output
      & \sym{p}\langle \ty{list}(\ty{int}), \ty{int}\rangle(y, x) \land \sym{p}\langle \ty{int}, \ty{int} \rangle(x, x) \land {} \\[-\jot]
      & \sym{p}\langle \ty{int}, \ty{nat}\rangle(x, z)\end{aligned}\)
 \end{enumerate}
+In this example, two new monomorphic formulae are generated.
 
 % target page number: 2-4
 \section{Evaluation}
