@@ -264,7 +264,7 @@ Given two types \(\tau, \upsilon\), \emph{matching} \(\upsilon\) against \(\tau\
 \section{High level algorithm}
 \label{sec:high level-algorithm}
 
-The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It works by applying a bounded number of iterations, each taking a polymorphic problem as argument and returning a problem with new partially instantiated formulae. A single iteration consists of a collection phase and an instantiation phase. Once the iterations are completed, a final step discards all non-monomorphic formulae returned by the last iteration.
+The iterative monomorphisation algorithm takes a polymorphic problem as input and returns a monomorphic problem. It applies a bounded number of iterations, each taking a polymorphic problem as argument and returning a problem with new partially instantiated formulae. Once the iterations are completed, a final step discards all non-monomorphic formulae.% returned by the last iteration.
 
 The initial phase of each iteration computes two maps, \(M\) and \(N\), from the input problem~$\Phi$.
 %
@@ -275,7 +275,7 @@ The initial phase of each iteration computes two maps, \(M\) and \(N\), from the
 \end{enumerate}
 
 %These definitions depend on the precise form of the input formulae, which has been left undefined.
-\(N\) is parametrised with \(\varphi\) because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic.
+\(N\) is parametrised with \(\varphi\) because type variables are implicitly quantified at the formula level. The formula indicates the scope of type variables. This is not necessary for \(M\) since all the types it contains are monomorphic. To avoid copying the monomorphic types for each formula, \(M\) and \(N\) are kept separate.
 
 Once the maps \(M\) and \(N\) are initialised, each iteration performs the following steps to create new instances of formulae:
 
@@ -822,8 +822,8 @@ we group closely related bounds together and test combinations of values for the
 
 To guard against overfitting took place, we carried out the part of the evaluation related to parameter optimisation and all preliminary evaluations on 500 randomly chosen problems out of the 1534 selected problems. We carried out the rest of the evaluations on the remaining 1034 problems.
 
-Before finding values to assign to the bounds of the monomorphisation algorithm, we must choose which base options to run Zipperposition with. The prover has a portfolio mode with several configurations. Because the space of possible base configurations is too large to evaluate exhaustively, we evaluated, in a preliminary experiment, all portfolio configurations that called E against our benchmark suite of 500 problems, but we disabled E.
-The preliminary evaluation found that the so-called \verb|40_b.comb| configuration performed best by proving 131 problems.
+Before finding values to assign to the bounds of the monomorphisation algorithm, we must choose which base options to run Zipperposition with. Because the space of possible base configurations is too large to evaluate exhaustively, we evaluated, in a preliminary experiment, all pre-existing portfolio configurations that called E against our benchmark suite of 500 problems. Since E could not treat these non-monomorphic problems, it was disabled.
+The preliminary evaluation found that the \verb|40_b.comb| configuration performed best by proving 131 problems.
 This configuration became the base configuration, which we used as a basis to evaluate the monomorphisation options.
 
 We conducted additional informal evaluations on the 500 problems to find appropriate default values and test ranges for the monomorphisation bounds. We started the option evaluation process with the base configuration and the following default values for monomorphisation bounds and parameters for E:

@@ -3,17 +3,6 @@
   * (JB+TB) Revisit "SMT-LIB also uses iterative monomorphisation [7]". Is this
     accurate?
 
-  * (TB) This is a nonstandard (and for me incomprehensible) notation
-    {p í¯¿í°ƒâ†’ (int,nat);p í¯¿í°ƒâ†’ (int,int)}
-    in detailed example. I've tried to fix this. Double-check. --JB
-
-  * (TB) "it's not clear why we need both monomorphic type argument maps and
-    non-monomorphic type argument maps." Clarify why not just one map.
-
-  * (TB) page 11: you tested "all portfolio configurations that called E against
-    our benchmark suite of 500 problems, but we disabled E". Why?
-
-
 # Maybe
 
   * (JB) page 2: the word "mangled" implies destruction. Alternative words could
@@ -22,6 +11,7 @@
 
 
 # Ignored
+  
 
   * Where can one find the actual implementation? It does not seem to be
     available in the linked repositories.
@@ -54,6 +44,12 @@
 
 # Kind of Done
 
+  * (TB) page 11: you tested "all portfolio configurations that called E against
+    our benchmark suite of 500 problems, but we disabled E". Why?
+    >>> Had to remove a sentence and some rewriting to fit the clarification. Double-check --TB
+  * (TB) "it's not clear why we need both monomorphic type argument maps and
+    non-monomorphic type argument maps." Clarify why not just one map.
+    >>> Explained in third paragraph of High level algorithm section, rephrased a sentence to clarify, removed a useless previous sentence. Double-check --TB
 
 # Done
 
@@ -67,3 +63,8 @@
   * (JB) Check Nipkow et al. 2002, subtitle.
 
   * (JB) Clean up references.
+
+  * (TB) This is a nonstandard (and for me incomprehensible) notation
+    {p í¯¿í°ƒâ†’ (int,nat);p í¯¿í°ƒâ†’ (int,int)}
+    in detailed example. I've tried to fix this. Double-check. --JB
+    >>> looks good me, clearer than the previous version, keeps the same semantics --TB
