@@ -185,7 +185,7 @@ it cannot be computed in general~\cite[Theorem~1]{expr-poly-types}.
 
 B\"ohme's approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,paulson-blanchette-2010} to interface with superposition based automatic theorem provers. However, it is documented only superficially~\cite[Section 2.2.1]{sb-phd}.
 An iterative monomorphisation approach is also described in the context of SMT-LIB \cite{smt-lib-mono}.
-Moreover, a similar algorithm appears to have been implemented in the \relax{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
+Moreover, a similar algorithm appears to be implemented in the \relax{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
 
 In this paper, we present an algorithm based on our understanding of Böhme's description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed\pagebreak[2] \hbox{description} to help future implementers. In addition, we present some optimisations
 to curb the combinatorial explosions (Section~\ref{sec:low-level-algorithm}).
