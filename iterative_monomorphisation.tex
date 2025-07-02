@@ -171,7 +171,8 @@ Automatic theorem provers provide automation for proof assistant users. Many pro
 %
 The alternative is to translate polymorphic problems to monomorphic problems.
 
-One approach \cite{mono-trans} is to encode a complete polymorphic type system, %using dedicated function or predicate symbols in a monomorphic logic,
+\looseness=-1
+To achieve this, one approach \cite{mono-trans} is to encode a complete polymorphic type system, %using dedicated function or predicate symbols in a monomorphic logic,
 but this increases the size of the input problem substantially and slows down provers \cite{mono-trans}.
 %
 Another approach to encode polymorphism is based on {iterative monomorphisation}, as described by B\"ohme~\cite[Section 2.2.1]{sb-phd}.
@@ -182,9 +183,9 @@ However, any translation relying on a finite number of instantiations is inevita
 By a typed version of the compactness theorem, for any first order polymorphic formula \(\varphi\), there exists an equisatisfiable finite set of monomorphic instances of~\(\varphi\), but
 it cannot be computed in general~\cite[Theorem~1]{expr-poly-types}.
 
-B\"ohme's approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,paulson-blanchette-2010} to interface with superposition based automatic theorem provers. However, it is documented only as a single subsection in B\"ohme's PhD thesis~\cite[Section 2.2.1]{sb-phd}.
-\relax{SMT-LIB} also uses iterative monomorphisation \cite{smt-lib-mono}.
-Moreover, a similar algorithm appears to be implemented in the \relax{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
+B\"ohme's approach is implemented as part of Isabelle/HOL's SMT (satisfiability modulo theories) integration~\cite[Chapter 2]{sb-phd}. This implementation is also used by Sledgehammer~\cite{judgement,paulson-blanchette-2010} to interface with superposition based automatic theorem provers. However, it is documented only superficially~\cite[Section 2.2.1]{sb-phd}.
+An iterative monomorphisation approach is also described in the context of SMT-LIB \cite{smt-lib-mono}.
+Moreover, a similar algorithm appears to have been implemented in the \relax{MESON} tactic~\cite{harrison-1996} of HOL Light, but it is undocumented.
 
 In this paper, we present an algorithm based on our understanding of Böhme's description and implementation (Section~\ref{sec:high level-algorithm}). We also provide a more detailed\pagebreak[2] \hbox{description} to help future implementers. In addition, we present some optimisations
 to curb the combinatorial explosions (Section~\ref{sec:low-level-algorithm}).

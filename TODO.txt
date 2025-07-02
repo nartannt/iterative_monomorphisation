@@ -1,8 +1,3 @@
-# To do
-
-  * (JB+TB) Revisit "SMT-LIB also uses iterative monomorphisation [7]". Is this
-    accurate?
-
 # Maybe
 
   * (JB) page 2: the word "mangled" implies destruction. Alternative words could
@@ -47,6 +42,7 @@
   * (TB) page 11: you tested "all portfolio configurations that called E against
     our benchmark suite of 500 problems, but we disabled E". Why?
     >>> Had to remove a sentence and some rewriting to fit the clarification. Double-check --TB
+
   * (TB) "it's not clear why we need both monomorphic type argument maps and
     non-monomorphic type argument maps." Clarify why not just one map.
     >>> Explained in third paragraph of High level algorithm section, rephrased a sentence to clarify, removed a useless previous sentence. Double-check --TB
@@ -68,3 +64,6 @@
     {p í¯¿í°ƒâ†’ (int,nat);p í¯¿í°ƒâ†’ (int,int)}
     in detailed example. I've tried to fix this. Double-check. --JB
     >>> looks good me, clearer than the previous version, keeps the same semantics --TB
+
+  * (JB+TB) Revisit "SMT-LIB also uses iterative monomorphisation [7]". Is this
+    accurate?
