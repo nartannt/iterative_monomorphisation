@@ -1,11 +1,30 @@
+We request to see a new version of the proofs with our suggested changes
+incorporated.
+
+AQ1: OK.
+
+AQ2: TODO.
+
 - page 4, exemple 6, la ligne <5> est split de manière bizarre
 
 - ils ont massacrés tous les tableaux, au point où ça en devient problématique
   pour la clarté du propos
-  
-- autre problème mineur page 15 il manque un points après "Monomorphisation as
-  a Preprocessor
 
 - ils se sont aussi trompés sur la ville de mon université mais je peux
   corriger ça de mon côté
 
+On p. 16, the heading "E as a Zipperposiiton backend" should not have a period.
+In addition, there should be a vertical space preceding it, and the line
+following "E as a Zipperpositiion backend" should not be indented. (To see what
+the heading should look like, scroll down to "Monomorphisation as a
+Preprocessor", which is typeset properly.)
+
+On p. 18, reference 1, "vampire" should be "Vampire".
+
+On p. 18, reference 6, "judgement day" should be "Judgement Day".
+
+On p. 18, reference 9, "light" should be "Light".
+
+On p. 18, reference 10, "Qua Non" should be "qua non".
+
+On p. 19, reference 15: "E - a" should be "E -- a", where -- denotes an en-dash.
