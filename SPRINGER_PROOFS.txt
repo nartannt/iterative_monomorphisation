@@ -1,0 +1,11 @@
+- page 4, exemple 6, la ligne <5> est split de manière bizarre
+
+- ils ont massacrés tous les tableaux, au point où ça en devient problématique
+  pour la clarté du propos
+  
+- autre problème mineur page 15 il manque un points après "Monomorphisation as
+  a Preprocessor
+
+- ils se sont aussi trompés sur la ville de mon université mais je peux
+  corriger ça de mon côté
+
