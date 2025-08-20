@@ -3,21 +3,17 @@ incorporated.
 
 AQ1: OK.
 
-AQ2: TODO.
+AQ2: The city name for Tanguy Bozec should be Gif-sur-Yvette, not Paris.
 
-- page 4, exemple 6, la ligne <5> est split de manière bizarre
-
-- ils ont massacrés tous les tableaux, au point où ça en devient problématique
-  pour la clarté du propos
-
-- ils se sont aussi trompés sur la ville de mon université mais je peux
-  corriger ça de mon côté
+On p. 4, example 6, the line <5> is split after the arrow, instead of being split after the full stop
 
 On p. 16, the heading "E as a Zipperposiiton backend" should not have a period.
 In addition, there should be a vertical space preceding it, and the line
 following "E as a Zipperpositiion backend" should not be indented. (To see what
 the heading should look like, scroll down to "Monomorphisation as a
 Preprocessor", which is typeset properly.)
+
+TANGUY: the initial version had a period after the titles, if we want to stick to that, we should ask for one to be added after "Monomorphisation as a Preprocessor" and "Parameter Optimisation"
 
 On p. 18, reference 1, "vampire" should be "Vampire".
 
@@ -28,3 +24,24 @@ On p. 18, reference 9, "light" should be "Light".
 On p. 18, reference 10, "Qua Non" should be "qua non".
 
 On p. 19, reference 15: "E - a" should be "E -- a", where -- denotes an en-dash.
+
+There are several issues with the tables:
+
+On p. 10:
+   - There should be smaller vertical spaces both before and after the table.
+   - The symbols \sigma_1, \sigma_2 and \sigma_3 should be centered.
+   - The horizontal bar below \sigma_1-3 should be split in three parts matching the columns.
+   - The symbols below the \sigma_1-3 should be centered.
+
+On p. 13, Table 1:
+   - "mult" should occur at the bottom of the column.
+   - All column titles (from "cap" all the way down to "0, 50, 100, 200") should be centered.
+   - There should be a small horizontal space between the three groups of of "0, 50, 100, 200".
+   - If the spacing between all columns is slightly increased, it should be possible to remove the vertical lines of the tables.
+
+The remaining tables suffer from the same issues:
+   - The column titles should be centered
+   - The column content should be centered
+   - There should be increased spacing between columns
+   - Vertical lines should be removed
+   - For tables 1 and 2, groups of four columns should be spaced further appart from each other
