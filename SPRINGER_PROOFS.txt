@@ -1,19 +1,21 @@
+Thank you for your work typesetting our paper. We have some corrections below.
 We request to see a new version of the proofs with our suggested changes
 incorporated.
 
 AQ1: OK.
 
-AQ2: The city name for Tanguy Bozec should be Gif-sur-Yvette, not Paris.
+AQ2: The city name for Tanguy Bozec should be Gif-sur-Yvette, not Paris. This
+applies both for the metadata and for the first page of the paper.
 
-On p. 4, example 6, the line <5> is split after the arrow, instead of being split after the full stop
+On p. 4, example 6, the line starting with <5> is split after the arrow,
+instead of being split after the full stop. See the authors' PDF for how it
+should be done.
 
 On p. 16, the heading "E as a Zipperposiiton backend" should not have a period.
 In addition, there should be a vertical space preceding it, and the line
 following "E as a Zipperpositiion backend" should not be indented. (To see what
 the heading should look like, scroll down to "Monomorphisation as a
 Preprocessor", which is typeset properly.)
-
-TANGUY: the initial version had a period after the titles, if we want to stick to that, we should ask for one to be added after "Monomorphisation as a Preprocessor" and "Parameter Optimisation"
 
 On p. 18, reference 1, "vampire" should be "Vampire".
 
@@ -25,7 +27,7 @@ On p. 18, reference 10, "Qua Non" should be "qua non".
 
 On p. 19, reference 15: "E - a" should be "E -- a", where -- denotes an en-dash.
 
-There are several issues with the tables:
+Moreover, there are several issues with the tables:
 
 On p. 10:
    - There should be smaller vertical spaces both before and after the table.
