@@ -39,11 +39,11 @@ On p. 13, Table 1:
    - "mult" should occur at the bottom of the column.
    - All column titles (from "cap" all the way down to "0, 50, 100, 200") should be centered.
    - There should be a small horizontal space between the three groups of of "0, 50, 100, 200".
-   - If the spacing between all columns is slightly increased, it should be possible to remove the vertical lines of the tables.
+   - If the spacing between all columns is slightly increased and the content of the columns is centered, it should be possible to remove the vertical lines of the tables.
 
 The remaining tables suffer from the same issues:
    - The column titles should be centered
    - The column content should be centered
    - There should be increased spacing between columns
    - Vertical lines should be removed
-   - For tables 1 and 2, groups of four columns should be spaced further appart from each other
+   - For tables 1 and 2, groups of four columns should be spaced further appart from each other and the separating horizontal line should have gaps between the groups of four columns
