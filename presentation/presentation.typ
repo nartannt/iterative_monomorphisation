@@ -18,6 +18,7 @@
     author: [Jasmin Blanchette and Tanguy Bozec],
     institution: [LMU, München, Germany and ENS Paris-Saclay, Gif-sur-Yvette, France],
   ),
+  config-common(new-section-slide-fn: none),
 )
 
 #show strong: alert
@@ -51,9 +52,10 @@
 
 = Introduction
 #slide(title: "Context")[
-  Proof assistants output problems to automatic theorem provers.
-
-  Mismatch between polymorphism supported by proof assistants and monomorphic automatic theorem provers.
+  Isabelle $arrow$ Sledgehammer $arrow$ Provers
+  // TODO instead of Provers have multiple provers
+  // show that some of these provers cannot be called because of the polymorphism mismatch
+  // show that some provers cannot call their backends for the same reason
 ]
 
 
@@ -270,10 +272,4 @@ $ty("pair")(ty("list")(ty("list")(ty("int"))), ty("list")(ty("list")(ty("int")))
   - It is a viable method for extending monomorphic provers
 ]
 
-#slide(title: "Conclusion")[
-  #set align(center)
-  #set text(35pt)
-  Thank you for listening!
-
-  Questions?
-]
+#title-slide()
