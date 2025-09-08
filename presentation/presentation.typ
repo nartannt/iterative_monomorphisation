@@ -1,30 +1,29 @@
-#import "@preview/touying:0.4.2": *
+#import "@preview/touying:0.6.1": *
+#import themes.metropolis: *
 
-#let s = themes.metropolis.register(aspect-ratio: "16-9", footer: self => self.info.institution)
-//#let s = (s.methods.enable-transparent-cover)(self: s)
-#let s = (s.methods.info)(
-  self: s,
-  title: [Iterative Monomorphisation],
-  subtitle: [ARPE internship],
-  author: [Tanguy Bozec supervised by Jasmin Blanchette\
-
-          #set text(size: 0.8em)
-          LMU, München, Germany and ENS Paris-Saclay, Gif-sur-Yvette, France],
+#show: metropolis-theme.with(
+  aspect-ratio: "16-9",
+  footer: self => [],
+  config-colors(
+    primary: rgb("#eb811b"),
+    primary-light: rgb("#d6c6b7"),
+    secondary: rgb("#23373b"),
+    neutral-lightest: rgb("#fafafa"),
+    neutral-dark: rgb("#23373b"),
+    neutral-darkest: rgb("#23373b"),
+  ),
+  config-info(
+    title: [Iterative Monomorphisation],
+    subtitle: [ARPE internship],
+    author: [Jasmin Blanchette and Tanguy Bozec],
+    institution: [LMU, München, Germany and ENS Paris-Saclay, Gif-sur-Yvette, France],
+  ),
 )
 
-#let (init, slides, touying-outline, alert, speaker-note) = utils.methods(s)
-#let (slide, empty-slide, title-slide, new-section-slide, focus-slide) = utils.slides(s)
-//#show: init
 #show strong: alert
 
 #set text(size: 24pt, font: "Fira Sans", fallback: false)
-#let s = (s.methods.colors)(
-  self: s,
-  neutral-lightest: rgb("#fafafa"),
-  primary-dark: rgb("#23373b"),
-  secondary-light: rgb("#eb811b"),
-  secondary-lighter: rgb("#d6c6b7"),
-)
+
 
 #let ty(body) = {
   set text(
@@ -46,7 +45,10 @@
   else {body}
 }
 
-#show: slides
+//#show: slides
+
+#title-slide()
+
 = Introduction
 #slide(title: "Context")[
   Proof assistants output problems to automatic theorem provers.
@@ -271,7 +273,6 @@ $ty("pair")(ty("list")(ty("list")(ty("int"))), ty("list")(ty("list")(ty("int")))
 #slide(title: "Conclusion")[
   #set align(center)
   #set text(35pt)
-  #show par: set block(spacing: 3.5em)
   Thank you for listening!
 
   Questions?
