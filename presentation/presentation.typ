@@ -1,5 +1,10 @@
 #import "@preview/touying:0.6.1": *
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+
 #import themes.metropolis: *
+
+#let diagram = touying-reducer.with(
+  reduce: fletcher.diagram, cover: fletcher.hide)
 
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
@@ -52,7 +57,43 @@
 
 = Introduction
 #slide(title: "Context")[
-  Isabelle $arrow$ Sledgehammer $arrow$ Provers
+
+  #align(center)[
+  #set text(font: "Fira Sans")
+  #diagram(
+   //debug: 3,
+   spacing: (3.5em, 1em),
+   node((0, 1.5), [Isabelle/HOL]),
+
+   node(name: <sl>, (0.88, 1.5), [Sledgehammer], defocus: 0.7, fill: white),
+
+   //node(name: <ghost-zip>,  (2, 0), [a]),
+   //node(name: <ghost-vamp>, (2, 1), [a]),
+   //node(name: <ghost-e>,    (2, 2), [a]),
+
+   node(name: <zip>,  (2,0), align(left)[Zipperposition], width: 7em, height: 2em),
+   node(name: <vamp>, (2,1), align(left)[Vampire]       , width: 7em, height: 2em),
+   node(name: <e>,    (2,2), align(left)[E]             , width: 7em, height: 2em),
+   node(name: <leo>,  (2,3), align(left)[Leo-III]       , width: 7em, height: 2em),
+
+   //node(name: <zip>,  <ghost-zip.west>,  [Zipperposition]),
+   //node(name: <vamp>, <ghost-vamp.west>, [Vampire]),
+   //node(name: <e>,    <ghost-e.west>,    [E]),
+
+   edge((0,1.5),(1,1.5), "->"),
+
+   edge((0.87, 1.5), <zip.west> , "->", layer: -1, shift: (-0pt ,0pt)),
+   edge((0.87, 1.5), <vamp.west>, "->", layer: -1, shift: (-0pt ,0pt)),
+   edge((0.87, 1.5), <e.west>   , "->", layer: -1, shift: (-0pt ,0pt)),
+   edge((0.87, 1.5), <leo.west> , "->", layer: -1, shift: (-0pt ,0pt)),
+
+   node((3,0), [E]),
+   node((3,3), [E]),
+
+   edge(<zip.east>, (3, 0), "->"),
+   edge(<leo.center>, (3, 3), "->"),
+  )
+  ]
   // TODO instead of Provers have multiple provers
   // show that some of these provers cannot be called because of the polymorphism mismatch
   // show that some provers cannot call their backends for the same reason
