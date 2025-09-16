@@ -41,8 +41,10 @@
 
 #let mathCol(x, color) = text(fill: color)[$#x$]
 
+#let hl(body, colour: yellow) = {box(fill: colour.lighten(20%),stroke: none, outset: 0.1em, body)}
+
 #let altHighlight(self, body, visible: "2-", colour: yellow) = {
-  if utils.check-visible(self.subslide, visible) {box(fill: colour.lighten(20%),stroke: none, outset: 0.1em, body)}
+  if utils.check-visible(self.subslide, visible) {hl(body, colour: colour)}
   else {body}
 }
 
@@ -51,56 +53,88 @@
   else {body}
 }
 
-//#show: slides
+// TODO this is a temporary fix, the correct thing to do
+// would be to pass the previous character as an argument,
+// measure the height of both and align accordingly
+#let cross = text(font: "Noto Color Emoji", top-edge: "ascender")[#box[#move(dy: -2.5pt, emoji.crossmark)]]
 
 #title-slide()
 
 = Introduction
-#slide(title: "Context")[
 
+== Motivation
+#slide(repeat: 7, self => {
+   let (uncover, only, alternatives) = utils.methods(self)
+
+  [
+
+    #align(center)[
+    #set text(font: "Fira Sans")
+    #diagram(
+     //debug: 3,
+     spacing: (2.5em, 1em),
+     node((0, 1.5), altHighlight(self, [Isabelle/HOL], visible: "2, 3-7")),
+
+     node(name: <sl>, (0.88, 1.5), [Sledgehammer], defocus: 0.7),
+
+     //node(name: <ghost-zip>,  (2, 0), [a]),
+     //node(name: <ghost-vamp>, (2, 1), [a]),
+     //node(name: <ghost-e>,    (2, 2), [a]),
+
+     let hl_poly(body) = {altHighlight(self, body, visible: "3-7")},
+     let hl_mono(body) = {altHighlight(self, body, colour: green, visible: "4-7")},
+
+     node(name: <zip>,  (2,0), width: 7em, height: 2em, align(left)[#hl_poly[Zipperposition]]),
+     node(name: <vamp>, (2,1), width: 7em, height: 2em, align(left)[#hl_poly[Vampire]]       ),
+     node(name: <e>,    (2,2), width: 7em, height: 2em, align(left)[#hl_mono[E] #uncover("7")[#cross]]),
+     node(name: <leo>,  (2,3), width: 7em, height: 2em, align(left)[#hl_poly[Leo-III]]       ),
+
+     //node(name: <zip>,  <ghost-zip.west>,  [Zipperposition]),
+     //node(name: <vamp>, <ghost-vamp.west>, [Vampire]),
+     //node(name: <e>,    <ghost-e.west>,    [E]),
+
+     edge((0,1.5),(1,1.5), "->"),
+
+     edge((0.87, 1.5), <zip.west> , "->", layer: -1),
+     edge((0.87, 1.5), <vamp.west>, "->", layer: -1),
+     edge((0.87, 1.5), <e.west>   , "->", layer: -1),
+     edge((0.87, 1.5), <leo.west> , "->", layer: -1),
+
+
+     pause,
+     /*only("1-6")*/[#node((0, 0), [#hl[Polymorphic]\ with type variables])],
+     pause,
+     pause,
+     /*only("1-6")*/[#node((0.88, 0), [#hl(colour: green)[Monomorphic]\ no type variables])],
+
+     pause,
+     let hl_e_call(body) = {altHighlight(self, body, colour: green, visible: "6-7")},
+     [#node((2.9,0), [#hl_e_call[E] #uncover("7")[#cross]])],
+     [#node((2.9,3), [#hl_e_call[E] #uncover("7")[#cross]])],
+
+     [#edge(<zip.east>,   (2.9, 0), "->")],
+     [#edge(<leo.center>, (2.9, 3), "->")],
+    )
+    ]
+    // TODO instead of Provers have multiple provers
+    // show that some of these provers cannot be called because of the polymorphism mismatch
+    // show that some provers cannot call their backends for the same reason
+]})
+
+== Solution
+#slide[
   #align(center)[
-  #set text(font: "Fira Sans")
-  #diagram(
-   //debug: 3,
-   spacing: (3.5em, 1em),
-   node((0, 1.5), [Isabelle/HOL]),
-
-   node(name: <sl>, (0.88, 1.5), [Sledgehammer], defocus: 0.7, fill: white),
-
-   //node(name: <ghost-zip>,  (2, 0), [a]),
-   //node(name: <ghost-vamp>, (2, 1), [a]),
-   //node(name: <ghost-e>,    (2, 2), [a]),
-
-   node(name: <zip>,  (2,0), align(left)[Zipperposition], width: 7em, height: 2em),
-   node(name: <vamp>, (2,1), align(left)[Vampire]       , width: 7em, height: 2em),
-   node(name: <e>,    (2,2), align(left)[E]             , width: 7em, height: 2em),
-   node(name: <leo>,  (2,3), align(left)[Leo-III]       , width: 7em, height: 2em),
-
-   //node(name: <zip>,  <ghost-zip.west>,  [Zipperposition]),
-   //node(name: <vamp>, <ghost-vamp.west>, [Vampire]),
-   //node(name: <e>,    <ghost-e.west>,    [E]),
-
-   edge((0,1.5),(1,1.5), "->"),
-
-   edge((0.87, 1.5), <zip.west> , "->", layer: -1, shift: (-0pt ,0pt)),
-   edge((0.87, 1.5), <vamp.west>, "->", layer: -1, shift: (-0pt ,0pt)),
-   edge((0.87, 1.5), <e.west>   , "->", layer: -1, shift: (-0pt ,0pt)),
-   edge((0.87, 1.5), <leo.west> , "->", layer: -1, shift: (-0pt ,0pt)),
-
-   node((3,0), [E]),
-   node((3,3), [E]),
-
-   edge(<zip.east>, (3, 0), "->"),
-   edge(<leo.center>, (3, 3), "->"),
-  )
+    Polymorphic problem $arrow.double.long$ Monomorphic problem
   ]
-  // TODO instead of Provers have multiple provers
-  // show that some of these provers cannot be called because of the polymorphism mismatch
-  // show that some provers cannot call their backends for the same reason
+
+  #pause \
+  Two possibilities:
+    + Encode type variables in a monomorphic logic
+    + Heuristically instantiate type variables
 ]
 
-
-#slide(title: "Rank-1 polymorphism")[
+== Rank-1 Polymorphism
+#slide[
 
   $forall x: ty("list_int"),    f angle.l ty("list_int")    angle.r(x)$\
   #pause
@@ -114,67 +148,70 @@
 
   #pause
 
-  Type variables are always quantified #emph[universally] at the #emph[top level] of a forumla.
+  Type variables are quantified #emph[universally] at the #emph[top level] of a formula.
 ]
-#let approach(nb) = {"approach " + str(nb) + ": "}
-#slide(title: "Monomorphisation")[
-Not all automatic theorem provers support polymorphism.
-#set enum(numbering: approach)
-  + #pause Extend monomorphic provers to support polymorphism
-  + #pause Monomorphise problems
-]
-//#slide(title: "Encoding approach")[
-//  Adds side conditions and annotations to the problem's formulae.
-//
+
+= Iterative monomorphisation
+//#slide(title: "Iterative monomorphisation algorithm")[
+//  $forall alpha, forall x: ty("list")\(alpha), f angle.l ty("list")(alpha) angle.r(x)$
 //  #pause
-//  $forall x: ty("int"), P(x)$ 
 //
-//  #pause
-//  $forall x, g_("int")(x) arrow.r.double P(x)$
+//  $forall x: ty("list")(ty("int")),    f angle.l ty("list")(ty("int"))    angle.r(x)$\
+//  $forall x: ty("list")(ty("nat")),    f angle.l ty("list")(ty("nat"))    angle.r(x)$\
+//  $forall x: ty("list")(ty("bool")),   f angle.l ty("list")(ty("bool"))   angle.r(x)$\
+//  $forall x: ty("list")(ty("string")), f angle.l ty("list")(ty("string")) angle.r(x)$\
+//
 //
 //]
-= Iterative monomorphisation
-#slide(title: "Iterative monomorphisation algorithm")[
-  $forall alpha, forall x: ty("list")\(alpha), f angle.l ty("list")(alpha) angle.r(x)$
-  #pause
-
-  $forall x: ty("list")(ty("int")),    f angle.l ty("list")(ty("int"))    angle.r(x)$\
-  $forall x: ty("list")(ty("nat")),    f angle.l ty("list")(ty("nat"))    angle.r(x)$\
-  $forall x: ty("list")(ty("bool")),   f angle.l ty("list")(ty("bool"))   angle.r(x)$\
-  $forall x: ty("list")(ty("string")), f angle.l ty("list")(ty("string")) angle.r(x)$\
-
-
-]
 
 //#slide(title: "Iterative monomorphisation algorithm")[
 //  Match non-monomorphic type arguments against monomorphic type arguments to generate substitutions that we can use to instantiate type variables.
 //]
 
+== Example
 
-#slide(title: "An easy example", self => [
+#slide(self => [
   #let (uncover, only, alternatives) = utils.methods(self)
+
+  #let good_col = green.lighten(20%)
+  #let bad_col = red.lighten(40%)
 
   Initial problem:
   + $forall x: ty("int"), #altHighlight(self, $f angle.l ty("int") angle.r$, visible: "2-4")\(x) $
-  + $forall x: alpha, y: ty("list")(alpha), #altHighlight(self, $f angle.l alpha angle.r$, visible: "2,3,5")\(x) and #altHighlight(self, $f angle.l ty("list")(alpha) angle.r$, visible: "2,4")\(y)$
+  + $forall x: alpha, y: ty("list")(alpha), #altHighlight(self, colour: good_col, $f angle.l alpha angle.r$, visible: "2,3,4")\(x) and #altHighlight(self, colour: bad_col, $f angle.l ty("list")(alpha) angle.r$, visible: "3")\(y)$
 
   #pause
-  #pause
-  Successful match of $alpha$ against $ty("int")$:
-
-#set enum(start: 3)
-  + $forall x: ty("int"), y: ty("list")(ty("int")), f angle.l ty("int") angle.r(x) and #altHighlight(self, $f angle.l ty("list")(ty("int")) angle.r$, visible: "5")\(y)$
+  Successful match of $hl(colour: #good_col, alpha)$ against $hl(ty("int"))$
 
   #pause
-  Failure to match $ty("list")(ty("int"))$ against $ty("int")$
+  #alternatives[
+    Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$][
+    Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$][
+    Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$][
+    We apply the substitution $hl(colour: #good_col, alpha) mapsto hl(ty("int"))$ to clause 2.]
+
+  //#only("1-3")[Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$]
 
   #pause
-  Successful match of $alpha$ against $ty("list")(ty("int"))$:
 
-#set enum(start: 4)
-  + $forall x: ty("list")(ty("int")), y: ty("list")(ty("list")(ty("int"))), \ f angle.l ty("list")(ty("int")) angle.r(x) and f angle.l ty("list")(ty("list")(ty("int"))) angle.r(y)$
+  #set enum(start: 3)
+  + $forall x: ty("int"), y: ty("list")(ty("int")), f angle.l ty("int") angle.r(x) and #altHighlight(self, colour: good_col, $f angle.l ty("list")(ty("int")) angle.r$, visible: "6")\(y)$
+
+  //#pause
+
+  //#pause
+  //Successful match of $alpha$ against $ty("list")(ty("int"))$:
+
+  //#set enum(start: 4)
+  //+ $forall x: ty("list")(ty("int")), y: ty("list")(ty("list")(ty("int"))), \ f angle.l ty("list")(ty("int")) angle.r(x) and f angle.l ty("list")(ty("list")(ty("int"))) angle.r(y)$
 
 ])
+
+#slide[
+  + $forall x: ty("int"), f angle.l ty("int") angle.r (x) $
+  + $forall x: alpha, y: ty("list")(alpha), f angle.l alpha angle.r (x)$ and $f angle.l ty("list")(alpha) angle.r (y)$
+  + $forall x: ty("int"), y: ty("list")(ty("int")), f angle.l ty("int") angle.r (x)$ and $f angle.l ty("list")(ty("int")) angle.r (y)$
+]
 
 #slide(title: "An easy(-ish) example", repeat: 5, self => [
   We add another formula to our problem:
