@@ -1,5 +1,7 @@
 #import "@preview/touying:0.6.1": *
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
+#import "@preview/lovelace:0.3.0": *
+#import "@preview/algo:0.3.6": *
 
 #import themes.metropolis: *
 
@@ -30,6 +32,12 @@
 
 #set text(size: 24pt, font: "Fira Sans", fallback: false)
 
+#let primary = rgb("#eb811b")
+
+#let alert(body) = {text(fill: primary, weight: "semibold")[#body]}
+
+#let good_col = green.lighten(20%)
+#let bad_col = red.lighten(40%)
 
 #let ty(body) = {
   set text(
@@ -129,8 +137,8 @@
 
   #pause \
   Two possibilities:
-    + Encode type variables in a monomorphic logic
-    + Heuristically instantiate type variables
+    + #alert[Encode] type variables in a monomorphic logic
+    + #alert[Instantiate] type variables
 ]
 
 == Rank-1 Polymorphism
@@ -148,7 +156,7 @@
 
   #pause
 
-  Type variables are quantified #emph[universally] at the #emph[top level] of a formula.
+  Type variables are quantified #alert[universally] at the #alert[top level] of a formula.
 ]
 
 = Iterative monomorphisation
@@ -168,26 +176,38 @@
 //  Match non-monomorphic type arguments against monomorphic type arguments to generate substitutions that we can use to instantiate type variables.
 //]
 
+== Algorithm
+
+#slide[
+  #pseudocode-list(line-numbering: none)[
+  + while new formulae are added
+    + for all pairs of type arguments $tau, pi$
+      + if $tau$ matches against $pi$
+        + compute the associated substitution $sigma$
+        + apply $sigma$ to all relevant formulae
+        + add the new formulae to our problem set
+  ]
+
+]
+
 == Example
 
 #slide(self => [
   #let (uncover, only, alternatives) = utils.methods(self)
 
-  #let good_col = green.lighten(20%)
-  #let bad_col = red.lighten(40%)
 
   Initial problem:
   + $forall x: ty("int"), #altHighlight(self, $f angle.l ty("int") angle.r$, visible: "2-4")\(x) $
   + $forall x: alpha, y: ty("list")(alpha), #altHighlight(self, colour: good_col, $f angle.l alpha angle.r$, visible: "2,3,4")\(x) and #altHighlight(self, colour: bad_col, $f angle.l ty("list")(alpha) angle.r$, visible: "3")\(y)$
 
   #pause
-  Successful match of $hl(colour: #good_col, alpha)$ against $hl(ty("int"))$
+  Successful match of $hl(colour: #good_col, alpha)$ against $hl(ty("int"))$.
 
   #pause
   #alternatives[
-    Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$][
-    Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$][
-    Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$][
+    Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$.][
+    Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$.][
+    Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$.][
     We apply the substitution $hl(colour: #good_col, alpha) mapsto hl(ty("int"))$ to clause 2.]
 
   //#only("1-3")[Failure to match $hl(colour: #bad_col, ty("list")(alpha))$ against $hl(ty("int"))$]
@@ -207,70 +227,85 @@
 
 ])
 
-#slide[
+#slide(self => [
   + $forall x: ty("int"), f angle.l ty("int") angle.r (x) $
-  + $forall x: alpha, y: ty("list")(alpha), f angle.l alpha angle.r (x)$ and $f angle.l ty("list")(alpha) angle.r (y)$
-  + $forall x: ty("int"), y: ty("list")(ty("int")), f angle.l ty("int") angle.r (x)$ and $f angle.l ty("list")(ty("int")) angle.r (y)$
-]
+  + $forall x: alpha, y: ty("list")(alpha), #altHighlight(self, $f angle.l alpha angle.r$, colour: good_col, visible: "2-")\(x) and f angle.l ty("list")(alpha) angle.r (y)$
+  + $forall x: ty("int"), y: ty("list")(ty("int")), f angle.l ty("int") angle.r (x) and #altHighlight(self, $f angle.l ty("list")(ty("int")) angle.r$, visible: "2-")\(y)$
 
-#slide(title: "An easy(-ish) example", repeat: 5, self => [
-  We add another formula to our problem:
-#set enum(start: 5)
-  + $forall x: alpha, y: beta, z: ty("pair")(alpha, beta), #altHighlight(self, $f angle.l alpha angle.r$, visible: "3")\(x) and #altHighlight(self, $f angle.l beta angle.r$, visible: "4", colour: orange)\(y) and #altHighlight(self, $f angle.l ty("pair")(alpha,beta) angle.r$, visible: "5", colour: green)\(z)$
   #pause
-#table(
-  stroke: none,
-  columns: (1fr, 1fr),
-  rows: 1.5em,
-  align: (x, _) => if x==0 {center} else {center},
-  table.header(
-    [Monomorphic],
-    [Non-monomorphic],
-  ),
-  [],[],
-  [$ty("int"), ty("list")(ty("int")), ty("list")(ty("list")(ty("int")))$],[$alpha, beta, ty("pair")(alpha, beta)$],
-  [], [#hide(self, altHighlight(self, $ty("pair")(ty("int"), beta), ty("pair")(ty("list")(ty("int")), beta)$, visible: "3"), invisible: "1-2")],
-  [], [#hide(self, altHighlight(self, $ty("pair")(ty("list")(ty("list")(ty("int"))), beta)$, visible: "3"), invisible: "1-2")],
-  [], [#hide(self, altHighlight(self, $ty("pair")(alpha, ty("int")), ty("pair")(alpha, ty("list")(ty("int")))$, visible: "4", colour: orange), invisible: "1-3")],
-  [], [#hide(self, altHighlight(self, $ty("pair")(alpha, ty("list")(ty("list")(ty("int"))))$, visible: "4", colour: orange), invisible: "1-3")],
-)
+  Successful match of $hl(colour: #good_col, alpha)$ against $hl(hl("list")(ty("int")))$.
+
+  #pause
+  We apply the substitution $hl(colour: #good_col, alpha) mapsto hl(hl("list")(ty("int")))$ to clause 2.
+
+  #set enum(start: 4)
+  + $forall x: ty("list")(ty("int")), y: ty("list")(ty("list")(ty("int"))),\ f angle.l ty("list")(ty("int")) angle.r (x) and f angle.l ty("list")(ty("list")(ty("int"))) angle.r (y)$
+
+  #pause
+  This can generate an #alert[infinite] number of new formulae.
 ])
 
-#slide(title: [An #strike(stroke: 3pt)[easy] explosive example])[
+//#slide(title: "An easy(-ish) example", repeat: 5, self => [
+//  We add another formula to our problem:
+//#set enum(start: 5)
+//  + $forall x: alpha, y: beta, z: ty("pair")(alpha, beta), #altHighlight(self, $f angle.l alpha angle.r$, visible: "3")\(x) and #altHighlight(self, $f angle.l beta angle.r$, visible: "4", colour: orange)\(y) and #altHighlight(self, $f angle.l ty("pair")(alpha,beta) angle.r$, visible: "5", colour: green)\(z)$
+//  #pause
+//#table(
+//  stroke: none,
+//  columns: (1fr, 1fr),
+//  rows: 1.5em,
+//  align: (x, _) => if x==0 {center} else {center},
+//  table.header(
+//    [Monomorphic],
+//    [Non-monomorphic],
+//  ),
+//  [],[],
+//  [$ty("int"), ty("list")(ty("int")), ty("list")(ty("list")(ty("int")))$],[$alpha, beta, ty("pair")(alpha, beta)$],
+//  [], [#hide(self, altHighlight(self, $ty("pair")(ty("int"), beta), ty("pair")(ty("list")(ty("int")), beta)$, visible: "3"), invisible: "1-2")],
+//  [], [#hide(self, altHighlight(self, $ty("pair")(ty("list")(ty("list")(ty("int"))), beta)$, visible: "3"), invisible: "1-2")],
+//  [], [#hide(self, altHighlight(self, $ty("pair")(alpha, ty("int")), ty("pair")(alpha, ty("list")(ty("int")))$, visible: "4", colour: orange), invisible: "1-3")],
+//  [], [#hide(self, altHighlight(self, $ty("pair")(alpha, ty("list")(ty("list")(ty("int"))))$, visible: "4", colour: orange), invisible: "1-3")],
+//)
+//])
 
-$ty("pair")(ty("int"), ty("int"))$\
-$ty("pair")(ty("int"), ty("list")(ty("int")))$\
-$ty("pair")(ty("int"), ty("list")(ty("list")(ty("int"))))$\
+//#slide(title: [An #strike(stroke: 3pt)[easy] explosive example])[
+//
+//$ty("pair")(ty("int"), ty("int"))$\
+//$ty("pair")(ty("int"), ty("list")(ty("int")))$\
+//$ty("pair")(ty("int"), ty("list")(ty("list")(ty("int"))))$\
+//
+//$ty("pair")(ty("list")(ty("int")), ty("int"))$\
+//$ty("pair")(ty("list")(ty("int")), ty("list")(ty("int")))$\
+//$ty("pair")(ty("list")(ty("int")), ty("list")(ty("list")(ty("int"))))$\
+//
+//$ty("pair")(ty("list")(ty("list")(ty("int"))), ty("int"))$\
+//$ty("pair")(ty("list")(ty("list")(ty("int"))), ty("list")(ty("int")))$\
+//$ty("pair")(ty("list")(ty("list")(ty("int"))), ty("list")(ty("list")(ty("int"))))$\
+//]
 
-$ty("pair")(ty("list")(ty("int")), ty("int"))$\
-$ty("pair")(ty("list")(ty("int")), ty("list")(ty("int")))$\
-$ty("pair")(ty("list")(ty("int")), ty("list")(ty("list")(ty("int"))))$\
-
-$ty("pair")(ty("list")(ty("list")(ty("int"))), ty("int"))$\
-$ty("pair")(ty("list")(ty("list")(ty("int"))), ty("list")(ty("int")))$\
-$ty("pair")(ty("list")(ty("list")(ty("int"))), ty("list")(ty("list")(ty("int"))))$\
-]
 #slide(title: "Bounds")[
-  To curb explosive enumerations bounds are necessary, they limit the number of new:
-  #pause
-    - monomorphic type arguments (each iteration)
-    #pause
-    - non-monomorphic type arguments (each iteration)
-    #pause
-    - monomorphised formulae
-]
+  We cannot exhaustively enumerate all type variables instantiations.
 
-= Implementation
-#slide(title: "Improvements")[
-  Key ideas:
-  - Separating type arguments into "old" and "new" sets
-  - Only applying substitutions to type argument
-  - Generating the monomorphised formulae in a seperate phase
+  #alert[Heuristics] determine which instantiations we perform:
+  #pause
+
+  #pause
+  - The number of #alert[iterations] of the algorithm is limited.
+
+  #pause
+  - We filter type arguments by #alert[function symbol].
+
+  #pause
+  - We limit the number of #alert[substitutions] we generate.
+
+  #pause
+  - We limit the number of #alert[applications] of the substitutions.
+
 ]
 
 #slide(title: "Zipperposition and E")[
   #figure(
-  image("architecture.svg", width: 80%),
+  image("architecture.svg", width: 95%),
 )
 
 ]
