@@ -118,10 +118,10 @@
      pause,
      let hl_e_call(body) = {altHighlight(self, body, colour: green, visible: "6-7")},
      [#node((2.9,0), [#hl_e_call[E] #uncover("7")[#cross]])],
-     [#node((2.9,3), [#hl_e_call[E] #uncover("7")[#cross]])],
+     //[#node((2.9,3), [#hl_e_call[E] #uncover("7")[#cross]])],
 
      [#edge(<zip.east>,   (2.9, 0), "->")],
-     [#edge(<leo.center>, (2.9, 3), "->")],
+     //[#edge(<leo.center>, (2.9, 3), "->")],
     )
     ]
     // TODO instead of Provers have multiple provers
@@ -178,23 +178,42 @@
 
 == Algorithm
 
-#slide[
-  #pseudocode-list(line-numbering: none)[
-  + while new formulae are added
-    + for all pairs of type arguments $tau, pi$
-      + if $tau$ matches against $pi$
-        + compute the associated substitution $sigma$
-        + apply $sigma$ to all relevant formulae
-        + add the new formulae to our problem set
+#let st(body) = text(weight: "semibold")[#body]
+
+#let it_mon_algo = pseudocode-list(line-numbering: none)[
+  + $P$ is the set of input formulae
+  + #st[while] new formulae are added to $P$ #st[do]
+    + #st[for all] occurrences $f angle.l tau angle.r (dots)$ and $f angle.l pi angle.r (dots)$ in $P$ #st[do]
+      + #st[if] $pi$ is monomorphic #st[and] $tau$ matches against $pi$ #st[then]
+        + add $sigma$, the unifier of $pi$ and $tau$ to $S$
+    + #st[for all] $phi in P, sigma in S$ #st[do]
+      + add $phi sigma$ to $P$
+  + $R = {phi in P | phi #text(font: "Fira Sans")[is monomorphic]}$
+  + #st[return] $R$
   ]
 
+#slide[
+  #it_mon_algo
+]
+
+#slide[
+
+  #alert[Soundness]: instantiation of universally quantified type variables.
+
+  #pause
+  #alert[Completeness]: this algorithm is incomplete.
+
+    #pause
+    - Finding a #alert[finite equisatisfiable] set of monomorphic instances of a first-order polymorphic formula is #alert[undecidable]
+
+    #pause
+    - #alert[Bounds] limit the instantiations we perform
 ]
 
 == Example
 
 #slide(self => [
   #let (uncover, only, alternatives) = utils.methods(self)
-
 
   Initial problem:
   + $forall x: ty("int"), #altHighlight(self, $f angle.l ty("int") angle.r$, visible: "2-4")\(x) $
@@ -316,39 +335,60 @@
 //  
 //  The many options of the base version of Zipperposition also have to be set.
 //]
-#slide(title: "Methodology")[
-  Two sets of TPTP (Thousands of Problems for Theorem Provers) problems:
-    - 500 problems for testing and adjusting bounds
-    - 1034 problems for the evaluations
+
+== Benchmarks
+#slide[
+
+  We wanted to test the #alert[usefulness] of our implementation of iterative monomorphisation.
+
+  We had two questions:
+
+  #pause
+  + Does Zipperposition benefit from the ability to call E on monomorphised problems?
+
+  + Does E perform well on monomorphised problems?
+
 ]
-#slide(title: "Zipperposition with E")[
-#table(
-  stroke: none,
-  columns: (1fr, 1fr, 1fr, 1fr),
-  rows: 1.5em,
-  align: (x, _) => if x==0 {left} else {center},
-  table.header(
-    [],
-    [Zipperposition without E],
-    [Zipperposition with E],
-    [Union],
-  ),
-  [],[],[],[],
-  [500 problems] ,[168],[198],[207],
-  [1034 problems],[337],[410],[434],
-)
-//  Significant improvement:
-//    - 160 problems solved without E vs 198 with E
-//    - 337 problems solved without E vs 410 with E
+
+== Methodology
+#slide[
+  We used the #alert[TPTP] (Thousand Problems for Theorem Provers) problem set for our evaluations.
+
+  #pause
+  We split the problem set into two:
+    - 500 problems for adjusting bounds and parameters
+    - 1034 problems for the benchmarks
 ]
-//#slide(title: "Extending monomorphic provers")[
-//  The iterative monomorphisation to monomorphic prover pipeline is viable.
-//
-//  #pause
-//
-//  E with monomorphisation solves 340 problems, as many as the base version of Zipperposition 
-//]
-#slide(title: "Extending a monomorphic prover", repeat: 4, self => [
+
+== Zipperposition benefits from monomorphisation
+
+#slide[
+  #table(
+    stroke: none,
+    columns: (1fr, 1fr, 1fr, 1fr),
+    rows: 1.5em,
+    align: (x, _) => if x==0 {left} else {center},
+    table.header(
+      [],
+      [Zipperposition without E],
+      [Zipperposition with E],
+      [Union],
+    ),
+    [],[],[],[],
+    [500 problems] ,[168],[198],[207],
+    [1034 problems],[337],[410],[434],
+  )
+
+  #pause \
+  This is #alert[expected] Zipperposition benefits greatly from E in a monomorphic setting.
+]
+
+== E performs well on monomorphised problems
+#slide(repeat: 4, self => [
+  #let hide_leo(body) = hide(self, body, invisible: "1-2")
+  #let hide_zip(body) = hide(self, body, invisible: "1")
+  #let hide_u(body) = hide(self, body, invisible: "1-3")
+
 #table(
   stroke: none,
   columns: (6em, 1fr, 1fr, 1fr),
@@ -356,33 +396,38 @@
   align: (x, _) => if x==0 {left} else {center},
   table.header(
     [],
-    [#hide(self, [Native polymorphism], invisible: "1-2")],
+    [Native polymorphism],
     [Monomorphisation],
-    [#hide(self, [Union], invisible: "1-3")],
+    [#hide_u([Union])],
   ),
   [],[],[],[],
-  [E]                            ,[#hide(self, [-]  , invisible: "1-2")],  [340]             ,[#hide(self, [340], invisible: "1-3")],
-  [#hide(self, [Leo-III])]       ,[#hide(self, [157], invisible: "1-2")],[#hide(self, [231])],[#hide(self, [274], invisible: "1-3")],
-  [#hide(self, [Zipperposition])],[#hide(self, [339], invisible: "1-2")],[#hide(self, [351])],[#hide(self, [404], invisible: "1-3")],
+  [E]                   ,[\- ]             ,[340]             ,[#hide_u([340])],
+  [Zipperposition]      ,[339]             ,[#hide_zip([351])],[#hide_u([404])],
+  [#hide_leo([Leo-III])],[#hide_leo([157])],[#hide_leo([231])],[#hide_u([274])],
 )
-//  Significant improvement:
-//    - 157 problems solved by Leo-III vs 231 by Leo-III with monomorphisation
-//    - 339 problems solved by Zipperposition vs 351 by Zipperposition with monomorphisation
+
+  Calling E on monomorphised problems is a #alert[viable] option.
+
+  #uncover("3-")[Polymorphic provers perform #alert[better] on monomorphised problems.]
+
 ])
 
 = Conclusion
 #slide(title: "Conclusion")[
   
-  - Iterative monomorphisation heuristically instantiates type variables of polymorphic formulae
+  - Goal: Polymorphic problem $arrow.double.long$ Monomorphic problem.
 
   #pause
-  - This approach needs bounds and limits to be viable
+  - Algorithm works by #alert[instantiating] type variables with ground types.
 
   #pause
-  - Iterative monomorphisation can outperform native implementations of polymorphism
+  - #alert[Bounds] are necessary in practice.
 
   #pause
-  - It is a viable method for extending monomorphic provers
+  - It is a #alert[viable] means for extending monomorphic provers.
+
+  #pause
+  - Iterative monomorphisation can #alert[outperform] native implementations of polymorphism
 ]
 
 #title-slide()
