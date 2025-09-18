@@ -303,10 +303,9 @@
 //]
 
 #slide(title: "Bounds")[
-  We cannot exhaustively enumerate all type variables instantiations.
+  We cannot #alert[exhaustively enumerate] all type variables instantiations.
 
-  #alert[Heuristics] determine which instantiations we perform:
-  #pause
+  We use #alert[heuristics] to determine which instantiations we perform:
 
   #pause
   - The number of #alert[iterations] of the algorithm is limited.
