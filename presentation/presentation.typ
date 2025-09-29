@@ -159,8 +159,8 @@
 
   #pause \
   Two possibilities:
-    + #alert[Encode] type variables in a monomorphic logic
-    + #alert[Instantiate] type variables
+    + #alert[Encode] type variables in a monomorphic logic.
+    + #alert[Instantiate] type variables.
 ]
 
 
