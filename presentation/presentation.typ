@@ -5,6 +5,7 @@
 
 #import themes.metropolis: *
 
+
 #let diagram = touying-reducer.with(
   reduce: fletcher.diagram, cover: fletcher.hide)
 
@@ -21,7 +22,6 @@
   ),
   config-info(
     title: [Iterative Monomorphisation],
-    subtitle: [ARPE internship],
     author: [Jasmin Blanchette and Tanguy Bozec],
     institution: [LMU, München, Germany and ENS Paris-Saclay, Gif-sur-Yvette, France],
   ),
@@ -65,23 +65,43 @@
 // would be to pass the previous character as an argument,
 // measure the height of both and align accordingly
 #let cross = text(font: "Noto Color Emoji", top-edge: "ascender")[#box[#move(dy: -2.5pt, emoji.crossmark)]]
+#let tick =  text(font: "Noto Color Emoji", top-edge: "ascender")[#box[#move(dy: -2.5pt, emoji.checkmark.box)]]
+#let quest = text(font: "Noto Color Emoji", top-edge: "ascender")[#box[#move(dy: -2.5pt, emoji.quest)]]
 
 #title-slide()
 
 = Introduction
 
+== Rank-1 Polymorphism
+#slide[
+
+  $forall x: ty("list_int"),    f angle.l ty("list_int")    angle.r(x)$\
+  #pause
+  $forall x: ty("list_nat"),    f angle.l ty("list_nat")    angle.r(x)$\
+  $forall x: ty("list_bool"),   f angle.l ty("list_bool")   angle.r(x)$\
+  $forall x: ty("list_string"), f angle.l ty("list_string") angle.r(x)$\
+
+  #pause
+
+  $forall mathCol(alpha, #red), forall x: ty("list")\(mathCol(alpha, #red)), f angle.l ty("list")\(mathCol(alpha, #red)) angle.r\(x)$
+
+  #pause
+
+  Type variables are quantified #alert[universally] at the #alert[top level] of a formula.
+]
+
+
 == Motivation
-#slide(repeat: 7, self => {
+#let motivation_diagram = slide(repeat: 7, self => {
    let (uncover, only, alternatives) = utils.methods(self)
 
   [
-
     #align(center)[
     #set text(font: "Fira Sans")
     #diagram(
      //debug: 3,
      spacing: (2.5em, 1em),
-     node((0, 1.5), altHighlight(self, [Isabelle/HOL], visible: "2, 3-7")),
+     node((0, 1.5), altHighlight(self, [Isabelle/HOL], visible: "2, 3-9")),
 
      node(name: <sl>, (0.88, 1.5), [Sledgehammer], defocus: 0.7),
 
@@ -89,12 +109,12 @@
      //node(name: <ghost-vamp>, (2, 1), [a]),
      //node(name: <ghost-e>,    (2, 2), [a]),
 
-     let hl_poly(body) = {altHighlight(self, body, visible: "3-7")},
-     let hl_mono(body) = {altHighlight(self, body, colour: green, visible: "4-7")},
+     let hl_poly(body) = {altHighlight(self, body, visible: "3-9")},
+     let hl_mono(body) = {altHighlight(self, body, colour: green, visible: "4-9")},
 
      node(name: <zip>,  (2,0), width: 7em, height: 2em, align(left)[#hl_poly[Zipperposition]]),
      node(name: <vamp>, (2,1), width: 7em, height: 2em, align(left)[#hl_poly[Vampire]]       ),
-     node(name: <e>,    (2,2), width: 7em, height: 2em, align(left)[#hl_mono[E] #uncover("7")[#cross]]),
+     node(name: <e>,    (2,2), width: 7em, height: 2em, align(left)[#hl_mono[E] #only("8-9")[#tick] #uncover("7")[#cross] ]),
      node(name: <leo>,  (2,3), width: 7em, height: 2em, align(left)[#hl_poly[Leo-III]]       ),
 
      //node(name: <zip>,  <ghost-zip.west>,  [Zipperposition]),
@@ -116,8 +136,8 @@
      /*only("1-6")*/[#node((0.88, 0), [#hl(colour: green)[Monomorphic]\ no type variables])],
 
      pause,
-     let hl_e_call(body) = {altHighlight(self, body, colour: green, visible: "6-7")},
-     [#node((2.9,0), [#hl_e_call[E] #uncover("7")[#cross]])],
+     let hl_e_call(body) = {altHighlight(self, body, colour: green, visible: "6-9")},
+     [#node((2.9,0), [#hl_e_call[E] #uncover("7-9")[#only("1-7")[#cross]#alternatives(start: 8)[#cross][#tick]]])],
      //[#node((2.9,3), [#hl_e_call[E] #uncover("7")[#cross]])],
 
      [#edge(<zip.east>,   (2.9, 0), "->")],
@@ -128,6 +148,8 @@
     // show that some of these provers cannot be called because of the polymorphism mismatch
     // show that some provers cannot call their backends for the same reason
 ]})
+
+#motivation_diagram
 
 == Solution
 #slide[
@@ -141,23 +163,6 @@
     + #alert[Instantiate] type variables
 ]
 
-== Rank-1 Polymorphism
-#slide[
-
-  $forall x: ty("list_int"),    f angle.l ty("list_int")    angle.r(x)$\
-  #pause
-  $forall x: ty("list_nat"),    f angle.l ty("list_nat")    angle.r(x)$\
-  $forall x: ty("list_bool"),   f angle.l ty("list_bool")   angle.r(x)$\
-  $forall x: ty("list_string"), f angle.l ty("list_string") angle.r(x)$\
-
-  #pause
-
-  $forall mathCol(alpha, #red), forall x: ty("list")\(mathCol(alpha, #red)), f angle.l ty("list")\(mathCol(alpha, #red)) angle.r\(x)$
-
-  #pause
-
-  Type variables are quantified #alert[universally] at the #alert[top level] of a formula.
-]
 
 = Iterative monomorphisation
 //#slide(title: "Iterative monomorphisation algorithm")[
@@ -180,19 +185,21 @@
 
 #let st(body) = text(weight: "semibold")[#body]
 
-#let it_mon_algo = pseudocode-list(line-numbering: none)[
+#let it_mon_algo = pseudocode-list()[
   + $P$ is the set of input formulae
   + #st[while] new formulae are added to $P$ #st[do]
-    + #st[for all] occurrences $f angle.l tau angle.r (dots)$ and $f angle.l pi angle.r (dots)$ in $P$ #st[do]
-      + #st[if] $pi$ is monomorphic #st[and] $tau$ matches against $pi$ #st[then]
-        + add $sigma$, the unifier of $pi$ and $tau$ to $S$
-    + #st[for all] $phi in P, sigma in S$ #st[do]
-      + add $phi sigma$ to $P$
-  + $R = {phi in P | phi #text(font: "Fira Sans")[is monomorphic]}$
-  + #st[return] $R$
-  ]
+    + #st[for all] $phi in P$ #st[do]
+      + #st[for all] occurrences $f angle.l pi angle.r (dots)$ in $phi$ with $pi$ polymorphic #st[do]
+        + #st[for all] occurrences $f angle.l tau angle.r (dots)$ in $P$ with $tau$ monomorphic #st[do]
+          + #st[if] $pi$ matches against $tau$ #st[then]
+            + add $sigma$, the unifier of $pi$ and $tau$ to $S$
+      + #st[for all] $sigma in S$ #st[do]
+        + add $phi sigma$ to $P$
+  + #st[return] ${phi in P | phi #text(font: "Fira Sans")[is monomorphic]}$
+]
 
 #slide[
+  #v(-0.5em)
   #it_mon_algo
 ]
 
@@ -200,14 +207,13 @@
 
   #alert[Soundness]: instantiation of universally quantified type variables.
 
-  #pause
   #alert[Completeness]: this algorithm is incomplete.
 
     #pause
-    - Finding a #alert[finite equisatisfiable] set of monomorphic instances of a first-order polymorphic formula is #alert[undecidable]
+    - Finding a #alert[finite equisatisfiable] set of monomorphic instances of a first-order polymorphic formula is #alert[undecidable].
 
     #pause
-    - #alert[Bounds] limit the instantiations we perform
+    - #alert[Bounds] limit the instantiations we perform.
 ]
 
 == Example
@@ -252,10 +258,10 @@
   + $forall x: ty("int"), y: ty("list")(ty("int")), f angle.l ty("int") angle.r (x) and #altHighlight(self, $f angle.l ty("list")(ty("int")) angle.r$, visible: "2-")\(y)$
 
   #pause
-  Successful match of $hl(colour: #good_col, alpha)$ against $hl(hl("list")(ty("int")))$.
+  Successful match of $hl(colour: #good_col, alpha)$ against $hl(hl(ty("list"))(ty("int")))$.
 
   #pause
-  We apply the substitution $hl(colour: #good_col, alpha) mapsto hl(hl("list")(ty("int")))$ to clause 2.
+  We apply the substitution $hl(colour: #good_col, alpha) mapsto hl(hl(ty("list"))(ty("int")))$ to clause 2.
 
   #set enum(start: 4)
   + $forall x: ty("list")(ty("int")), y: ty("list")(ty("list")(ty("int"))),\ f angle.l ty("list")(ty("int")) angle.r (x) and f angle.l ty("list")(ty("list")(ty("int"))) angle.r (y)$
@@ -303,20 +309,16 @@
 //]
 
 #slide(title: "Bounds")[
-  We cannot #alert[exhaustively enumerate] all type variables instantiations.
+  #set par(justify: true)
+  Since we cannot #alert[exhaustively enumerate] all type variables instantiations, we use #alert[heuristics] to determine which instantiations we perform:
 
-  We use #alert[heuristics] to determine which instantiations we perform:
+  - We limit the number of #alert[iterations].
 
-  #pause
-  - The number of #alert[iterations] of the algorithm is limited.
-
-  #pause
   - We filter type arguments by #alert[function symbol].
 
   #pause
   - We limit the number of #alert[substitutions] we generate.
 
-  #pause
   - We limit the number of #alert[applications] of the substitutions.
 
 ]
@@ -342,11 +344,56 @@
 
   We had two questions:
 
-  #pause
   + Does Zipperposition benefit from the ability to call E on monomorphised problems?
 
   + Does E perform well on monomorphised problems?
 
+]
+
+#slide[
+    #align(center)[
+    #set text(font: "Fira Sans")
+    #diagram(
+     //debug: 3,
+     spacing: (2.5em, 1em),
+     node((0, 1.5), hl([Isabelle/HOL])),
+
+     node(name: <sl>, (0.88, 1.5), [Sledgehammer], defocus: 0.7),
+
+     //node(name: <ghost-zip>,  (2, 0), [a]),
+     //node(name: <ghost-vamp>, (2, 1), [a]),
+     //node(name: <ghost-e>,    (2, 2), [a]),
+
+     let hl_poly(body) = {hl(body)},
+     let hl_mono(body) = {hl(body, colour: green)},
+
+     node(name: <zip>,  (2,0), width: 7em, height: 2em, align(left)[#hl_poly[Zipperposition]]),
+     node(name: <vamp>, (2,1), width: 7em, height: 2em, align(left)[#hl_poly[Vampire]]       ),
+     node(name: <e>,    (2,2), width: 7em, height: 2em, align(left)[#hl_mono[E] #quest ]),
+     node(name: <leo>,  (2,3), width: 7em, height: 2em, align(left)[#hl_poly[Leo-III]]       ),
+
+     //node(name: <zip>,  <ghost-zip.west>,  [Zipperposition]),
+     //node(name: <vamp>, <ghost-vamp.west>, [Vampire]),
+     //node(name: <e>,    <ghost-e.west>,    [E]),
+
+     edge((0,1.5),(1,1.5), "->"),
+
+     edge((0.87, 1.5), <zip.west> , "->", layer: -1),
+     edge((0.87, 1.5), <vamp.west>, "->", layer: -1),
+     edge((0.87, 1.5), <e.west>   , "->", layer: -1),
+     edge((0.87, 1.5), <leo.west> , "->", layer: -1),
+
+
+     [#node((0, 0), [#hl[Polymorphic]\ with type variables])],
+     [#node((0.88, 0), [#hl(colour: green)[Monomorphic]\ no type variables])],
+
+     let hl_e_call(body) = {hl(body, colour: green)},
+     [#node((2.9,0), [#hl_e_call[E] #quest])],
+
+     [#edge(<zip.east>,   (2.9, 0), "->")],
+     //[#edge(<leo.center>, (2.9, 3), "->")],
+    )
+    ]
 ]
 
 == Methodology
@@ -363,7 +410,10 @@
 
 #slide[
   #table(
-    stroke: none,
+    stroke: (x, y) => (
+      x: none,
+      y: if (y < 2) {none} else {1pt},
+    ),
     columns: (1fr, 1fr, 1fr, 1fr),
     rows: 1.5em,
     align: (x, _) => if x==0 {left} else {center},
@@ -382,6 +432,52 @@
   This is #alert[expected] Zipperposition benefits greatly from E in a monomorphic setting.
 ]
 
+#slide[
+    #align(center)[
+    #set text(font: "Fira Sans")
+    #diagram(
+     //debug: 3,
+     spacing: (2.5em, 1em),
+     node((0, 1.5), hl([Isabelle/HOL])),
+
+     node(name: <sl>, (0.88, 1.5), [Sledgehammer], defocus: 0.7),
+
+     //node(name: <ghost-zip>,  (2, 0), [a]),
+     //node(name: <ghost-vamp>, (2, 1), [a]),
+     //node(name: <ghost-e>,    (2, 2), [a]),
+
+     let hl_poly(body) = {hl(body)},
+     let hl_mono(body) = {hl(body, colour: green)},
+
+     node(name: <zip>,  (2,0), width: 7em, height: 2em, align(left)[#hl_poly[Zipperposition]]),
+     node(name: <vamp>, (2,1), width: 7em, height: 2em, align(left)[#hl_poly[Vampire]]       ),
+     node(name: <e>,    (2,2), width: 7em, height: 2em, align(left)[#hl_mono[E] #quest ]),
+     node(name: <leo>,  (2,3), width: 7em, height: 2em, align(left)[#hl_poly[Leo-III]]       ),
+
+     //node(name: <zip>,  <ghost-zip.west>,  [Zipperposition]),
+     //node(name: <vamp>, <ghost-vamp.west>, [Vampire]),
+     //node(name: <e>,    <ghost-e.west>,    [E]),
+
+     edge((0,1.5),(1,1.5), "->"),
+
+     edge((0.87, 1.5), <zip.west> , "->", layer: -1),
+     edge((0.87, 1.5), <vamp.west>, "->", layer: -1),
+     edge((0.87, 1.5), <e.west>   , "->", layer: -1),
+     edge((0.87, 1.5), <leo.west> , "->", layer: -1),
+
+
+     [#node((0, 0), [#hl[Polymorphic]\ with type variables])],
+     [#node((0.88, 0), [#hl(colour: green)[Monomorphic]\ no type variables])],
+
+     let hl_e_call(body) = {hl(body, colour: green)},
+     [#node((2.9,0), [#hl_e_call[E] #tick])],
+
+     [#edge(<zip.east>,   (2.9, 0), "->")],
+     //[#edge(<leo.center>, (2.9, 3), "->")],
+    )
+    ]
+]
+
 == E performs well on monomorphised problems
 #slide(repeat: 4, self => [
   #let hide_leo(body) = hide(self, body, invisible: "1-2")
@@ -389,14 +485,17 @@
   #let hide_u(body) = hide(self, body, invisible: "1-3")
 
 #table(
-  stroke: none,
-  columns: (6em, 1fr, 1fr, 1fr),
+  stroke: (x, y) => (
+      x: none,
+      y: if (y < 2) {none} else {1pt},
+    ),
+  columns: (7em, 1fr, 1fr, 1fr),
   rows: 1.5em,
   align: (x, _) => if x==0 {left} else {center},
   table.header(
     [],
-    [Native polymorphism],
-    [Monomorphisation],
+    [Polymorphic],
+    [Monomorphised],
     [#hide_u([Union])],
   ),
   [],[],[],[],
@@ -411,13 +510,60 @@
 
 ])
 
+#let victory_slide = slide[
+    #align(center)[
+    #set text(font: "Fira Sans")
+    #diagram(
+     //debug: 3,
+     spacing: (2.5em, 1em),
+     node((0, 1.5), hl([Isabelle/HOL])),
+
+     node(name: <sl>, (0.88, 1.5), [Sledgehammer], defocus: 0.7),
+
+     //node(name: <ghost-zip>,  (2, 0), [a]),
+     //node(name: <ghost-vamp>, (2, 1), [a]),
+     //node(name: <ghost-e>,    (2, 2), [a]),
+
+     let hl_poly(body) = {hl(body)},
+     let hl_mono(body) = {hl(body, colour: green)},
+
+     node(name: <zip>,  (2,0), width: 7em, height: 2em, align(left)[#hl_poly[Zipperposition]]),
+     node(name: <vamp>, (2,1), width: 7em, height: 2em, align(left)[#hl_poly[Vampire]]       ),
+     node(name: <e>,    (2,2), width: 7em, height: 2em, align(left)[#hl_mono[E] #tick ]),
+     node(name: <leo>,  (2,3), width: 7em, height: 2em, align(left)[#hl_poly[Leo-III]]       ),
+
+     //node(name: <zip>,  <ghost-zip.west>,  [Zipperposition]),
+     //node(name: <vamp>, <ghost-vamp.west>, [Vampire]),
+     //node(name: <e>,    <ghost-e.west>,    [E]),
+
+     edge((0,1.5),(1,1.5), "->"),
+
+     edge((0.87, 1.5), <zip.west> , "->", layer: -1),
+     edge((0.87, 1.5), <vamp.west>, "->", layer: -1),
+     edge((0.87, 1.5), <e.west>   , "->", layer: -1),
+     edge((0.87, 1.5), <leo.west> , "->", layer: -1),
+
+
+     [#node((0, 0), [#hl[Polymorphic]\ with type variables])],
+     [#node((0.88, 0), [#hl(colour: green)[Monomorphic]\ no type variables])],
+
+     let hl_e_call(body) = {hl(body, colour: green)},
+     [#node((2.9,0), [#hl_e_call[E] #tick])],
+
+     [#edge(<zip.east>,   (2.9, 0), "->")],
+     //[#edge(<leo.center>, (2.9, 3), "->")],
+    )
+    ]
+]
+
+#victory_slide
+
 = Conclusion
 #slide(title: "Conclusion")[
   
   - Goal: Polymorphic problem $arrow.double.long$ Monomorphic problem.
 
-  #pause
-  - Algorithm works by #alert[instantiating] type variables with ground types.
+  - Solution: #alert[instantiating] type variables with ground types.
 
   #pause
   - #alert[Bounds] are necessary in practice.
@@ -425,8 +571,9 @@
   #pause
   - It is a #alert[viable] means for extending monomorphic provers.
 
-  #pause
   - Iterative monomorphisation can #alert[outperform] native implementations of polymorphism
 ]
+
+#victory_slide
 
 #title-slide()
