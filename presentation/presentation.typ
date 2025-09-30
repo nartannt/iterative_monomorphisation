@@ -571,7 +571,7 @@
   #pause
   - It is a #alert[viable] means for extending monomorphic provers.
 
-  - Iterative monomorphisation can #alert[outperform] native implementations of polymorphism
+  - Iterative monomorphisation can #alert[outperform] native implementations of polymorphism.
 ]
 
 #victory_slide
